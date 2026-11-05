@@ -6,13 +6,15 @@ Scope: open-source software, macOS first, Windows next, Linux desirable. The fir
 
 ## Recommendation
 
+**Conditional fallback:** the later [competitive workflow audit](competitive-workflow-audit.md) expands the decision beyond Mixxx versus a new engine. Investigate GlideMix/Mixxx reuse and focused application/DAW workflows first. If application reuse fails, evaluate [Tracktion Engine](https://github.com/Tracktion/tracktion_engine), which provides a sequence-oriented model as a C++20 JUCE module, before custom sequencing. Its licensing is separate from JUCE's. None of these reuse routes has been built or measured in this project.
+
 Use **C++20 for the audio engine and a small JUCE desktop shell for the first native POC**, subject to adopting a compatible open-source license. Keep the engine independent of GUI widgets and operating-system devices. The same engine must render a saved set to a device or to an offline audio file. Make web/hybrid delivery a separate measured decision; this recommendation is for the shortest native audio experiment, not a permanent restriction on the UI.
 
 JUCE reduces the amount of platform plumbing for audio devices, MIDI, file formats, and GUI controls. It does not supply our arrangement model, editable performance recording, controller HID protocol, DJ synchronization, or guaranteed real-time behavior. Its current stable release page lists **9.0.5**, and that tag's license is **AGPLv3 or commercial JUCE 9**, not an assumed permissive license. Open source alone does not settle the application's exact license. [JUCE release list](https://github.com/juce-framework/JUCE/releases), [tag-pinned license](https://raw.githubusercontent.com/juce-framework/JUCE/9.0.5/LICENSE.md), [audio/MIDI modules](https://docs.juce.com/)
 
 Rust is a credible alternative, particularly if the team strongly prefers it, but it is not automatically lower latency. CPAL provides cross-platform audio I/O; UI, MIDI, HID, decoding, and quality time stretching still require a collection of libraries and integration work. Choose one engine language for the POC. A C++/Rust split should solve a demonstrated problem before adding an FFI boundary, two build systems, and ownership rules.
 
-Before finalizing the greenfield approach, run a bounded **Mixxx reuse spike**. Existing controller integration and DJ playback are valuable. A full fork is justified only if it can gain a timeline and headless deterministic rendering without a much larger refactor than a small new core. Do not treat Mixxx as an already separable engine SDK.
+Before finalizing the greenfield approach, complete the broader adoption/reuse gate, including a bounded **Mixxx reuse spike**. Existing controller integration and DJ playback are valuable. Compare capture/render refactoring and long-term maintenance with the alternative arranger/engine routes; do not presume a small new core is cheaper. Do not treat Mixxx as an already separable engine SDK.
 
 ## What the framework choice changes
 

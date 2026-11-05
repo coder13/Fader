@@ -10,6 +10,8 @@ Open source, macOS and Windows, S4 MK3 first, Audacity-inspired clarity, editabl
 
 | Risk | Impact | Next evidence or mitigation | Gate |
 | --- | --- | --- | --- |
+| Building capabilities an existing app already supplies | Unnecessary engine/editor work and long-term maintenance | Common-task adoption/reuse gate; compare GlideMix, Mixxx and focused commercial/DAW workflows before custom implementation | M0 / DJ-037 |
+| Published features conceal workflow or source-build gaps | Attractive UI leads to a costly port/fork or unusable controller path | Exact-version trial, build reproducibility, selective-retake and automation-ownership probes; screenshots remain research evidence only | M0 / DJ-037 |
 | S4 HID access or initialization differs by firmware | Cannot control the actual target device | Exact report inventory, known parser fixtures, one LED round-trip | M0/M1 |
 | Hardware monitoring differs from software mix | Recorded/exported sound differs from what user heard | Explicit monitor boundary; digital vs physical routing test | A03/A09 |
 | Audio callback stalls | Audible glitches | Bounded work, preallocation, queue/caching policy, sustained load metrics | A04–A06 |
@@ -29,7 +31,7 @@ Open source, macOS and Windows, S4 MK3 first, Audacity-inspired clarity, editabl
 ## Decisions still needed
 
 1. **Exact license:** open source is settled; AGPL/GPL/permissive policy is not. Resolve before importing implementation code. See [stack ADR](decisions/0001-platform-and-engine.md).
-2. **New core or Mixxx fork:** select using the reuse experiment, not assumption.
+2. **Adopt, contribute, extend or build:** select using the [competitive workflow protocol](research/competitive-workflow-audit.md#proposed-adoption-and-reuse-gate); include GlideMix, Mixxx, DAW templates and existing engine reuse. Keep personal adoption separate from the open-source product requirement.
 3. **Native UI or web frontend:** choose after the minimal timeline prototype; keep audio independent either way.
 4. **Browser product scope:** full controller application, preparation companion, or eventual standalone arrangement editor, based on capability tests.
 5. **DSP candidate and sound quality:** compare Rubber Band and Signalsmith at relevant tempos and latency; no algorithm selected yet.

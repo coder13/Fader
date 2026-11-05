@@ -8,6 +8,8 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 
 | Document | Purpose |
 | --- | --- |
+| [Competitive workflow audit](docs/research/competitive-workflow-audit.md) | Deeper comparison, source evidence, adoption/reuse decision gate |
+| [UI evidence atlas](docs/research/ui-evidence-atlas.md) | 33 inspected published UI images/crops across nine products |
 | [Product and UX](docs/product-and-ux.md) | User workflows, Audacity-inspired interface, feature priorities |
 | [Architecture](docs/architecture.md) | Real-time engine, editor, hardware, and export boundaries |
 | [Set format and automation](docs/set-format-and-automation.md) | Editable performance semantics, time domains, persistence |
@@ -15,13 +17,13 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 | [Audio import and library compatibility](docs/audio-import-and-library.md) | Common formats, existing-library workflow, and qualification |
 | [POC plan](docs/poc-plan.md) | Smallest useful Mac + S4 MK3 demonstration and pass/fail evidence |
 | [Roadmap and issue backlog](docs/roadmap-and-issue-backlog.md) | Dependency-ordered milestones and draft GitHub issues |
-| [Stack decision](docs/decisions/0001-platform-and-engine.md) | Proposed C++ native core; Rust, web, and Mixxx alternatives |
+| [Stack decision](docs/decisions/0001-platform-and-engine.md) | Conditional C++ fallback after application/engine reuse evaluation |
 | [Risks and open questions](docs/risks-and-open-questions.md) | Unresolved decisions and how to resolve them |
 | [Experiment report template](docs/experiments/README.md) | Evidence format for hardware, timing, and design decisions |
 | [Audio engine research](docs/research/audio-engine-and-stack.md) | Frameworks, real-time audio, DSP, licensing |
 | [Controller research](docs/research/traktor-and-controller-integration.md) | Exact S4 MK3 integration and other controller families |
 | [Web research](docs/research/web-platform.md) | Browser, Electron, Tauri, Web Audio/Wasm, device access |
-| [Product references](docs/research/product-references.md) | Audacity, Ableton, Mixxx, DJ.Studio, MixMeister |
+| [Product references](docs/research/product-references.md) | Candidate index and workflow references |
 
 ## Confirmed requirements
 
@@ -36,7 +38,11 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 
 ## Current recommendation
 
-Prototype a **C++20 headless audio core with a thin JUCE desktop host**, conditional on the license/dependency review. Keep project semantics independent of JUCE and the UI. Test S4 HID control and multichannel Core Audio before investing in a polished editor. Evaluate a web UI over the native engine with a small editor spike; evaluate browser-only S4 support separately. These are proposals, not finalized stack commitments.
+**Evaluate adoption or a focused contribution before building another audio engine.** The [deeper audit](docs/research/competitive-workflow-audit.md) identifies GlideMix as the leading arranger-reuse investigation and Mixxx as the strongest documented S4 performance foundation. Density and DJ.Studio are important workflow benchmarks; MixCanvas and a focused DAW template are additional alternatives. None has passed the user's complete workflow here. Published UI/manual evidence is not hands-on qualification.
+
+The next proposed milestone is an adoption/reuse decision: perform or record one transition, correct one parameter, replace a range, move the transition, save/reopen and export. Record exact blockers. Personal adoption of commercial software may solve the immediate workflow but does not replace the confirmed open-source product requirement.
+
+If existing applications prove unsuitable, evaluate Tracktion Engine before a custom **C++20 headless audio core with a thin JUCE desktop host**. The existing native architecture remains a conditional fallback, subject to license/dependency review and measured S4 HID/Core Audio results. Web UI and browser-only hardware experiments remain proposals. No stack or product pivot has been accepted.
 
 The first complete POC imports two tracks, records a short S4 transition, edits its automation, saves/reopens it, and exports WAV. Full controller screens, motors, four-deck performance, and a complete DAW are later milestones.
 

@@ -16,9 +16,13 @@ Use two short synthetic/redistributable stereo WAVs plus representative user-own
 
 ## Sequence and stop conditions
 
+Before committing to P1–P3 implementation, complete the proposed [adoption/reuse gate](research/competitive-workflow-audit.md#proposed-adoption-and-reuse-gate). Evaluate GlideMix's arranger/source-build/controller seams and Mixxx's capture/replay/render seams; benchmark the editing task in DJ.Studio or a focused DAW template. Qualify Density's capture configuration before treating it as an S4 candidate. Record adoption, contribution, extension or rejection with concrete blockers. This research has not run those trials.
+
+The stages below describe the custom implementation fallback. Existing software that solves the personal workflow can end the need for that implementation, but a commercial-only solution does not fulfill an open-source distribution requirement. Reconcile that distinction explicitly in the decision record. Competitor EQ tests do not add EQ to the POC scope.
+
 | Stage | Build or test | Exit evidence |
 | --- | --- | --- |
-| P0 Decision experiments | License inventory, native S4 qualification, bounded Mixxx reuse evaluation, browser capability/routing experiment | A recorded stack/host decision and hardware feature matrix; failed assumptions recorded before editor build |
+| P0 Decision experiments | Adoption/reuse gate, license inventory, native S4 qualification, bounded reuse/source-build evaluation, browser capability/routing experiment | Recorded adopt/contribute/extend/build decision, stack/host decision if needed, and hardware feature matrix; failed assumptions recorded before editor build |
 | P1 Native harness | Two WAV sources, gain/crossfader, Core Audio master/cue, HID play/fader input and LED feedback | Correct physical routing, timestamped semantic controls, basic callback metrics |
 | P2 Capture/render core | Initial state + actions + curves, immutable project, offline WAV renderer | Capture/replay/persistence fixtures pass without UI/controller dependencies |
 | P3 Minimal editor | Folder browser, drag/drop two clips, waveforms, gain/crossfader lanes, selection/undo | End-to-end demo including one range retake |

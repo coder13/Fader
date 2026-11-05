@@ -8,6 +8,8 @@ A DJ performance editor combines familiar deck controls with a song arrangement 
 
 The main promise is **perform → inspect → edit → replay → export**. Good controller behavior matters because a prepared transition should still feel natural to play. Reliable project recovery matters because the editable performance is the primary creative artifact.
 
+The [competitive workflow audit](research/competitive-workflow-audit.md) finds substantial existing overlap. This product definition is a workflow target, not a claim of novelty or a decision to build every component. First evaluate adoption, contribution or extension; the detailed custom UI below remains proposed.
+
 ## Three workflows
 
 1. **Arrange a set.** Browse local files, preview a track, drag it onto a lane, adjust its start/source offset and duration, align beats, draw gain/EQ/crossfade changes, and audition the overlap.
@@ -63,5 +65,9 @@ The file browser needs folders, search, supported-format status, duration, BPM/g
 The goal of eventually having broad DJ features is preserved in the backlog. Plugin effects are a confirmed version 2/3 requirement: drag effects from a plugin browser onto a song or effects rack and edit their exposed parameters on the timeline. See [plugin effects](plugin-effects.md). Plugin hosting, streaming services, DRM media, DVS/timecode, stem separation, video, and cloud collaboration remain outside the POC.
 
 ## Usability evidence
+
+The [UI evidence atlas](research/ui-evidence-atlas.md) records 33 inspected published images/crops. It suggests testing a selected-transition mixer, visible preview/record/override state, selective automation-lane display, and a move preview that makes automation ownership clear. These are design hypotheses, not measured usability improvements. Preserve the editing rules above until an explicit decision changes them; in particular, MixCanvas's documented lane-owned curves differ from this proposal.
+
+Begin with the same [cross-application workflow](research/competitive-workflow-audit.md#proposed-adoption-and-reuse-gate) in existing candidates. Record blocked tasks, setup effort, parameter ownership and retake behavior. Historical forum complaints become current-build test questions, not presumed defects.
 
 Run five tasks on the editor prototype: import two tracks, align an overlap, record a fade, correct the fade, save/reopen/export. Record confusion points, number of mode errors, and whether the user can distinguish a temporary override from a saved edit. The first research participant is the project owner using their S4. This experiment should guide the layout before a toolkit choice becomes expensive to reverse.

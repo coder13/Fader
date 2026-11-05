@@ -2,13 +2,13 @@
 
 Status: Proposed backlog, not published issues. Updated 2026-11-04. IDs such as `DJ-001` are local planning IDs, not GitHub issue numbers. Repository: [coder13/Fader](https://github.com/coder13/Fader). Documentation pushes are authorized; issue publication is a separate pending step. Research is complete for this planning pass; implementation has not begun.
 
-The order prioritizes hardware feasibility and the editable-performance loop. Web research starts early; a production browser host depends on measured capability. Milestones have exit criteria instead of speculative release dates.
+The order prioritizes an adoption/reuse decision, hardware feasibility and the editable-performance loop. The [competitive audit](research/competitive-workflow-audit.md) expands M0 beyond a Mixxx-versus-new-core choice. M1 onward describes the custom implementation fallback, to be revised if adoption or contribution wins. Web research starts early; a production browser host depends on measured capability. Milestones have exit criteria instead of speculative release dates.
 
 ## Milestones
 
 | Milestone | Outcome | Exit gate |
 | --- | --- | --- |
-| M0 Architecture decisions | Choose license, build/reuse route, initial host strategy; record S4/browser feasibility | ADR accepted with evidence and unresolved risks; no assumption that MIDI controls S4 MK3 |
+| M0 Adoption/reuse and architecture decisions | Compare existing workflows, choose adopt/contribute/extend/build route; choose license/host if needed; record S4/browser feasibility | Common-task results and blockers recorded before accepting a new-core ADR; no assumption that MIDI controls S4 MK3 |
 | M1 Native Mac hardware harness | Two sources, S4 essential controls/LEDs, master/cue, timestamped event path, MIDI output proof | POC A01–A03/A06/A08/A14 demonstrated in a small harness |
 | M2 Editable-set POC | Import MP3/WAV, arrange, perform, edit, retake, save/reopen, export WAV | Full [POC acceptance matrix](poc-plan.md), including real-library, long-run and recovery evidence |
 | M3 Musical mixing alpha | Beat/grid editing, key lock, tempo changes, EQ/filter, loops and cue actions | DJ-oriented transitions retain correct timing and editable replay |
@@ -28,6 +28,12 @@ Keep M0–M2 actionable at task level. Later drafts are epics to split after the
 
 ## M0 decision issues
 
+### DJ-037 Evaluate existing applications and focused extensions
+
+Type: spike. Dependencies: none for workflow research/trials; DJ-001 before substantial source reuse, DJ-002 for exact S4 qualification. Scope: execute the [common-task protocol](research/competitive-workflow-audit.md#proposed-adoption-and-reuse-gate); investigate GlideMix source-build/controller seams and Mixxx capture/replay/render seams; benchmark DJ.Studio and a small DAW template; qualify Density hardware before an S4 trial. Screen MixCanvas's Mac, automation-ownership and plugin mismatches. If application reuse fails, evaluate Tracktion Engine before custom sequencing.
+
+Acceptance: exact versions and setup recorded, each task passed/blocked/unknown with evidence, implementation effort bounded before starting, and an explicit adopt/contribute/extend/build recommendation with smallest blocking gaps. Distinguish personal commercial adoption from meeting the open-source product requirement. No timing, audio or hardware claim may be inferred from published screenshots. Reconcile the remaining backlog and ADR before commencing a new engine. EQ is an optional competitor probe, not added POC scope. This draft has not been published externally.
+
 ### DJ-001 Choose project license and pin initial dependencies
 
 Type: spike. Dependencies: none. Scope: compare intended JUCE, HIDAPI, DSP and optional Mixxx reuse licenses; propose exact project license and build-version inventory.
@@ -40,11 +46,11 @@ Type: spike. Dependencies: none for inventory; DJ-001 before substantial impleme
 
 Acceptance: report with actual configuration, input fixtures and channel map; required controls and monitoring-only controls listed; master/cue tested separately; no screen/motor writes in this spike. Failed access produces an identified next experiment. [Controller plan](research/traktor-and-controller-integration.md).
 
-### DJ-003 Evaluate Mixxx fork versus new core
+### DJ-003 Evaluate Mixxx capture and render reuse
 
 Type: spike. Dependencies: DJ-001. Scope: build a pinned Mixxx version; trace one S4 input to engine state; attempt semantic capture and a headless scripted render seam.
 
-Acceptance: written reuse/fork/new-core decision with concrete modules, coupling, license obligations, and a minimal code-path sketch. Set a bounded effort before starting; stop with findings rather than attempting an unbounded refactor. [Mixxx investigation](research/audio-engine-and-stack.md).
+Acceptance: written reuse/fork findings with concrete modules, coupling, license obligations, and a minimal code-path sketch, feeding DJ-037's broader decision. Set a bounded effort before starting; stop with findings rather than attempting an unbounded refactor. Review historical Macros work without assuming it is a released full-set editor. [Mixxx investigation](research/audio-engine-and-stack.md), [competitive audit](research/competitive-workflow-audit.md#mixxx-strongest-performance-and-hardware-foundation).
 
 ### DJ-004 Test browser S4 access and master/cue routing
 
@@ -62,7 +68,7 @@ Acceptance: run the product workflow tasks with project owner; record mode confu
 
 ### DJ-006 Create native/headless build and audio host
 
-Type: feature. Dependencies: DJ-001, DJ-003, accepted initial stack decision. Scope: reproducible build, headless engine target, minimal native host, audio-device selection and metrics.
+Type: feature. Dependencies: DJ-001, DJ-003, DJ-037, accepted initial stack decision requiring a custom core. Scope: reproducible build, headless engine target, minimal native host, audio-device selection and metrics.
 
 Acceptance: clean Mac build; silence/test signal output at negotiated settings; offline target has no UI/device dependency; callback metrics collected off-thread; pinned dependencies recorded. Windows compile-only CI can be added if available, without hardware certification.
 
@@ -250,7 +256,7 @@ Acceptance: Linux build and core workflow report on declared backend/hardware; e
 
 M8 plugin work is excluded from this initial slice.
 
-Start DJ-001–DJ-005 as bounded experiments, then deliver DJ-006–DJ-009 and a minimal DJ-011–DJ-013 scripted capture/render path before the full editor. Keep DJ-017's evidence requirements visible throughout. This sequence tests the hardware and the defining feature while the UI and product scope are still inexpensive to change.
+Start DJ-037, using DJ-001–DJ-005 where needed as bounded investigations. Proceed to DJ-006–DJ-009 and a minimal DJ-011–DJ-013 scripted capture/render path only if the recorded decision calls for custom implementation. Otherwise rewrite the slice around the selected contribution or extension. Keep DJ-017's evidence requirements visible wherever they apply; do not treat a software purchase or attractive timeline as a passed Mac/S4 POC.
 
 ## M8 plugin effects for version 2 and version 3
 

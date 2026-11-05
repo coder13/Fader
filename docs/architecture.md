@@ -2,6 +2,8 @@
 
 Status: Proposed. Updated 2026-11-04. See [stack decision](decisions/0001-platform-and-engine.md) for alternatives and [audio research](research/audio-engine-and-stack.md) for evidence.
 
+This is a custom-implementation design, conditional on the [adoption/reuse gate](research/competitive-workflow-audit.md#proposed-adoption-and-reuse-gate). Use its behavior requirements to assess existing applications and engines; do not require a candidate to adopt these exact internal components if it meets the workflow. No implementation route has been accepted.
+
 ## One musical model and one rendering core
 
 The editable set is authoritative. A compiler turns a validated project snapshot into a render plan containing source mappings, parameter curves, ordered actions, and routing. The same DSP core consumes that plan in live playback and offline export. The UI and controller adapters submit semantic commands; neither owns audio time.
