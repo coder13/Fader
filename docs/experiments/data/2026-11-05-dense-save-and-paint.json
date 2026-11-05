@@ -1,0 +1,28 @@
+{
+  "scope": "Offscreen production arrangement component with synthetic continuous sources; no native window/device",
+  "projectSeconds": 3600,
+  "pointsPerClipParameter": 14401,
+  "imageWidth": 1200,
+  "imageHeight": 700,
+  "timingPixelsPerSecond": 10,
+  "snapshotPixelsPerSecond": 40,
+  "densePaintExecution": {
+    "samples": 100,
+    "p50Microseconds": 3839.333,
+    "p95Microseconds": 4296.667,
+    "p99Microseconds": 6128.0,
+    "p999Microseconds": 6362.375,
+    "maximumMicroseconds": 6362.375
+  },
+  "qualifiedLocalSourceRevision": "e2842daa54da2cb419360019af819f282d162f96",
+  "sourceVerification": "All 70 tracked source/test/CMake files byte-compared with the local build source",
+  "localSuitesPassed": 7,
+  "denseStorageRegression": {
+    "originalInputs": 107999,
+    "compiledPoints": 149169,
+    "fileBytes": 7394820,
+    "manifestLimitBytes": 8388608,
+    "pointEqualityAfterReopen": true,
+    "binary32EdgeBitsAndBinary64Metadata": true
+  }
+}
