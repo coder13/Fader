@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "Arrangement.h"
+#include "AudioPlayback.h"
 #include "AudioSetup.h"
 #include "LibraryView.h"
 #include "Theme.h"
@@ -10,12 +11,9 @@
 using namespace fader;
 namespace {
 const auto ink = ui::text, paper = ui::background, accent = ui::accent, muted = ui::muted;
-class Workspace final : public juce::Component,
-                        public juce::DragAndDropContainer,
-                        private juce::AudioIODeviceCallback,
-                        private juce::Timer {
+class Workspace final : public juce::Component, public juce::DragAndDropContainer, private juce::Timer {
   public:
-    Workspace() : workers(2), libraryWorker(1) {
+    explicit Workspace(bool fixtureMode = false) : workers(2), libraryWorker(1) {
         setLookAndFeel(&look);
         tooltips.setLookAndFeel(&look);
         for (auto *c : std::array<juce::Component *, 18>{
@@ -231,6 +229,12 @@ class Workspace final : public juce::Component,
         library.setLoading();
         prefsButton.setEnabled(false);
         auto safe = juce::Component::SafePointer<Workspace>(this);
+        if (fixtureMode) {
+            library.setLibrary({}, {});
+            library.refresh = {};
+            setStatus("Synthetic UI fixture; no music-library scan or audio device.");
+            return;
+        }
         libraryWorker.addJob([safe] {
             try {
                 auto settings = Preferences::load();
@@ -266,17 +270,17 @@ class Workspace final : public juce::Component,
     void requestQuit() {
         confirmDiscard([] { juce::JUCEApplication::getInstance()->quit(); });
     }
-    void openFile(const juce::File &f) {
+    void openFile(const juce::File &f, bool interruptedFixture = false) {
         if (busy)
             return;
         stop();
         busy = true;
         setStatus("Opening set and checking its media...");
         auto safe = juce::Component::SafePointer<Workspace>(this);
-        workers.addJob([safe, f] {
+        workers.addJob([safe, f, interruptedFixture] {
             try {
                 auto p = loadProject(f);
-                juce::MessageManager::callAsync([safe, p = std::move(p), f]() mutable {
+                juce::MessageManager::callAsync([safe, p = std::move(p), f, interruptedFixture]() mutable {
                     if (!safe)
                         return;
                     safe->project = std::move(p);
@@ -291,12 +295,40 @@ class Workspace final : public juce::Component,
                                         ? "Set opened. Clip automation and source identities restored."
                                         : "Version 1 set: original playback and export preserved. Choose New "
                                           "set to use clip automation.");
+#if FADER_ENABLE_UI_FIXTURES
+                    if (interruptedFixture)
+                        safe->simulateInterruptedCapture();
+#else
+                    juce::ignoreUnused(interruptedFixture);
+#endif
                 });
             } catch (const std::exception &e) {
                 postError(safe, e.what());
             }
         });
     }
+#if FADER_ENABLE_UI_FIXTURES
+    // Developer fixture: exercise the real stop/recovery UI without opening hardware.
+    // Only compiled with the explicit opt-in CMake flag; requires synthetic source media.
+    void simulateInterruptedCapture() {
+        if (project.clips.empty() || project.end() < 512)
+            return;
+        engine = std::make_shared<Playback>(project, 0, ++nextSegment);
+        engine->arm(0, project.end(), 7, 0);
+        engine->deviceStarted(projectRate);
+        const auto now = monotonicTime();
+        engine->submit(InputSource::ui, {engine->segment(), now, Param::volume, 0.2f, 0});
+        std::array<float, 128> left{}, right{};
+        float *out[]{left.data(), right.data()};
+        engine->process(out, 2, 128, now);
+        audioPlayback = std::make_unique<AudioPlayback>(*engine);
+        audioPlayback->audioDeviceStopped();
+        takeIn = 0;
+        takeOut = project.end();
+        recording = true;
+        stop(); // fault is inspected here before any timer runs
+    }
+#endif
     void paint(juce::Graphics &g) override {
         g.fillAll(paper);
         g.setColour(ui::panel);
@@ -418,6 +450,9 @@ class Workspace final : public juce::Component,
         menu.addItem(4, "Export WAV...", !busy && project.end() > 0);
         menu.addSeparator();
         menu.addItem(5, "Preferences...", !busy && prefsButton.isEnabled());
+        menu.addSeparator();
+        menu.addItem(6, "Save incomplete take...", !busy && incompleteTake != nullptr);
+        menu.addItem(7, "Discard incomplete take...", !busy && incompleteTake != nullptr);
         auto options =
             juce::PopupMenu::Options().withTargetComponent(anchor ? anchor : this).withMinimumWidth(210);
         if (!anchor)
@@ -441,6 +476,12 @@ class Workspace final : public juce::Component,
             case 5:
                 if (safe->prefsButton.isEnabled())
                     safe->showPreferences();
+                break;
+            case 6:
+                safe->chooseIncompleteSave();
+                break;
+            case 7:
+                safe->discardIncomplete();
                 break;
             }
         });
@@ -577,9 +618,13 @@ class Workspace final : public juce::Component,
             return;
         const auto selected = static_cast<unsigned>(arrangement.selected);
         if (engine) {
-            if (!engine->command({engine->position(), static_cast<Param>(parameter), value, selected})) {
+            if (!engine->submit(InputSource::ui, {engine->segment(), monotonicTime(),
+                                                  static_cast<Param>(parameter), value, selected})) {
                 captureLost = recording;
-                setStatus("Control queue overflow; an active take will be discarded.");
+                setStatus(
+                    recording
+                        ? "Control input was lost. Applied actions will be retained as an incomplete take."
+                        : "Control input was lost. Stop and restart playback before continuing.");
             } else if (!recording) {
                 overriding = true;
                 setStatus("Temporary override. Resume automation returns to the saved envelopes.");
@@ -739,7 +784,8 @@ class Workspace final : public juce::Component,
             setStatus("Wait for the current operation to finish.");
             return;
         }
-        if (!dirty) {
+        stop(); // collect a running take and its failure state before deciding whether work is unsaved
+        if (!dirty && !incompleteTake) {
             action();
             return;
         }
@@ -748,14 +794,16 @@ class Workspace final : public juce::Component,
             juce::MessageBoxOptions{}
                 .withIconType(juce::MessageBoxIconType::QuestionIcon)
                 .withAssociatedComponent(this)
-                .withTitle("Unsaved set")
+                .withTitle("Unsaved work")
                 .withMessage(
-                    "This set has unsaved changes. Save it before continuing if you want to keep them.")
+                    "Save unsaved set changes and any incomplete take from the Set menu before continuing.")
                 .withButton("Discard changes", 1)
                 .withButton("Cancel", 0),
             [safe, action = std::move(action)](int result) {
-                if (safe && result == 1)
+                if (safe && result == 1) {
+                    safe->incompleteTake.reset();
                     action();
+                }
             });
     }
     void chooseOpen() {
@@ -814,6 +862,62 @@ class Workspace final : public juce::Component,
                 });
             });
     }
+    void chooseIncompleteSave() {
+        if (busy || !incompleteTake)
+            return;
+        stop();
+        chooser = std::make_unique<juce::FileChooser>("Save incomplete take archive", juce::File{},
+                                                      "*.fadercapture");
+        chooser->launchAsync(
+            juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles |
+                juce::FileBrowserComponent::warnAboutOverwriting,
+            [safe = juce::Component::SafePointer<Workspace>(this)](const juce::FileChooser &choice) {
+                if (!safe || !safe->incompleteTake || choice.getResult() == juce::File{})
+                    return;
+                const auto file = choice.getResult().withFileExtension("fadercapture");
+                auto snapshot = safe->incompleteTake;
+                safe->busy = true;
+                safe->sync();
+                safe->setStatus("Saving incomplete actions and the original set...");
+                safe->workers.addJob([safe, snapshot, file] {
+                    try {
+                        saveIncompleteTake(*snapshot, file);
+                        juce::MessageManager::callAsync([safe, snapshot] {
+                            if (!safe)
+                                return;
+                            if (safe->incompleteTake == snapshot)
+                                safe->incompleteTake.reset();
+                            safe->busy = false;
+                            safe->sync();
+                            safe->setStatus("Incomplete take archived. This prototype cannot reopen "
+                                            "capture archives yet. Your set envelopes are unchanged.");
+                        });
+                    } catch (const std::exception &e) {
+                        postError(safe, e.what());
+                    }
+                });
+            });
+    }
+    void discardIncomplete() {
+        if (busy || !incompleteTake)
+            return;
+        auto snapshot = incompleteTake;
+        juce::AlertWindow::showAsync(
+            juce::MessageBoxOptions{}
+                .withIconType(juce::MessageBoxIconType::QuestionIcon)
+                .withAssociatedComponent(this)
+                .withTitle("Discard incomplete take?")
+                .withMessage("This removes its retained actions. Save the incomplete take first if you "
+                             "want to keep them. Your existing set envelopes will stay unchanged.")
+                .withButton("Discard take", 1)
+                .withButton("Cancel", 0),
+            [safe = juce::Component::SafePointer<Workspace>(this), snapshot](int result) {
+                if (safe && result == 1 && safe->incompleteTake == snapshot) {
+                    safe->incompleteTake.reset();
+                    safe->setStatus("Incomplete take discarded. Existing envelopes are intact.");
+                }
+            });
+    }
     bool ensureAudio() {
         const auto error = configureAudioOutput(audio, audioConfigured);
         if (error.isNotEmpty()) {
@@ -829,6 +933,10 @@ class Workspace final : public juce::Component,
         if (capture && !editableSelection())
             return;
         stop();
+        if (capture && incompleteTake) {
+            setStatus("Save or discard the incomplete take from the Set menu before recording again.");
+            return;
+        }
         if (!ensureAudio())
             return;
         if (cursor >= project.end())
@@ -858,10 +966,12 @@ class Workspace final : public juce::Component,
         setStatus("Preparing playback and filter history...");
         auto snapshot = project;
         const auto startFrame = cursor;
+        const auto segment = ++nextSegment;
         auto safe = juce::Component::SafePointer<Workspace>(this);
-        workers.addJob([safe, snapshot = std::move(snapshot), startFrame, capture, in, out, selected] {
+        workers.addJob([safe, snapshot = std::move(snapshot), startFrame, segment, capture, in, out,
+                        selected] {
             try {
-                auto prepared = std::make_shared<Engine>(snapshot, startFrame);
+                auto prepared = std::make_shared<Playback>(snapshot, startFrame, segment);
                 if (capture)
                     prepared->arm(in, out, 7, selected);
                 juce::MessageManager::callAsync([safe, prepared = std::move(prepared), capture, in, out,
@@ -877,8 +987,8 @@ class Workspace final : public juce::Component,
                     safe->takeIn = in;
                     safe->takeOut = out;
                     safe->busy = false;
-                    safe->deviceInterrupted.store(false);
-                    safe->audio.addAudioCallback(safe.getComponent());
+                    safe->audioPlayback = std::make_unique<AudioPlayback>(*prepared);
+                    safe->audioPlayback->attach(safe->audio);
                     safe->play.setButtonText("Stop");
                     safe->record.setButtonText(capture ? "Finish take" : "Record clip");
                     safe->sync();
@@ -897,24 +1007,29 @@ class Workspace final : public juce::Component,
         if (!engine)
             return;
         Event e;
-        while (engine->captured(e)) {
+        for (unsigned budget = 16384; budget > 0 && engine->captured(e); --budget) {
             if (take.size() < 200000)
                 take.push_back(e);
             else
-                captureLost = true;
+                engine->markIncomplete(captureStorageFull);
         }
     }
     void stop() {
         if (!engine)
             return;
-        audio.removeAudioCallback(this);
+        audioPlayback->detach();
+        audioPlayback.reset();
         cursor = engine->position();
         drain();
         if (recording) {
-            if (captureLost || engine->captureFailed())
-                setStatus(
-                    "Take discarded after capture interruption or overflow. Existing envelopes are intact.");
-            else {
+            if (captureLost && !engine->captureFailed())
+                engine->markIncomplete(inputOverflow);
+            if (engine->captureFailed()) {
+                incompleteTake = std::make_shared<IncompleteTake>(
+                    IncompleteTake{engine->plan(), std::move(take), takeIn, takeOut, engine->stats()});
+                setStatus("Take incomplete. Applied actions are retained; save them from the Set menu. "
+                          "Existing envelopes are intact.");
+            } else {
                 try {
                     checkpoint();
                     commitTake(project, take, takeIn, std::min(cursor, takeOut));
@@ -925,7 +1040,9 @@ class Workspace final : public juce::Component,
                 }
             }
         } else
-            setStatus("Playback stopped.");
+            setStatus(engine->clockFailed() ? "Playback stopped because the audio device clock changed. "
+                                              "Press Play to start a new playback segment."
+                                            : "Playback stopped.");
         engine.reset();
         recording = false;
         overriding = false;
@@ -962,29 +1079,14 @@ class Workspace final : public juce::Component,
         options.resizable = false;
         preferencesWindow = options.launchAsync();
     }
-    void audioDeviceIOCallbackWithContext(const float *const *, int, float *const *output, int channels,
-                                          int samples, const juce::AudioIODeviceCallbackContext &) override {
-        if (engine && rateOK.load(std::memory_order_relaxed))
-            engine->process(output, channels, samples);
-        else
-            for (int c = 0; c < channels; ++c)
-                if (output[c])
-                    juce::FloatVectorOperations::clear(output[c], samples);
-    }
-    void audioDeviceAboutToStart(juce::AudioIODevice *d) override {
-        rateOK.store(std::abs(d->getCurrentSampleRate() - projectRate) < 0.1, std::memory_order_relaxed);
-    }
-    void audioDeviceStopped() override {
-        rateOK.store(false, std::memory_order_relaxed);
-        deviceInterrupted.store(true, std::memory_order_relaxed);
-    }
     void timerCallback() override {
         if (engine) {
             cursor = engine->position();
             drain();
-            if (deviceInterrupted.load() && recording)
-                captureLost = true;
-            if (cursor >= project.end() || !rateOK.load() || deviceInterrupted.load())
+            CallbackMetric metric;
+            for (unsigned budget = 1024; budget > 0 && engine->metric(metric); --budget)
+                lastCallback = metric;
+            if (cursor >= project.end() || engine->clockFailed() || (recording && engine->captureFailed()))
                 stop();
             else if (!recording && !overriding && !sliderGesture)
                 syncControls();
@@ -997,13 +1099,14 @@ class Workspace final : public juce::Component,
                                  .paddedLeft('0', 5) +
                              (engine && engine->peak() > 1 ? "  CLIPPING" : ""),
                          juce::dontSendNotification);
-        mode.setText(busy         ? "Preparing"
-                     : recording  ? "RECORD"
-                     : overriding ? "OVERRIDE"
-                     : engine     ? "READ"
-                                  : "EDIT",
+        mode.setText(busy             ? "Preparing"
+                     : recording      ? "RECORD"
+                     : overriding     ? "OVERRIDE"
+                     : engine         ? "READ"
+                     : incompleteTake ? "INCOMPLETE"
+                                      : "EDIT",
                      juce::dontSendNotification);
-        mode.setColour(juce::Label::textColourId, recording ? ui::danger : accent);
+        mode.setColour(juce::Label::textColourId, recording || incompleteTake ? ui::danger : accent);
         record.setColour(juce::TextButton::textColourOffId, recording ? ui::danger : ui::text);
         resume.setVisible(engine && overriding);
         if (!recording)
@@ -1030,7 +1133,11 @@ class Workspace final : public juce::Component,
     juce::ToggleButton cue;
     juce::ThreadPool workers, libraryWorker;
     juce::AudioDeviceManager audio;
-    std::shared_ptr<Engine> engine;
+    std::shared_ptr<Playback> engine;
+    std::unique_ptr<AudioPlayback> audioPlayback;
+    std::shared_ptr<const IncompleteTake> incompleteTake;
+    std::uint64_t nextSegment = 0;
+    CallbackMetric lastCallback;
     std::unique_ptr<juce::FileChooser> chooser;
     juce::Component::SafePointer<juce::DialogWindow> preferencesWindow;
     juce::File currentFile;
@@ -1047,7 +1154,6 @@ class Workspace final : public juce::Component,
     bool busy = false, dirty = false, recording = false, overriding = false, captureLost = false,
          sliderGesture = false, scanning = false, rescanPending = false, importing = false,
          audioConfigured = false;
-    std::atomic<bool> rateOK{false}, deviceInterrupted{false};
 };
 class App final : public juce::JUCEApplication {
   public:
@@ -1058,12 +1164,19 @@ class App final : public juce::JUCEApplication {
         return "0.2.0";
     }
     void initialise(const juce::String &args) override {
-        window = std::make_unique<Window>();
-        const auto path = args.trim().unquoted();
+        bool fixture = false;
+        auto path = args.trim();
+#if FADER_ENABLE_UI_FIXTURES
+        fixture = path.startsWith("--incomplete-take-fixture ");
+        if (fixture)
+            path = path.fromFirstOccurrenceOf(" ", false, false).trim();
+#endif
+        window = std::make_unique<Window>(fixture);
+        path = path.unquoted();
         if (path.isNotEmpty()) {
             auto file = juce::File::getCurrentWorkingDirectory().getChildFile(path);
             if (file.existsAsFile())
-                static_cast<Workspace *>(window->getContentComponent())->openFile(file);
+                static_cast<Workspace *>(window->getContentComponent())->openFile(file, fixture);
         }
     }
     void shutdown() override {
@@ -1078,9 +1191,9 @@ class App final : public juce::JUCEApplication {
 
   private:
     struct Window final : juce::DocumentWindow {
-        Window() : DocumentWindow("Fader - arrangement prototype", paper, allButtons) {
+        explicit Window(bool fixture) : DocumentWindow("Fader - arrangement prototype", paper, allButtons) {
             setUsingNativeTitleBar(true);
-            setContentOwned(new Workspace(), true);
+            setContentOwned(new Workspace(fixture), true);
             setResizable(true, false);
             setResizeLimits(1250, 920, 2400, 1700);
             centreWithSize(getWidth(), getHeight());

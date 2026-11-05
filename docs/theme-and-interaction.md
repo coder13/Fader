@@ -22,7 +22,7 @@ Use flat rectangular surfaces, thin borders and restrained fills. Text, selected
 
 | Surface | Persistent controls | Menu actions |
 | --- | --- | --- |
-| Workspace | Play/Stop, Record/Finish, Rewind, Undo, Save, parameter selection, Snap, Zoom | **Set ...**: New, Open, Save, Export WAV, Preferences |
+| Workspace | Play/Stop, Record/Finish, Rewind, Undo, Save, parameter selection, Snap, Zoom | **Set ...**: New, Open, Save, Export WAV, Preferences, save/discard an incomplete take |
 | Clip inspector | Name/metadata, volume, HP/LP, start and headphone cue | **Clip ...** or right-click: select displayed envelope, show/clear retake range, remove clip |
 | Envelope point | Drag the point directly | Right-click near a point: Delete automation point |
 | Library | Search, folder list, sortable metadata columns | **Library ...**: Refresh, Preferences; row right-click: Add to arrangement |
@@ -40,3 +40,5 @@ Cmd on macOS / Ctrl elsewhere: N New, O Open, S Save, Z Undo, comma Preferences,
 Release build on the existing Apple M3/macOS environment with pinned JUCE 9.0.5. All three CTest suites pass. Editor regression checks exercise actual mouse handlers: right-clicking a point preserves the curve and undo count; right-clicking the ruler does not seek. Existing clip-drag, automation ownership, save/reopen, filter and rendering checks still pass.
 
 Native inspection covered the empty arrangement, a selected waveform, browser rows and Preferences. Cmd+comma and the Set menu both opened Preferences; Shift+F10 and the Clip menu both toggled retake visibility without changing the set. A low-contrast inherited sort arrow was replaced with the shared accent. No hardware, sustained-audio or cross-platform claims were added by this UI change. An owner usability session should still check menu discoverability and frequent editing tasks.
+
+Interrupted captures show a red **INCOMPLETE** mode and an explanatory status. Valid retained actions stay separate from the saved envelopes. Recording again is blocked until they are archived or explicitly discarded. The archive currently has no reopen UI; this limitation is stated after saving. See the [capture contract](playback-clock.md).

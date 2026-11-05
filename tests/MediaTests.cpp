@@ -8,6 +8,7 @@
 using namespace fader;
 void testArrangement();
 void testAudioSetup();
+void testAudioPlayback();
 void testSourceRates();
 void check(bool pass, const char *message) {
     if (!pass)
@@ -17,6 +18,7 @@ int main() {
     juce::ScopedJuceInitialiser_GUI juce;
     testArrangement();
     testAudioSetup();
+    testAudioPlayback();
     const auto dir = juce::File::getSpecialLocation(juce::File::tempDirectory)
                          .getNonexistentChildFile("fader-test", {}, false);
     dir.createDirectory();
@@ -100,6 +102,48 @@ int main() {
                   modernReopened.clips[0].automation[0].points == modern.clips[0].automation[0].points &&
                   modernReopened.clips[0].artist == "Test artist" && modernReopened.clips[0].hasGrid,
               "clip project did not round-trip");
+        const auto originalBytes = modernFile.loadFileAsString();
+        IncompleteTake incomplete{
+            modern,
+            {{128, Param::volume, 0.2f, 0}, {128, Param::volume, 0.3f, 0}, {256, Param::highPass, 0.4f, 0}},
+            0,
+            48000,
+            PlaybackStats{.segment = 7,
+                          .inputDrops = 1,
+                          .engineFrame = 512,
+                          .projectFrame = 512,
+                          .failures = inputOverflow}};
+        const auto archiveFile = dir.getChildFile("interrupted.fadercapture");
+        saveIncompleteTake(incomplete, archiveFile);
+        const auto archive = juce::JSON::parse(archiveFile);
+        const auto actions = archive["appliedActions"];
+        check(archive["format"].toString() == "fader-incomplete-capture" && !bool(archive["complete"]) &&
+                  actions.size() == 3 && actions[0]["frame"].toString() == "128" &&
+                  double(actions[1]["value"]) > double(actions[0]["value"]) &&
+                  archive["project"]["clips"][0]["sha256"].toString() == juce::String(clip.hash),
+              "incomplete capture lost ordered actions or original source identity");
+        const auto baseline = dir.getChildFile("archive-baseline.faderset");
+        baseline.replaceWithText(juce::JSON::toString(archive["project"]));
+        check(loadProject(baseline).clips[0].automation[0].points == modern.clips[0].automation[0].points &&
+                  modernFile.loadFileAsString() == originalBytes && archiveFile.getSize() < 20000,
+              "capture archive changed baseline automation or embedded media");
+        bool rejectedArchive = false;
+        try {
+            loadProject(archiveFile);
+        } catch (...) {
+            rejectedArchive = true;
+        }
+        check(rejectedArchive, "incomplete archive opened as a complete set");
+        const auto archiveBytes = archiveFile.loadFileAsString();
+        incomplete.events.back().frame = 127; // invalid ordering must not replace good archive
+        bool rejectedCapture = false;
+        try {
+            saveIncompleteTake(incomplete, archiveFile);
+        } catch (...) {
+            rejectedCapture = true;
+        }
+        check(rejectedCapture && archiveFile.loadFileAsString() == archiveBytes,
+              "invalid capture replaced saved actions");
         const auto modernWave = dir.getChildFile("modern.wav");
         exportWav(modernReopened, modernWave, true);
         auto modernAudio = loadClip(modernWave);

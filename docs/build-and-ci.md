@@ -40,3 +40,7 @@ The core tests exercise capture/edit/replay, project invariants, filter state an
 The optional `fader_probe --audio-smoke` explicitly opens an output. It stores callback timing in a fixed array, removes the callback, then sorts and writes metrics on the calling thread. It reports actual negotiated buffer/rate and driver xrun availability; it does not establish sustained reliability or acoustic latency. Hardware work is excluded from the current issue sequence.
 
 References: [CMake preset schema supported by the minimum version](https://cmake.org/cmake/help/v3.22/manual/cmake-presets.7.html), [GitHub runner labels and image limitations](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
+
+## Synthetic UI qualification
+
+`FADER_ENABLE_UI_FIXTURES` defaults to `OFF` and is recorded in build metadata. An explicitly enabled local build accepts `--incomplete-take-fixture <synthetic.faderset>`. It skips preferences/library scanning, processes a synthetic volume action, injects a stop notification, and runs the actual stop/retained-take UI without opening a system audio device. Use only redistributable synthetic media for shared evidence. Normal builds ignore this test-only command. Reuse the existing preview application name, bundle ID and path instead of registering a new app for every issue; preserve its unsaved set before replacing it. Stable naming avoids separate app identities, but does not promise that macOS will never recheck an ad-hoc signed binary after an update.

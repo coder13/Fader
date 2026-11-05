@@ -12,5 +12,6 @@
   "cxxStandard": "@CMAKE_CXX_STANDARD@",
   "buildType": "@CMAKE_BUILD_TYPE@",
   "nativeApp": "@FADER_BUILD_APP@",
+  "uiFixtures": "@FADER_ENABLE_UI_FIXTURES@",
   "juceRevision": "@FADER_JUCE_REVISION@"
 }

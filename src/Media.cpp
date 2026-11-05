@@ -124,7 +124,8 @@ Clip loadClip(const juce::File &file) {
         static_cast<Frame>(std::floor(static_cast<double>(length) * projectRate / audio->sampleRate));
     return clip;
 }
-void saveProject(const Project &project, const juce::File &file) {
+namespace {
+juce::var projectDocument(const Project &project, const juce::File &file) {
     project.validate();
     // Relative paths must share the same physical base, even if a native chooser
     // returns a directory alias such as /tmp instead of /private/tmp on macOS.
@@ -183,11 +184,53 @@ void saveProject(const Project &project, const juce::File &file) {
         lanes.add(v);
     }
     put(root, "automation", lanes);
+    return root;
+}
+void writeDocument(const juce::var &root, const juce::File &file) {
     juce::TemporaryFile temporary(file);
     if (!temporary.getFile().replaceWithText(juce::JSON::toString(root, true)))
         fail("Could not write project");
     if (!temporary.overwriteTargetFileWithTemporary())
         fail("Could not replace project file");
+}
+} // namespace
+void saveProject(const Project &project, const juce::File &file) {
+    writeDocument(projectDocument(project, file), file);
+}
+void saveIncompleteTake(const IncompleteTake &take, const juce::File &file) {
+    if (!take.stats.failures || !take.stats.segment || take.events.size() > 200000 || take.in < 0 ||
+        take.out <= take.in || take.out > take.original.end())
+        fail("Invalid incomplete capture");
+    auto root = object();
+    put(root, "format", "fader-incomplete-capture");
+    put(root, "schemaVersion", 1);
+    put(root, "complete", false);
+    put(root, "project", projectDocument(take.original, file));
+    put(root, "segment", juce::String(take.stats.segment));
+    put(root, "rangeIn", juce::String(take.in));
+    put(root, "rangeOut", juce::String(take.out));
+    put(root, "actualProjectEnd", juce::String(take.stats.projectFrame));
+    put(root, "engineFrames", juce::String(take.stats.engineFrame));
+    put(root, "failureFlags", static_cast<int>(take.stats.failures));
+    put(root, "inputDrops", juce::String(take.stats.inputDrops));
+    put(root, "lateInputs", juce::String(take.stats.lateInputs));
+    juce::Array<juce::var> events;
+    Frame previous = -1;
+    for (const auto &event : take.events) {
+        if (event.frame < previous || event.frame < take.in || event.frame >= take.out ||
+            static_cast<unsigned>(event.param) >= 3 || event.clip >= take.original.clips.size() ||
+            !std::isfinite(event.value) || event.value < 0 || event.value > 1)
+            fail("Invalid recovered action");
+        previous = event.frame;
+        auto item = object();
+        put(item, "frame", juce::String(event.frame));
+        put(item, "parameter", static_cast<int>(event.param));
+        put(item, "value", event.value);
+        put(item, "clip", static_cast<int>(event.clip));
+        events.add(item); // ordered array preserves same-frame application order
+    }
+    put(root, "appliedActions", events);
+    writeDocument(root, file);
 }
 Project loadProject(const juce::File &file) {
     if (!file.existsAsFile() || file.getSize() > 8 * 1024 * 1024)

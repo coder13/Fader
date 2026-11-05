@@ -101,3 +101,7 @@ Do not introduce C++ plus Rust plus a web UI for the first engine experiment wit
 Pin dependency versions and record compile flags, platform, driver, and firmware in test reports. Keep deterministic synthetic audio fixtures; use redistributable material for listening tests. Build the headless renderer in CI before adding host-specific UI tests. Separate project migration tests, engine tests, and physical device qualification because none substitutes for the others.
 
 Diagnostics should record callback duration distributions, decoder starvation, event lateness, queue pressure, selected device settings, and capture completeness. Write these through bounded queues to a worker. Avoid absolute media paths and device serial numbers in ordinary shared reports.
+
+## Qualified playback clock path
+
+The native host now routes live controls through `Playback`, with distinct monotonic engine frames, project positions and restart identities. Independent UI/controller producer lanes feed a bounded audio-thread scheduler; applied capture and telemetry leave through separate queues. The native callback bridge owns device lifecycle handling. See the [implemented timing and callback contract](playback-clock.md) for queue limits, fault behavior, ownership and the remaining physical-timing limitations.

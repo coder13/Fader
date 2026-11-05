@@ -57,3 +57,7 @@ build/fader_probe_artefacts/Release/fader_probe --render build/demo/demo.faderse
 - No controller input/feedback, raw audio recording, VST hosting, transport/rate capture, MP3 export, autosave, missing-source relinking UI or complete keyboard envelope editor yet. Cue is monitoring state and is not saved automation. Audio-device selection lasts for the current session; library preferences persist.
 
 See [current evidence](experiments/2026-11-04-clip-arrangement.md), [POC qualification gates](poc-plan.md), and [ADR 0002](decisions/0002-clip-owned-automation.md). The source uses AGPL-3.0-or-later; the long-term stack/reuse choice remains provisional.
+
+## Interrupted recordings
+
+If input/capture queues overflow or the device clock changes, Fader retains captured actions separately and shows **INCOMPLETE**. Existing envelopes stay intact. Use **Set ... → Save incomplete take...** to archive those actions and the original project as `.fadercapture`, or explicitly discard them before recording again. The archive is not a complete playable set, has no audio embedded, and cannot yet be reopened through the UI. This is not autosave or crash recovery; those remain [#16](https://github.com/coder13/Fader/issues/16).

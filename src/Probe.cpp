@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#include "AudioPlayback.h"
 #include "AudioSetup.h"
 #include "Library.h"
 #include "Media.h"
@@ -6,40 +7,23 @@
 #include <chrono>
 #include <iostream>
 namespace {
-class SilentDeviceProbe final : public juce::AudioIODeviceCallback {
-  public:
-    SilentDeviceProbe() : engine(makeProject()) {}
-    void audioDeviceIOCallbackWithContext(const float *const *, int, float *const *out, int channels,
-                                          int frames, const juce::AudioIODeviceCallbackContext &) override {
-        const auto start = std::chrono::steady_clock::now();
-        engine.process(out, channels, frames);
-        if (count < times.size())
-            times[count++] =
-                std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - start).count();
+fader::Project silentProject() {
+    fader::Project project;
+    project.perClip = true;
+    auto audio = std::make_shared<fader::AudioData>();
+    for (auto &channel : audio->samples)
+        channel.assign(48000 * 4, 0.1f);
+    for (auto &clip : project.clips) {
+        clip.audio = audio;
+        clip.length = 48000 * 4;
+        clip.automation[0].initial = 0;
+        clip.automation[0].points = {{0, 0}}; // silent physical output
+        clip.automation[1].points = {{0, 0.1f}, {192000, 0.6f}};
+        clip.automation[2].points = {{0, 0.9f}, {192000, 0.4f}};
     }
-    void audioDeviceAboutToStart(juce::AudioIODevice *) override {}
-    void audioDeviceStopped() override {}
-    static fader::Project makeProject() {
-        fader::Project project;
-        project.perClip = true;
-        auto audio = std::make_shared<fader::AudioData>();
-        for (auto &channel : audio->samples)
-            channel.assign(48000 * 4, 0.1f);
-        for (auto &clip : project.clips) {
-            clip.audio = audio;
-            clip.length = 48000 * 4;
-            clip.automation[0].initial = 0;
-            clip.automation[0].points = {{0, 0}}; // silent physical output
-            clip.automation[1].points = {{0, 0.1f}, {192000, 0.6f}};
-            clip.automation[2].points = {{0, 0.9f}, {192000, 0.4f}};
-        }
-        project.curves[0].initial = project.curves[1].initial = 0; // silent physical output
-        return project;
-    }
-    fader::Engine engine;
-    std::array<double, 4096> times{};
-    std::size_t count = 0;
-};
+    project.curves[0].initial = project.curves[1].initial = 0; // silent physical output
+    return project;
+}
 void audioSmoke() {
     juce::AudioDeviceManager manager;
     const auto error = fader::configureAudioOutput(manager);
@@ -48,24 +32,32 @@ void audioSmoke() {
     auto *device = manager.getCurrentAudioDevice();
     if (!device || device->getCurrentSampleRate() != 48000)
         throw std::runtime_error("48 kHz device unavailable");
-    SilentDeviceProbe callback;
+    auto playback = std::make_unique<fader::Playback>(silentProject(), 0, 1);
+    fader::AudioPlayback callback(*playback);
     const int before = device->getXRunCount();
-    manager.addAudioCallback(&callback);
+    callback.attach(manager);
     juce::Thread::sleep(2000);
-    manager.removeAudioCallback(&callback);
+    callback.detach();
     const int after = device->getXRunCount();
-    if (callback.count == 0)
+    const auto stats = playback->stats();
+    std::vector<double> times;
+    fader::CallbackMetric metric;
+    while (playback->metric(metric))
+        times.push_back(double(metric.executionNs) / 1000);
+    if (times.empty())
         throw std::runtime_error("No device callbacks received");
-    std::sort(callback.times.begin(), callback.times.begin() + static_cast<std::ptrdiff_t>(callback.count));
+    std::sort(times.begin(), times.end());
     auto *result = new juce::DynamicObject();
     juce::var json(result);
     result->setProperty("sampleRate", device->getCurrentSampleRate());
     result->setProperty("bufferFrames", device->getCurrentBufferSizeSamples());
-    result->setProperty("callbacks", static_cast<int>(callback.count));
+    result->setProperty("callbacks", static_cast<int>(stats.blocks));
     result->setProperty("xrunDelta", before < 0 || after < 0 ? -1 : after - before);
     result->setProperty("reportedOutputLatencyFrames", device->getOutputLatencyInSamples());
-    result->setProperty("coreP99Microseconds", callback.times[callback.count * 99 / 100]);
-    result->setProperty("coreMaxMicroseconds", callback.times[callback.count - 1]);
+    result->setProperty("retainedMetricP99Microseconds", times[times.size() * 99 / 100]);
+    result->setProperty("playbackMaxMicroseconds", double(stats.maxCallbackNs) / 1000);
+    result->setProperty("droppedMetrics", static_cast<int>(stats.metricDrops));
+    result->setProperty("failureFlags", static_cast<int>(stats.failures));
     result->setProperty("scope",
                         "2-second silent device smoke test; no acoustic or sustained-load qualification");
     manager.closeAudioDevice();

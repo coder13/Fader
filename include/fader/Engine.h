@@ -95,7 +95,8 @@ template <class T, std::size_t N> class Queue {
 
 class Engine {
   public:
-    static_assert(std::atomic<Frame>::is_always_lock_free && std::atomic<float>::is_always_lock_free);
+    static_assert(std::atomic<Frame>::is_always_lock_free && std::atomic<float>::is_always_lock_free &&
+                  std::atomic<bool>::is_always_lock_free && std::atomic<std::uint64_t>::is_always_lock_free);
     // Construct/seek on control thread while callback detached. Project immutable in process().
     explicit Engine(Project, Frame start = 0);
     bool command(Event e) noexcept {

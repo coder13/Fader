@@ -5,6 +5,10 @@
 #include <cmath>
 #include <cstdlib>
 #include <fader/Engine.h>
+#include <fader/Playback.h>
+#ifdef _WIN32
+#include <malloc.h>
+#endif
 #include <iostream>
 #include <new>
 
@@ -37,8 +41,55 @@ void operator delete[](void *p, std::size_t) noexcept {
     ::operator delete(p);
 }
 
+void *operator new(std::size_t size, std::align_val_t alignment) {
+    if (checking)
+        ++heapCalls;
+    void *p = nullptr;
+#ifdef _WIN32
+    p = _aligned_malloc(std::max(size, std::size_t{1}), static_cast<std::size_t>(alignment));
+#else
+    if (posix_memalign(&p, static_cast<std::size_t>(alignment), std::max(size, std::size_t{1})) != 0)
+        p = nullptr;
+#endif
+    if (p)
+        return p;
+    throw std::bad_alloc();
+}
+void *operator new[](std::size_t size, std::align_val_t alignment) {
+    return ::operator new(size, alignment);
+}
+void operator delete(void *p, std::align_val_t) noexcept {
+    if (checking)
+        ++heapCalls;
+#ifdef _WIN32
+    _aligned_free(p);
+#else
+    std::free(p);
+#endif
+}
+void operator delete[](void *p, std::align_val_t alignment) noexcept {
+    ::operator delete(p, alignment);
+}
+void operator delete(void *p, std::size_t, std::align_val_t alignment) noexcept {
+    ::operator delete(p, alignment);
+}
+void operator delete[](void *p, std::size_t, std::align_val_t alignment) noexcept {
+    ::operator delete(p, alignment);
+}
+
 int main() {
     using namespace fader;
+    checking = true;
+    auto *ordinary = ::operator new(8);
+    ::operator delete(ordinary);
+    auto *aligned = ::operator new(64, std::align_val_t{64});
+    ::operator delete(aligned, std::align_val_t{64});
+    checking = false;
+    if (heapCalls != 4) {
+        std::cerr << "FAIL: allocation instrumentation self-check\n";
+        return 1;
+    }
+    heapCalls = 0;
     Project project;
     project.perClip = true;
     auto audio = std::make_shared<AudioData>();
@@ -82,12 +133,55 @@ int main() {
             sum += std::abs(output[0][50]);
         }
     }
-    if (heapCalls || sum == 0) {
-        std::cerr << "FAIL: ordinary heap use or silent timing fixture\n";
+
+    unsigned captured = 0;
+    for (int batch = 0; batch < 200; ++batch) {
+        auto playback = std::make_unique<Playback>(project, 4800, 1);
+        playback->arm(4800, 48000);
+        playback->deviceStarted(projectRate);
+        for (int block = 0; block < 100; ++block) {
+            const auto now = HostTime(1000000000) + HostTime(block * 128) * 1000000000 / projectRate;
+            playback->submit(InputSource::ui, {1, now, Param::volume, 0.6f, 0});
+            playback->submit(InputSource::controller, {1, now + 200000, Param::lowPass, 0.8f, 1});
+            checking = true;
+            playback->process(pointers, 4, 128, now);
+            checking = false;
+            Event event;
+            while (playback->captured(event))
+                ++captured;
+            CallbackMetric metric;
+            while (playback->metric(metric)) {
+            }
+            sum += std::abs(output[0][50]);
+        }
+        if (playback->captureFailed()) {
+            std::cerr << "FAIL: playback fixture lost actions\n";
+            return 1;
+        }
+    }
+    // Saturated fixed scheduler/capture/telemetry paths must stay allocation-free too.
+    auto pressure = std::make_unique<Playback>(project, 0, 2);
+    pressure->arm(0, 48000);
+    pressure->deviceStarted(projectRate);
+    for (int batch = 0; batch < 1100; ++batch) {
+        if (batch < 6)
+            for (unsigned i = 0; i < 4096; ++i)
+                pressure->submit(InputSource::controller, {2, 1000000000, Param::volume, 0.5f, 0});
+        checking = true;
+        pressure->process(pointers, 4, 1, 1000000000);
+        checking = false;
+    }
+    checking = true;
+    pressure->deviceStopped();
+    pressure->process(pointers, 4, 128, 1000000000);
+    checking = false;
+    if (heapCalls || sum == 0 || captured != 40000) {
+        std::cerr << "FAIL: C++ heap use, missing capture or silent timing fixture\n";
         return 1;
     }
     std::sort(times.begin(), times.end());
-    std::cout << "PASS: 20000 core process calls, no ordinary new/delete; two clips + volume/filters + cue\n"
+    std::cout << "PASS: 20000 Engine + 20000 Playback calls and queue pressure, no ordinary/aligned "
+                 "new/delete; two clips + volume/filters + cue\n"
               << "microseconds p50=" << times[10000] << " p95=" << times[19000] << " p99.9=" << times[19980]
               << " max=" << times.back() << '\n'
               << "Synthetic offline timing only; not device latency or sustained audio qualification.\n";

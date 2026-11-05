@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#include "AudioPlayback.h"
 #include "AudioSetup.h"
 #include <memory>
 #include <stdexcept>
@@ -165,4 +166,55 @@ void testAudioSetup() {
     Manager mono(DeviceOptions{.channels = 1});
     require(fader::configureAudioOutput(mono).contains("Stereo output"),
             "mono-only device accepted for stereo engine");
+}
+
+void testAudioPlayback() {
+    using namespace fader;
+    Project project;
+    project.perClip = true;
+    project.clips.resize(1);
+    auto data = std::make_shared<AudioData>();
+    for (auto &channel : data->samples)
+        channel.assign(1024, 0.1f);
+    project.clips[0].audio = data;
+    project.clips[0].length = 1024;
+    std::array<float, 128> left{}, right{};
+    float *out[]{left.data(), right.data()};
+    for (int failure = 0; failure < 4; ++failure) {
+        Manager manager;
+        require(configureAudioOutput(manager).isEmpty(), "fixture setup failed");
+        auto playback = std::make_unique<Playback>(project, 0, 1);
+        playback->arm(0, 1024);
+        AudioPlayback callback(*playback);
+        callback.attach(manager);
+        playback->submit(InputSource::ui, {1, monotonicTime(), Param::volume, 0.4f, 0});
+        callback.audioDeviceIOCallbackWithContext(nullptr, 0, out, 2, 128, {});
+        require(playback->position() == 128, "native bridge did not process");
+        if (failure == 1)
+            manager.getCurrentAudioDevice()->stop(); // notification before UI timer or detach
+        else if (failure == 2) {
+            auto setup = manager.getAudioDeviceSetup();
+            setup.bufferSize = 256; // same-rate device restart still changes the clock segment
+            require(manager.setAudioDeviceSetup(setup, true).isEmpty(), "fixture reconfigure failed");
+        } else if (failure == 3)
+            callback.audioDeviceError("synthetic backend fault");
+        callback.detach(); // synthetic stop must not mask a preceding real stop
+        require(playback->clockFailed() == (failure != 0), "detach masked or manufactured a device fault");
+        Event event;
+        require(playback->captured(event) && event.frame == 0 && !playback->captured(event),
+                "detach discarded the valid capture prefix");
+        if (failure) {
+            left.fill(1);
+            callback.audioDeviceIOCallbackWithContext(nullptr, 0, out, 2, 128, {});
+            require(playback->position() == 128 && left[0] == 0 && left.back() == 0,
+                    "faulted native callback continued playing");
+        }
+    }
+    Manager wrongRate(DeviceOptions{.actualRate = 44100});
+    configureAudioOutput(wrongRate);
+    auto playback = std::make_unique<Playback>(project, 0, 2);
+    AudioPlayback callback(*playback);
+    callback.attach(wrongRate);
+    require(playback->clockFailed(), "native callback accepted a changed sample rate");
+    callback.detach();
 }
