@@ -1,6 +1,6 @@
 # Mac and S4 MK3 proof of concept
 
-Status: Proposed experiments and acceptance criteria. Updated 2026-11-04. **No tests below have been run.**
+Status: Proposed experiments and acceptance criteria. Updated 2026-11-04. **The first software experiment exercises parts of these gates; the complete POC has not passed.** See [2026-11-04 native prototype evidence](experiments/2026-11-04-native-prototype.md) for measured results and remaining work. The user authorized proceeding without the S4 hardware for now.
 
 ## Demonstration that counts as success
 

@@ -2,7 +2,7 @@
 
 An open-source DJ application for preparing, performing, editing, and exporting sets. The central feature is a performance that remains editable: record musical actions and automation, revise a transition on a timeline, and render the finished set without performing it again.
 
-**Current stage: research and design.** No audio engine, controller integration, benchmark, or executable POC has been built or tested. Research reviewed on 2026-11-04. Fader is the working project name.
+**Current stage: first native software prototype.** This branch adds a C++20/JUCE app with two waveform lanes, MP3/WAV import, editable gain/crossfader automation, recording/retakes, set persistence, and WAV export. See the [quickstart](docs/poc-quickstart.md) and [measured results and limitations](docs/experiments/2026-11-04-native-prototype.md). The complete Mac/S4 POC has not passed: controller integration and sustained performance qualification remain pending. Fader is the working project name.
 
 ## Start here
 
@@ -38,6 +38,8 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 
 ## Current recommendation
 
+The user requested a POC and authorized continuing without hardware. The native code on this branch is a bounded experiment in capture/edit/replay, not a final decision to reject reuse or commit to a production stack. The research recommendations below remain open.
+
 **Evaluate adoption or a focused contribution before building another audio engine.** The [deeper audit](docs/research/competitive-workflow-audit.md) identifies GlideMix as the leading arranger-reuse investigation and Mixxx as the strongest documented S4 performance foundation. Density and DJ.Studio are important workflow benchmarks; MixCanvas and a focused DAW template are additional alternatives. None has passed the user's complete workflow here. Published UI/manual evidence is not hands-on qualification.
 
 The next proposed milestone is an adoption/reuse decision: perform or record one transition, correct one parameter, replace a range, move the transition, save/reopen and export. Record exact blockers. Personal adoption of commercial software may solve the immediate workflow but does not replace the confirmed open-source product requirement.
@@ -52,4 +54,4 @@ This repository is the source of truth for design. Each implementation issue sho
 
 Record experiments under `docs/experiments/` with date, commit, dependency versions, machine/OS, firmware, settings, measurements, and conclusion. Keep research claims linked to primary sources and recheck changing claims at the point of adoption. Preserve rejected alternatives and their reasons in decision records. Keep hardware support claims tied to completed qualification reports.
 
-Repository: [coder13/Fader](https://github.com/coder13/Fader). The user authorizes direct commits and pushes of documentation updates to `main`; see [working conventions](AGENTS.md). GitHub issues have not been published; the local backlog is ready for review and publication. No project license file has been selected yet.
+Repository: [coder13/Fader](https://github.com/coder13/Fader). The user authorizes direct commits and pushes of documentation updates to `main`; see [working conventions](AGENTS.md). GitHub issues have not been published; the local backlog is ready for review and publication. The experimental implementation carries AGPL-3.0-or-later in [LICENSE](LICENSE), compatible with the chosen JUCE route. The user deferred license preferences; this does not record a final product licensing decision.

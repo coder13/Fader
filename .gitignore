@@ -1,0 +1,7 @@
+/build*/
+/.deps/
+/.DS_Store
+*.faderset
+*.wav
+*.mp3
+!tests/fixtures/
