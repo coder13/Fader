@@ -116,6 +116,8 @@ Source: [official homepage](https://www.audacityteam.org/).
 
 The [current hero image](https://www.audacityteam.org/_astro/hero-surface-studio-darkened.Bg6vZ4zE_Z1E7Af.webp) is a perspective product mockup showing colored clip lanes, a shared ruler, track controls and transport. It supports the waveform-first direction but is not a detailed interaction or accessibility reference. “Audacity-like” should mean readable time, clips and editing affordances, rather than copying a remembered version's appearance.
 
+Follow-up: the [Audacity 4 video study](audacity-4-design-lessons.md) adds a full-transcript review and inspection of design demonstrations. Those video frames are separate from this atlas's original 33-image count. The user confirmed the redesign lessons as Fader's primary UI reference.
+
 ## What the images cannot establish
 
 No image establishes latency, audio quality, exact hardware support, keyboard accessibility, undo correctness, crash recovery or live/export parity. Several illustrations omit the state needed to evaluate retakes. Use the [common-task protocol](competitive-workflow-audit.md#proposed-adoption-and-reuse-gate) to close those gaps. A missing screenshot is not evidence that a feature is missing, and a drawn control is not evidence that it works.

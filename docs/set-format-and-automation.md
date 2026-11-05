@@ -89,7 +89,11 @@ Later touch mode follows contact/release where the device supplies it. Non-touch
 
 ## Editing and ownership
 
+The [Audacity 4 UI direction](research/audacity-4-design-lessons.md) does not change capture semantics. Automation visibility is presentation state, separate from Read/Override/Record and armed targets. Workspace changes must not alter transport, recording, routing, undo history or project data.
+
 Clip-owned automation moves with a clip and trims non-destructively with it. Bus/master automation remains in the set timeline. The POC records mixer gain on two fixed buses, with that ownership visible. Later operations can explicitly include bus automation when moving a transition; avoid silently attaching every parameter to whichever clip happened to play at that instant.
+
+Deletion leaves a gap by default. Future ripple commands must declare their lane/set scope and apply one undoable transaction across affected clips, curves, tempo/markers and take boundaries; unsupported combinations remain unavailable with an explanation. Clip grouping is explicit and does not infer membership from overlap or automatically capture bus automation. These are later editing contracts, not new POC scope. Practice-loop bounds and export bounds remain distinct; using the loop for export requires an explicit choice.
 
 Keep captured dense points until the take is safe. Editing a captured point preserves step-target semantics unless the user explicitly changes interpolation; the editor must show which mode is active. A worker can derive a simpler editable curve under a declared error bound in parameter units and audible output; preserve endpoints, steps, and sharp gestures. Never simplify on the audio callback. Undo restores the original capture.
 

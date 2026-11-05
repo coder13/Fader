@@ -11,6 +11,7 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 | [Build and CI](docs/build-and-ci.md) | Clean-checkout presets, pinned dependencies and test evidence |
 | [Competitive workflow audit](docs/research/competitive-workflow-audit.md) | Deeper comparison, source evidence, adoption/reuse decision gate |
 | [UI evidence atlas](docs/research/ui-evidence-atlas.md) | 33 inspected published UI images/crops across nine products |
+| [Audacity 4 design lessons](docs/research/audacity-4-design-lessons.md) | Video/transcript research translated into Fader interaction proposals |
 | [Product and UX](docs/product-and-ux.md) | User workflows, Audacity-inspired interface, feature priorities |
 | [Theme and interaction](docs/theme-and-interaction.md) | Flat dark palette, shared controls, context menus and shortcuts |
 | [Architecture](docs/architecture.md) | Real-time engine, editor, hardware, and export boundaries |
@@ -33,7 +34,7 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 - Initial hardware is **Native Instruments Traktor Kontrol S4 MK3**.
 - Arrange local audio on a scrollable grid; move clips in time and between tracks without changing their length. Draw independent volume, high-pass and low-pass automation on each waveform.
 - Use a Traktor-inspired table with title, artist, BPM, key and other metadata. Configure the DJ subfolder in Preferences and import existing Traktor metadata read-only.
-- Use a flat, dark, clean interface informed by Traktor and Audacity. Keep common editing controls visible; put occasional actions in discoverable context menus.
+- Use a flat, dark, clean interface informed by Traktor and the Audacity 4 redesign: understandable defaults, direct and reversible editing, discoverable controls, and accessible presentation. Keep common editing controls visible; put occasional actions in discoverable context menus.
 - Use the existing `~/Music` library directly: MP3/WAV import in the completed POC, broader common DJ formats and collection-wide qualification for the usable alpha.
 - Record a performance as automation, optionally alongside audio; record replacement sections of a prepared set.
 - Save portable, versioned set projects and export WAV, MP3, and further formats in stages.
