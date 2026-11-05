@@ -22,9 +22,13 @@ parser.add_argument("--seconds", type=int, default=3600)
 parser.add_argument("--block", type=int, choices=(128, 256), default=128)
 parser.add_argument("--scheduler", choices=("normal", "realtime"), default="normal")
 parser.add_argument("--cpu-diagnostics", action="store_true", help="Instrument thread CPU time; cannot qualify hour performance")
+parser.add_argument("--timeline-seconds", type=int, help="Full project length for a CPU-only short diagnostic")
 args = parser.parse_args()
 if not 1 <= args.seconds <= 3600:
     parser.error("--seconds must be 1..3600")
+if args.timeline_seconds is not None and (
+        not args.cpu_diagnostics or not args.seconds <= args.timeline_seconds <= 3600):
+    parser.error("expanded timeline requires --cpu-diagnostics and --seconds <= --timeline-seconds <= 3600")
 
 
 def git(*command):
@@ -60,6 +64,7 @@ metadata = {
     "blockFrames": args.block,
     "scheduler": args.scheduler,
     "cpuDiagnostics": args.cpu_diagnostics,
+    "diagnosticTimelineSeconds": args.timeline_seconds or 0,
     "scope": "Software sink and offscreen production painter. No audio/MIDI device or native UI interaction.",
 }
 (args.output / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
@@ -96,6 +101,8 @@ try:
         command.append("--realtime")
     if args.cpu_diagnostics:
         command.append("--cpu-diagnostics")
+    if args.timeline_seconds is not None:
+        command.append(f"--timeline-seconds={args.timeline_seconds}")
     timed = run("timed", command)
     metadata["timedPhaseFinishedUtc"] = datetime.now(timezone.utc).isoformat()
     captured = args.fixtures / f"stress-captured-{args.block}.faderset"

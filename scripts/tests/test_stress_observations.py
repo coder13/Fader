@@ -72,6 +72,49 @@ def valid_report():
 
 
 class ObservationTests(unittest.TestCase):
+    def test_expanded_timeline_declarations_and_exclusion(self):
+        data = valid_report()
+        data.update(requestedSeconds=2, diagnosticTimelineSeconds=4, projectFrames=192000,
+                    storedAutomationPoints=102, callbacks=750)
+        data['callbackExecution']['samples'] = 750
+        data['timingTrace'].update(callbackSamples=750, hostSamples=750)
+        data['timingTrace']['blocksEndingAt4096FrameBoundary']['samples'] = 23
+        data['timingTrace']['otherBlocks']['samples'] = 727
+        data['cpuDiagnostics']['callbackCpuSamples'] = 750
+        data['cpuDiagnostics']['enclosingCallbackThreadCpu']['samples'] = 750
+        self.assertEqual(CHECKER.check_observations(data)['workloadDeclaration']['projectFrames'], 192000)
+        normal = copy.deepcopy(data)
+        normal.update(diagnosticTimelineSeconds=0, projectFrames=96000, storedAutomationPoints=54,
+                      cpuDiagnosticsEnabled=False, performanceQualificationEligible=True, hourTargetPassed=True)
+        with self.assertRaises(CHECKER.InvalidObservation):
+            CHECKER.check_observations(normal)
+        for key, value in [('storedAutomationPoints', 54), ('projectFrames', 96000),
+                           ('diagnosticTimelineSeconds', 1), ('diagnosticTimelineSeconds', 3601),
+                           ('cpuDiagnosticsEnabled', False), ('callbacks', 749)]:
+            with self.subTest(key=key, value=value):
+                bad = copy.deepcopy(data)
+                bad[key] = value
+                with self.assertRaises(CHECKER.InvalidObservation):
+                    CHECKER.check_observations(bad)
+
+    def test_thread_policy_brackets_allow_pre_origin_but_reject_corruption(self):
+        data = valid_report()
+        names = ['painterBeforeActivity', 'painterDuringActivity', 'callbackAtStart',
+                 'callbackAtEnd', 'painterAtEnd']
+        data['threadPolicySnapshots'] = {name: {'supported': False,
+            'beforeNanosecondsFromStart': i * 100 - 300,
+            'afterNanosecondsFromStart': i * 100 - 250, 'queryWallNanoseconds': 50}
+            for i, name in enumerate(names)}
+        self.assertEqual(CHECKER.check_observations(data)['threadPolicySnapshots']['checked'], 5)
+        for name, key, value in [('painterBeforeActivity', 'queryWallNanoseconds', 0),
+                                  ('callbackAtEnd', 'beforeNanosecondsFromStart', -500),
+                                  ('painterAtEnd', 'afterNanosecondsFromStart', False)]:
+            with self.subTest(name=name, key=key):
+                bad = copy.deepcopy(data)
+                bad['threadPolicySnapshots'][name][key] = value
+                with self.assertRaises(CHECKER.InvalidObservation):
+                    CHECKER.check_observations(bad)
+
     def test_valid_rows_and_repeated_global_maximum(self):
         result = CHECKER.check_observations(valid_report())
         self.assertTrue(result['arithmeticChecksPassed'])

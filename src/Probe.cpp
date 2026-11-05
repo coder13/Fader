@@ -8,8 +8,10 @@
 #include "StreamQualification.h"
 #include "StressQualification.h"
 #include <algorithm>
+#include <charconv>
 #include <chrono>
 #include <iostream>
+#include <string_view>
 #if defined(__APPLE__) || defined(__linux__)
 #include <sys/resource.h>
 #endif
@@ -152,20 +154,29 @@ int main(int argc, char **argv) {
             if (argc < 5)
                 throw std::runtime_error("Expected fixture folder, duration and block size");
             bool realtime = false, cpuDiagnostics = false;
+            int diagnosticTimelineSeconds = 0;
             for (int i = 5; i < argc; ++i) {
                 const std::string option(argv[i]);
                 if (option == "--realtime" && !realtime)
                     realtime = true;
                 else if (option == "--cpu-diagnostics" && !cpuDiagnostics)
                     cpuDiagnostics = true;
-                else
+                else if (option.starts_with("--timeline-seconds=") && diagnosticTimelineSeconds == 0) {
+                    const auto value =
+                        std::string_view(option).substr(std::string_view("--timeline-seconds=").size());
+                    const auto parsed =
+                        std::from_chars(value.data(), value.data() + value.size(), diagnosticTimelineSeconds);
+                    if (parsed.ec != std::errc{} || parsed.ptr != value.data() + value.size() ||
+                        diagnosticTimelineSeconds <= 0)
+                        throw std::runtime_error("Expected a positive integer for --timeline-seconds");
+                } else
                     throw std::runtime_error("Unknown or duplicate software stress option");
             }
             const auto duration = std::stoi(argv[3]);
             const auto block = std::stoi(argv[4]);
             auto result =
                 qualifySoftwareStress(juce::File::getCurrentWorkingDirectory().getChildFile(argv[2]),
-                                      duration, block, realtime, cpuDiagnostics);
+                                      duration, block, realtime, cpuDiagnostics, diagnosticTimelineSeconds);
             std::cout << juce::JSON::toString(result, true) << '\n';
             if (!bool(result["softwareIntegrityPassed"]))
                 return 1;

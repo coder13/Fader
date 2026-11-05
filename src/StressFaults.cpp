@@ -5,6 +5,7 @@
 #include <cmath>
 #include <fader/PlaybackPreparation.h>
 #include <thread>
+#include <utility>
 namespace {
 using namespace fader;
 void require(bool pass, const char *message) {
@@ -384,5 +385,51 @@ juce::var stressSelfTest() {
             "Painter context did not cover its actual frames");
     result->setProperty("cpuDiagnosticSmoke", diagnostic);
     result->setProperty("cpuAndPaintModelPassed", true);
+    // The project remains longer than the timed host. In particular the
+    // untouched second clip retains every point beyond the two-second run.
+    for (const auto &[cpuMode, timeline] :
+         {std::pair{false, 4}, std::pair{true, -1}, std::pair{true, 1}, std::pair{true, 3601}}) {
+        bool rejectedBeforeImport = false;
+        try {
+            qualifySoftwareStress(root.getChildFile("not-a-fixture-folder"), 2, 128, false, cpuMode,
+                                  timeline);
+        } catch (const std::exception &error) {
+            rejectedBeforeImport = juce::String(error.what()).contains("Diagnostic timeline requires");
+        }
+        require(rejectedBeforeImport,
+                "Invalid expanded timeline reached source import or could qualify performance");
+    }
+    auto expanded = qualifySoftwareStress(root, 2, 128, false, true, 4);
+    require(bool(expanded["softwareIntegrityPassed"]) &&
+                juce::int64(expanded["projectFrames"]) == 4 * projectRate &&
+                int(expanded["diagnosticTimelineSeconds"]) == 4 &&
+                juce::int64(expanded["storedAutomationPoints"]) == 6 * 17 &&
+                !bool(expanded["performanceQualificationEligible"]) && !bool(expanded["hourTargetPassed"]) &&
+                bool(expanded["cpuDiagnostics"]["complete"]),
+            "Expanded timeline changed its density, lost integrity or could qualify an hour");
+    const auto saved = loadProject(root.getChildFile("stress-captured-128.faderset"));
+    require(saved.clips.size() == 2 && saved.clips[0].length == 4 * projectRate &&
+                saved.clips[1].length == 4 * projectRate,
+            "Short diagnostic resized the full project clips");
+    for (const auto &curve : saved.clips[1].automation)
+        require(curve.points.size() == 17 && curve.points.back().frame == 4 * projectRate,
+                "Short diagnostic discarded untouched points after its timed interval");
+    const auto policy = expanded["threadPolicySnapshots"];
+    for (const auto *name : {"painterBeforeActivity", "painterDuringActivity", "callbackAtStart",
+                             "callbackAtEnd", "painterAtEnd"}) {
+        const auto sample = policy[name];
+        require(juce::int64(sample["beforeNanosecondsFromStart"]) <=
+                    juce::int64(sample["afterNanosecondsFromStart"]),
+                "Thread policy query has a backwards wall bracket");
+#if JUCE_MAC
+        require(bool(sample["supported"]) && int(sample["pthreadQosStatus"]) == 0 &&
+                    int(sample["machPortReleaseStatus"]) == 0,
+                "Mac thread policy snapshot failed or leaked its thread port");
+#else
+        require(!bool(sample["supported"]), "Non-Mac host claimed Mac policy queries");
+#endif
+    }
+    result->setProperty("fullTimelineDiagnosticSmoke", expanded);
+    result->setProperty("expandedTimelineGuardsPassed", true);
     return json;
 }

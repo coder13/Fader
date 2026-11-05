@@ -152,5 +152,7 @@ python3 scripts/run-software-stress.py \
 ```
 
 Run the 256-frame case into a new evidence directory.
+The [full-timeline CPU diagnostic candidate](experiments/2026-11-05-full-timeline-painter-diagnostic.md) can keep the full project during a shorter observation.
+Its instrumentation and shorter duration exclude it from hour qualification.
 Run one host at a time and record other machine activity.
 The peak process memory measurement includes capture commit and project save after the timed interval.

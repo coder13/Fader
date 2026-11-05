@@ -100,6 +100,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/verify-stress-observations.py build/native/Testing/Temporary/LastTest.log --ctest-log --key cpuDiagnosticSmoke --output build/native/stress-cpu-observations.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/verify-stress-observations.py build/native/Testing/Temporary/LastTest.log --ctest-log --key fullTimelineDiagnosticSmoke --output build/native/stress-full-timeline-observations.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Record built application
         run: |
           $app = "build/native/Fader_artefacts/Release/Fader.exe"
@@ -154,6 +156,7 @@ jobs:
         run: |
           python3 scripts/verify-stress-observations.py build/native/Testing/Temporary/LastTest.log --ctest-log --key timedSmoke --output build/native/stress-wall-observations.json
           python3 scripts/verify-stress-observations.py build/native/Testing/Temporary/LastTest.log --ctest-log --key cpuDiagnosticSmoke --output build/native/stress-cpu-observations.json
+          python3 scripts/verify-stress-observations.py build/native/Testing/Temporary/LastTest.log --ctest-log --key fullTimelineDiagnosticSmoke --output build/native/stress-full-timeline-observations.json
       - name: Verify application bundle
         run: |
           codesign --force --deep --sign - build/native/Fader_artefacts/Release/Fader.app

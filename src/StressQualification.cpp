@@ -2,6 +2,7 @@
 #include "StressQualification.h"
 #include "Arrangement.h"
 #include "Library.h"
+#include "StressThreadPolicy.h"
 #include "StressTiming.h"
 #include <algorithm>
 #include <bit>
@@ -266,12 +267,18 @@ class VirtualCallbackThread final : public juce::Thread {
 } // namespace
 
 juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int blockFrames, bool realtimeThread,
-                                bool cpuDiagnostics) {
+                                bool cpuDiagnostics, int diagnosticTimelineSeconds) {
     require(seconds >= 1 && seconds <= 3600 && (blockFrames == 128 || blockFrames == 256),
             "Stress duration must be 1..3600 seconds and block size 128 or 256");
+    require(diagnosticTimelineSeconds == 0 ||
+                (cpuDiagnostics && diagnosticTimelineSeconds >= seconds && diagnosticTimelineSeconds <= 3600),
+            "Diagnostic timeline requires CPU diagnostics and a duration from timed seconds through 3600");
     const auto importing = monotonicTime();
     const Frame frames = (Frame(seconds) * projectRate + blockFrames - 1) / blockFrames * blockFrames;
-    auto project = makeStressProject(folder, frames);
+    const Frame projectFrames = diagnosticTimelineSeconds == 0
+                                    ? frames
+                                    : std::max(frames, Frame(diagnosticTimelineSeconds) * projectRate);
+    auto project = makeStressProject(folder, projectFrames);
     const auto analysis = folder.getChildFile("analysis.wav");
     require(analysis.existsAsFile(), "Stress analysis fixture is missing");
     Preferences prefs;
@@ -325,9 +332,15 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
     std::string backgroundError;
     std::exception_ptr consumerError;
     std::vector<std::thread> workers;
+    qualification::ThreadPolicySnapshot painterBeforeActivity, painterDuringActivity, painterAtEnd;
+    qualification::ThreadPolicySnapshot callbackAtStart, callbackAtEnd;
+    if (cpuDiagnostics)
+        painterBeforeActivity = qualification::readThreadPolicy();
     // End the activity after StopOnExit joins the virtual callback on every exit.
     // The silent sink uses the native bridge's user-requested process activity.
     juce::ScopedLowPowerModeDisabler playbackActivity;
+    if (cpuDiagnostics)
+        painterDuringActivity = qualification::readThreadPolicy();
     struct StopOnExit {
         std::atomic<bool> &done;
         std::vector<std::thread> &workers;
@@ -427,6 +440,8 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
         }
     });
     const auto callbackBody = [&] {
+        if (cpuDiagnostics)
+            callbackAtStart = qualification::readThreadPolicy();
         std::array<std::array<float, 256>, 4> output{};
         float *pointers[]{output[0].data(), output[1].data(), output[2].data(), output[3].data()};
         for (Frame at = 0; at < frames && !done.load(); at += blockFrames) {
@@ -459,6 +474,8 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
         }
         if (!done.load())
             sleepUntil(endTime); // Include the final virtual sink buffer.
+        if (cpuDiagnostics)
+            callbackAtEnd = qualification::readThreadPolicy();
         done.store(true);
     };
     VirtualCallbackThread realtime(callbackBody, done);
@@ -525,6 +542,8 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
         worker.join();
     realtime.waitForThreadToExit(-1);
     const auto finished = monotonicTime();
+    if (cpuDiagnostics)
+        painterAtEnd = qualification::readThreadPolicy();
     if (consumerError)
         std::rethrow_exception(consumerError);
     std::map<std::uint32_t, const InputRecord *> inputByValue;
@@ -610,9 +629,29 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
                      "Real-clock software sink, production arrangement painter without native input/display, "
                      "synthetic library and virtual lifecycle. No audio/MIDI device or acoustic timing.");
     out->setProperty("requestedSeconds", seconds);
+    out->setProperty("diagnosticTimelineSeconds", diagnosticTimelineSeconds);
+    out->setProperty("projectFrames", juce::int64(projectFrames));
+    std::size_t storedPoints = 0;
+    for (const auto &clip : project.clips)
+        for (const auto &curve : clip.automation)
+            storedPoints += curve.points.size();
+    out->setProperty("storedAutomationPoints", juce::int64(storedPoints));
     out->setProperty("cpuDiagnosticsEnabled", cpuDiagnostics);
     out->setProperty("performanceQualificationEligible", !cpuDiagnostics);
     if (cpuDiagnostics) {
+        auto *policies = new juce::DynamicObject();
+        policies->setProperty("scope",
+                              "Requested pthread QoS (overrides are not visible) and sampled Mach "
+                              "time-constraint queries. Not continuous effective scheduling or a "
+                              "kernel wait/fault trace. Five host snapshots outside production callbacks.");
+        policies->setProperty("painterBeforeActivity",
+                              qualification::threadPolicyJson(painterBeforeActivity, begin));
+        policies->setProperty("painterDuringActivity",
+                              qualification::threadPolicyJson(painterDuringActivity, begin));
+        policies->setProperty("callbackAtStart", qualification::threadPolicyJson(callbackAtStart, begin));
+        policies->setProperty("callbackAtEnd", qualification::threadPolicyJson(callbackAtEnd, begin));
+        policies->setProperty("painterAtEnd", qualification::threadPolicyJson(painterAtEnd, begin));
+        out->setProperty("threadPolicySnapshots", policies);
         auto *clock = new juce::DynamicObject();
         clock->setProperty("name", cpuClock.name);
         clock->setProperty("unitNanoseconds", juce::int64(cpuClock.unitNanoseconds));

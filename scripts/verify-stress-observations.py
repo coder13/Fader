@@ -54,6 +54,56 @@ def check_observations(data):
         'cpuDeltasAboveEnclosingWall': 0, 'zeroCpuDeltas': 0,
         'largestRetainedQueryBracketNanoseconds': 0,
     }
+    if 'diagnosticTimelineSeconds' in data:
+        integers(data, ('requestedSeconds', 'diagnosticTimelineSeconds', 'projectFrames', 'storedAutomationPoints'))
+        seconds, timeline = data['requestedSeconds'], data['diagnosticTimelineSeconds']
+        require(1 <= seconds <= 3600, 'timed duration must be 1..3600 seconds')
+        if seconds != 3600:
+            require(data['hourTargetPassed'] is False, 'a short run cannot qualify an hour')
+        require(timeline == 0 or (diagnostic and seconds <= timeline <= 3600),
+                'expanded timeline requires CPU diagnostics and cannot qualify performance')
+        runtime_frames = (seconds * rate + block - 1) // block * block
+        project_frames = max(runtime_frames, timeline * rate) if timeline else runtime_frames
+        equal(callbacks, runtime_frames // block, 'callback count for timed duration')
+        equal(data['projectFrames'], project_frames, 'declared full project frames')
+        equal(data['storedAutomationPoints'], 6 * (project_frames // (rate // 4) + 1),
+              'declared two-clip stored curve density')
+        report['workloadDeclaration'] = {key: data[key] for key in (
+            'requestedSeconds', 'diagnosticTimelineSeconds', 'projectFrames', 'storedAutomationPoints')}
+    if 'threadPolicySnapshots' in data:
+        require(diagnostic, 'thread policy queries require diagnostics')
+        policies = data['threadPolicySnapshots']
+        brackets = {}
+        supported, query_errors = 0, 0
+        for name in ('painterBeforeActivity', 'painterDuringActivity', 'callbackAtStart',
+                     'callbackAtEnd', 'painterAtEnd'):
+            sample = policies[name]
+            first, last = sample['beforeNanosecondsFromStart'], sample['afterNanosecondsFromStart']
+            require(type(first) is int and type(last) is int and first <= last,
+                    'thread policy query has an invalid signed wall bracket')
+            integers(sample, ('queryWallNanoseconds',))
+            equal(sample['queryWallNanoseconds'], last-first, 'policy query wall duration')
+            require(type(sample['supported']) is bool, 'thread policy support flag must be boolean')
+            if sample['supported']:
+                supported += 1
+                integers(sample, ('pthreadQosStatus', 'pthreadRequestedQosClass', 'machTimeConstraintStatus',
+                                  'machPortReleaseStatus', 'machReturnedPolicyWords', 'periodAbsoluteTicks',
+                                  'computationAbsoluteTicks', 'constraintAbsoluteTicks', 'machTimebaseStatus',
+                                  'machTimebaseNumerator', 'machTimebaseDenominator'))
+                require(type(sample['pthreadRelativePriority']) is int, 'invalid requested relative priority')
+                require(type(sample['machReturnedDefaultPolicy']) is bool and
+                        type(sample['preemptibleField']) is bool, 'invalid Mach boolean fields')
+                query_errors += sum(sample[key] != 0 for key in (
+                    'pthreadQosStatus', 'machTimeConstraintStatus', 'machPortReleaseStatus', 'machTimebaseStatus'))
+            brackets[name] = (first, last)
+        require(brackets['painterBeforeActivity'][1] <= brackets['painterDuringActivity'][0] and
+                brackets['painterDuringActivity'][1] <= brackets['callbackAtStart'][0] and
+                brackets['callbackAtStart'][1] <= brackets['callbackAtEnd'][0] and
+                brackets['callbackAtEnd'][1] <= brackets['painterAtEnd'][0],
+                'thread policy snapshot lifecycle is out of order')
+        report['threadPolicySnapshots'] = {'checked': 5, 'supported': supported,
+                                         'reportedApiErrors': query_errors,
+                                         'scope': 'Sampled requested QoS/policy only; not continuous effective scheduling.'}
     trace = data['timingTrace']
     for field in ('callbackSamples', 'hostSamples'):
         equal(trace[field], callbacks, field)
