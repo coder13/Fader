@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "LibraryView.h"
 #include <cmath>
+#include <set>
 namespace fader {
 namespace {
 const juce::Colour ink{0xff27343c}, muted{0xff75838c}, accent{0xff087f8c};
@@ -67,9 +68,17 @@ void LibraryView::setLibrary(LibraryResult result, juce::File root) {
     sourceNames.add("All music");
     sourceNames.add("Traktor metadata");
     sourceNames.add("Missing files");
-    for (const auto &f : root.findChildFiles(juce::File::findDirectories, false)) {
-        sourceNames.add(f.getFileName());
-        sourceFolders.push_back(f);
+    std::set<juce::String> folders;
+    for (const auto &track : library.tracks) {
+        if (!track.file.isAChildOf(root))
+            continue;
+        const auto relative = track.file.getRelativePathFrom(root).replaceCharacter('\\', '/');
+        if (relative.containsChar('/'))
+            folders.insert(relative.upToFirstOccurrenceOf("/", false, false));
+    }
+    for (const auto &name : folders) {
+        sourceNames.add(name);
+        sourceFolders.push_back(root.getChildFile(name));
     }
     sources.updateContent();
     sources.selectRow(0);
@@ -218,6 +227,8 @@ PreferencesPanel::PreferencesPanel(juce::AudioDeviceManager &manager, Preference
         addAndMakeVisible(c);
     music.setReadOnly(true);
     nml.setReadOnly(true);
+    music.setColour(juce::TextEditor::textColourId, ink);
+    nml.setColour(juce::TextEditor::textColourId, ink);
     music.setText(prefs.musicFolder.getFullPathName());
     nml.setText(prefs.collection.getFullPathName());
     enabled.setToggleState(prefs.importTraktor, juce::dontSendNotification);

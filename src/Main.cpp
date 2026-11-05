@@ -31,6 +31,8 @@ class Workspace final : public juce::Component,
         look.setColour(juce::ToggleButton::tickColourId, accent);
         look.setColour(juce::ComboBox::backgroundColourId, juce::Colours::white);
         look.setColour(juce::ComboBox::textColourId, ink);
+        look.setColour(juce::ComboBox::arrowColourId, ink);
+        look.setColour(juce::ToggleButton::tickDisabledColourId, muted);
         look.setColour(juce::PopupMenu::backgroundColourId, juce::Colours::white);
         look.setColour(juce::PopupMenu::textColourId, ink);
         look.setColour(juce::TableHeaderComponent::backgroundColourId, juce::Colour(0xffedf2f5));
@@ -220,16 +222,33 @@ class Workspace final : public juce::Component,
         library.refresh = [this] { scan(); };
         project.perClip = true;
         project.clips.clear();
-        preferences = Preferences::load();
-        try {
-            preferences.save();
-        } catch (const std::exception &e) {
-            setStatus(e.what());
-        }
         setSize(1400, 940);
         sync();
         startTimerHz(30);
-        scan();
+        library.setLoading();
+        prefsButton.setEnabled(false);
+        auto safe = juce::Component::SafePointer<Workspace>(this);
+        libraryWorker.addJob([safe] {
+            try {
+                auto settings = Preferences::load();
+                settings.save();
+                juce::MessageManager::callAsync([safe, settings] {
+                    if (!safe)
+                        return;
+                    safe->preferences = settings;
+                    safe->prefsButton.setEnabled(true);
+                    safe->scan();
+                });
+            } catch (const std::exception &e) {
+                const juce::String error = e.what();
+                juce::MessageManager::callAsync([safe, error] {
+                    if (!safe)
+                        return;
+                    safe->prefsButton.setEnabled(true);
+                    safe->setStatus(error);
+                });
+            }
+        });
         setStatus("Drag a track into the grid. Move its header; draw automation on its waveform.");
     }
     ~Workspace() override {

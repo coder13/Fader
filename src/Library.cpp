@@ -180,14 +180,6 @@ Preferences Preferences::load(const juce::File &file) {
     Preferences p;
     const auto music = juce::File::getSpecialLocation(juce::File::userMusicDirectory);
     p.musicFolder = music.getChildFile("DJ").isDirectory() ? music.getChildFile("DJ") : music;
-    auto ni =
-        juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("Native Instruments");
-    for (const auto &dir : ni.findChildFiles(juce::File::findDirectories, false, "Traktor*")) {
-        const auto nml = dir.getChildFile("collection.nml");
-        if (nml.existsAsFile() && (!p.collection.existsAsFile() ||
-                                   nml.getLastModificationTime() > p.collection.getLastModificationTime()))
-            p.collection = nml;
-    }
     if (file.existsAsFile()) {
         auto json = juce::JSON::parse(file);
         if (json.isObject()) {
@@ -199,7 +191,28 @@ Preferences Preferences::load(const juce::File &file) {
                 p.collection = juce::File(nml);
             if (json.hasProperty("importTraktor"))
                 p.importTraktor = static_cast<bool>(json["importTraktor"]);
+            return p;
         }
+    }
+    const auto ni =
+        juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("Native Instruments");
+    std::error_code error;
+    std::filesystem::directory_iterator entries(ni.getFullPathName().toStdString(),
+                                                std::filesystem::directory_options::skip_permission_denied,
+                                                error),
+        end;
+    for (; entries != end; entries.increment(error)) {
+        if (error) {
+            error.clear();
+            continue;
+        }
+        const juce::File dir(entries->path().string());
+        if (!dir.getFileName().startsWithIgnoreCase("Traktor"))
+            continue;
+        const auto nml = dir.getChildFile("collection.nml");
+        if (nml.existsAsFile() && (!p.collection.existsAsFile() ||
+                                   nml.getLastModificationTime() > p.collection.getLastModificationTime()))
+            p.collection = nml;
     }
     return p;
 }
