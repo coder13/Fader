@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "StressQualification.h"
+#include "StressTiming.h"
 #include <chrono>
 #include <cmath>
 #include <fader/PlaybackPreparation.h>
@@ -9,6 +10,57 @@ using namespace fader;
 void require(bool pass, const char *message) {
     if (!pass)
         throw std::runtime_error(message);
+}
+void timingModelTests() {
+    using qualification::HostMetric;
+    using qualification::StressTiming;
+    constexpr int block = 128;
+    constexpr std::size_t count = StressTiming::tailLimit + 3;
+    StressTiming timing(count, block);
+    // Independent drains need not see the two streams in matching order.
+    for (std::size_t i = count; i-- > 0;)
+        timing.callback({9001, Frame(i * block), Frame(i * block), block, HostTime(100 + i), 0});
+    for (std::size_t i = 0; i < count; ++i) {
+        const HostTime target = 1000000 + i * 10000;
+        const bool last = i == count - 1;
+        timing.host({Frame(i * block), target, target + (last ? 1800 : 600), target + (last ? 3500 : 750),
+                     target + (last ? 3600 : 800), target + 1000});
+    }
+    require(timing.allSamplesPresent() && !timing.traceComplete() && timing.tailCount == count &&
+                timing.tails.size() == StressTiming::tailLimit && timing.omittedTails == 3 &&
+                timing.virtualMisses == 1,
+            "Bounded timing history hid samples, truncation or a missed deadline");
+    require(timing.maximumWake && timing.maximumCall && timing.maximumMiss &&
+                timing.maximumWake->frame == Frame((count - 1) * block) &&
+                timing.maximumCall->frame == timing.maximumWake->frame &&
+                timing.maximumMiss->frame == timing.maximumWake->frame &&
+                timing.callbackFor(timing.maximumMiss->frame) == HostTime(100 + count - 1),
+            "Timing maxima after tail capacity lost their frame-correlated callback");
+    for (const auto &tail : timing.tails)
+        require(timing.callbackFor(tail.frame) == HostTime(100 + tail.frame / block),
+                "Out-of-order drains paired a tail with the wrong callback");
+
+    StressTiming missing(2, block);
+    missing.callback({9001, block, block, block, 17, 0});
+    const HostMetric first{0, 1000, 1000, 1010, 1020, 2000};
+    missing.host(first);
+    missing.host({block, 2000, 2000, 2010, 2020, 3000});
+    require(!missing.allSamplesPresent() && !missing.traceComplete() && !missing.callbackFor(0) &&
+                missing.callbackFor(block) == 17,
+            "A dropped callback metric shifted later frame associations or hid incompleteness");
+    missing.callback({9001, block, block, block, 99, 0});
+    missing.callback({9001, 1, 1, block, 99, 0});
+    missing.callback({1, 0, 0, block, 99, 0});
+    missing.host(first);
+    missing.host({0, 1000, 999, 1010, 1020, 2000});
+    require(missing.callbackErrors == 3 && missing.hostErrors == 2 && missing.callbackFor(block) == 17,
+            "Invalid/duplicate timing records overwrote valid history or escaped counters");
+
+    StressTiming complete(1, block);
+    complete.callback({9001, 0, 0, block, 5, 0});
+    complete.host(first);
+    require(complete.traceComplete() && complete.tails.empty(),
+            "A complete timing trace needs no outliers to be valid");
 }
 std::vector<Event> captured(Playback &playback) {
     std::vector<Event> events;
@@ -224,6 +276,7 @@ juce::var qualifyStressFaults(const juce::File &folder) {
     return result;
 }
 juce::var stressSelfTest() {
+    timingModelTests();
     const auto root = juce::File::getSpecialLocation(juce::File::tempDirectory)
                           .getNonexistentChildFile("fader-stress-self-test", {}, false);
     require(root.createDirectory().wasOk(), "Cannot create stress self-test folder");
@@ -244,11 +297,18 @@ juce::var stressSelfTest() {
     auto *result = new juce::DynamicObject();
     juce::var json(result);
     result->setProperty("faults", qualifyStressFaults(root));
+    result->setProperty("timingModelPassed", true);
     auto timed = qualifySoftwareStress(root, 2, 128);
     // Smoke checks integrity only. CI scheduling jitter cannot qualify or fail a
     // one-hour performance target, and every timing measurement remains visible.
     require(bool(timed["softwareIntegrityPassed"]),
             "Software stress smoke lost capture, stream data or timing metrics");
+    require(bool(timed["timingTrace"]["allSamplesPresent"]) &&
+                juce::int64(timed["arrangementUpdateAndPaintExecution"]["samples"]) ==
+                    juce::int64(timed["arrangementPaints"]) &&
+                juce::int64(timed["arrangementPaintStartSpacing"]["samples"]) ==
+                    juce::int64(timed["arrangementPaints"]) - 1,
+            "Stress timing or painter telemetry did not cover its actual samples");
     result->setProperty("timedSmoke", timed);
     return json;
 }

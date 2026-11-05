@@ -95,7 +95,9 @@ try:
     timed = run("timed", command)
     metadata["timedPhaseFinishedUtc"] = datetime.now(timezone.utc).isoformat()
     captured = args.fixtures / f"stress-captured-{args.block}.faderset"
-    if captured.is_file():
+    # A prior run can leave this fixture-side path behind. A failed save must
+    # never archive that older project as if the current take had persisted.
+    if timed.get("capturePersistencePassed") and captured.is_file():
         metadata["capturedProjectSha256"] = digest(captured)
         metadata["capturedProjectBytes"] = captured.stat().st_size
         # Archive through the production loader/writer, so relative media paths

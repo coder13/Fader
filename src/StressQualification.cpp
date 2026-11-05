@@ -2,6 +2,7 @@
 #include "StressQualification.h"
 #include "Arrangement.h"
 #include "Library.h"
+#include "StressTiming.h"
 #include <algorithm>
 #include <bit>
 #include <chrono>
@@ -17,6 +18,8 @@
 namespace {
 using namespace fader;
 using Clock = std::chrono::steady_clock;
+using qualification::HostMetric;
+using qualification::StressTiming;
 constexpr std::size_t takeLimit = 200000;
 constexpr HostTime second = 1000000000;
 HostTime frameTime(Frame frame) {
@@ -128,10 +131,52 @@ Project makeStressProject(const juce::File &folder, Frame frames) {
     }
     return project;
 }
-struct HostMetric {
-    HostTime wake{}, outer{};
-    bool missed = false;
-};
+juce::var timingTrace(const StressTiming &timing, HostTime begin) {
+    const auto row = [&](const HostMetric &metric) -> juce::var {
+        auto *out = new juce::DynamicObject();
+        out->setProperty("projectFrame", juce::int64(metric.frame));
+        out->setProperty("targetNanosecondsFromStart", juce::int64(metric.target - begin));
+        out->setProperty("wakeNanosecondsFromStart", juce::int64(metric.woke - begin));
+        out->setProperty("processReturnedNanosecondsFromStart", juce::int64(metric.returned - begin));
+        out->setProperty("sinkFinishedNanosecondsFromStart", juce::int64(metric.finished - begin));
+        out->setProperty("deadlineNanosecondsFromStart", juce::int64(metric.deadline - begin));
+        out->setProperty("wakeLatenessNanoseconds", juce::int64(metric.woke - metric.target));
+        out->setProperty("processCallNanoseconds", juce::int64(metric.returned - metric.woke));
+        out->setProperty("sinkNanoseconds", juce::int64(metric.finished - metric.returned));
+        out->setProperty(
+            "completionLatenessNanoseconds",
+            juce::int64(metric.finished > metric.deadline ? metric.finished - metric.deadline : 0));
+        const auto execution = timing.callbackFor(metric.frame);
+        out->setProperty("callbackMetricMatched", execution.has_value());
+        if (execution)
+            out->setProperty("internalCallbackNanoseconds", juce::int64(*execution));
+        return out;
+    };
+    auto *out = new juce::DynamicObject();
+    out->setProperty("clock", "std::chrono::steady_clock nanoseconds; wall duration, not thread CPU time");
+    out->setProperty("selection", "First 256 blocks with wake or process call >= half their interval, or a "
+                                  "missed virtual deadline; global maxima retained separately");
+    out->setProperty("tailLimit", int(StressTiming::tailLimit));
+    out->setProperty("tailCount", juce::int64(timing.tailCount));
+    out->setProperty("omittedTails", juce::int64(timing.omittedTails));
+    out->setProperty("callbackSamples", juce::int64(timing.callbackSamples));
+    out->setProperty("hostSamples", juce::int64(timing.hostSamples));
+    out->setProperty("invalidOrDuplicateCallbackMetrics", juce::int64(timing.callbackErrors));
+    out->setProperty("invalidOrDuplicateHostMetrics", juce::int64(timing.hostErrors));
+    out->setProperty("allSamplesPresent", timing.allSamplesPresent());
+    out->setProperty("traceComplete", timing.traceComplete());
+    juce::Array<juce::var> rows;
+    for (const auto &metric : timing.tails)
+        rows.add(row(metric));
+    out->setProperty("tails", rows);
+    if (timing.maximumWake)
+        out->setProperty("maximumWake", row(*timing.maximumWake));
+    if (timing.maximumCall)
+        out->setProperty("maximumProcessCall", row(*timing.maximumCall));
+    if (timing.maximumMiss)
+        out->setProperty("maximumDeadlineMiss", row(*timing.maximumMiss));
+    return out;
+}
 class VirtualCallbackThread final : public juce::Thread {
   public:
     VirtualCallbackThread(std::function<void()> body, std::atomic<bool> &done)
@@ -187,20 +232,18 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
         juce::Graphics graphics(image);
         arrangement.paintEntireComponent(graphics, true);
     }
-    const auto begin = monotonicTime() + second / 5;
-    const auto endTime = begin + frameTime(frames);
     std::atomic<bool> done{false};
     std::atomic<std::size_t> capturedCount{0};
     auto hostQueue = std::make_unique<Queue<HostMetric, 4096>>();
     std::vector<Event> take;
     std::vector<ControlMetric> controls;
-    std::vector<HostTime> callbacks, wakes, outer;
+    StressTiming timing(blocks, blockFrames);
+    constexpr HostTime paintPeriod = second / 50;
+    const auto expectedPaints = std::size_t((frameTime(frames) + paintPeriod - 1) / paintPeriod);
+    std::vector<HostTime> paintExecution(expectedPaints), paintSpacing(expectedPaints);
     take.reserve(takeLimit);
     controls.reserve(takeLimit);
-    callbacks.reserve(blocks);
-    wakes.reserve(blocks);
-    outer.reserve(blocks);
-    std::size_t hostDrops = 0, virtualMisses = 0, nonFinite = 0, quietBlocks = 0, retainedDrops = 0;
+    std::size_t hostDrops = 0, nonFinite = 0, quietBlocks = 0, retainedDrops = 0;
     std::size_t libraryJobs = 0, analysisJobs = 0, seekCancellations = 0;
     double checksum = 0, cueChecksum = 0;
     std::string backgroundError;
@@ -216,6 +259,10 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
                     worker.join();
         }
     } stop{done, workers}; // Stop loops and join on exceptions, including older libc++.
+    // Establish the clock origin after allocating and touching timing history.
+    // The real-time producer only publishes fixed-size queue entries.
+    const auto begin = monotonicTime() + second / 5;
+    const auto endTime = begin + frameTime(frames);
     workers.emplace_back([&] {
         try {
             const auto drain = [&] {
@@ -231,7 +278,7 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
                 capturedCount.store(take.size());
                 CallbackMetric metric;
                 while (playback->metric(metric))
-                    callbacks.push_back(metric.executionNs);
+                    timing.callback(metric);
                 ControlMetric control;
                 while (playback->controlMetric(control)) {
                     if (controls.size() < takeLimit)
@@ -240,11 +287,8 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
                         ++retainedDrops;
                 }
                 HostMetric host;
-                while (hostQueue->pop(host)) {
-                    wakes.push_back(host.wake);
-                    outer.push_back(host.outer);
-                    virtualMisses += unsigned(host.missed);
-                }
+                while (hostQueue->pop(host))
+                    timing.host(host);
             };
             while (!done.load()) {
                 drain();
@@ -311,6 +355,7 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
             sleepUntil(target, 100000);
             const auto woke = monotonicTime();
             playback->process(pointers, 4, blockFrames, woke);
+            const auto returned = monotonicTime();
             double blockSum = 0;
             for (int ch = 0; ch < 4; ++ch)
                 for (int i = 0; i < blockFrames; ++i) {
@@ -324,8 +369,7 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
             checksum += blockSum;
             quietBlocks += unsigned(blockSum == 0);
             const auto finished = monotonicTime();
-            if (!hostQueue->push({woke > target ? woke - target : 0, finished - woke,
-                                  finished > begin + frameTime(at + blockFrames)}))
+            if (!hostQueue->push({at, target, woke, returned, finished, begin + frameTime(at + blockFrames)}))
                 ++hostDrops;
         }
         if (!done.load())
@@ -345,14 +389,19 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
         workers.emplace_back(callbackBody);
     }
     std::size_t paints = 0, missedPaintIntervals = 0;
+    HostTime previousPaint = 0, maximumPaintWake = 0;
     auto nextPaint = begin, nextProgress = begin + 30 * second;
-    while (!done.load()) {
+    while (!done.load() && nextPaint < endTime) {
         sleepUntil(nextPaint);
         if (done.load())
             break;
         const auto now = monotonicTime();
-        if (now > nextPaint + second / 50)
+        maximumPaintWake = std::max(maximumPaintWake, now - nextPaint);
+        if (now > nextPaint + paintPeriod)
             ++missedPaintIntervals;
+        if (paints > 0)
+            paintSpacing[paints - 1] = now - previousPaint;
+        previousPaint = now;
         arrangement.parameter = int(paints % 3);
         arrangement.playhead = playback->position();
         arrangement.viewport.setViewPosition(int((paints % 12000) * 3), 0);
@@ -362,8 +411,9 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
             arrangement.paintEntireComponent(graphics, true);
         }
         editor.clips[0].start = 0;
+        paintExecution[paints] = monotonicTime() - now;
         ++paints;
-        nextPaint += second / 50;
+        nextPaint += paintPeriod;
         if (now >= nextProgress) {
             std::cerr << "Software stress " << (now - begin) / second << '/' << seconds
                       << " s; callbacks=" << playback->stats().blocks << "; captured=" << capturedCount.load()
@@ -434,16 +484,23 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
     const auto stats = playback->stats();
     const auto sources = playback->streamStats();
     const auto planned = uiInputs.size() + controllerInputs.size();
-    const bool integrity =
-        stats.blocks == blocks && attempted == planned && accepted == planned && take.size() == accepted &&
-        controls.size() == accepted && correlationErrors == 0 && retainedDrops == 0 &&
-        stats.inputDrops == 0 && stats.failures == 0 && stats.metricDrops == 0 &&
-        stats.controlMetricDrops == 0 && hostDrops == 0 && callbacks.size() == blocks &&
-        wakes.size() == blocks && playback->starvationFrames() == 0 && sources.failedSources == 0 &&
-        nonFinite == 0 && checksum > 0 && cueChecksum > 0 && quietBlocks == 0 && backgroundError.empty() &&
-        libraryJobs > 0 && analysisJobs > 0 && seekCancellations > 0 && paints > 0;
-    const auto maximum = callbacks.empty() ? second : *std::max_element(callbacks.begin(), callbacks.end());
-    auto callbackDistribution = distribution(callbacks);
+    const bool integrity = stats.blocks == blocks && attempted == planned && accepted == planned &&
+                           take.size() == accepted && controls.size() == accepted && correlationErrors == 0 &&
+                           retainedDrops == 0 && stats.inputDrops == 0 && stats.failures == 0 &&
+                           stats.metricDrops == 0 && stats.controlMetricDrops == 0 && hostDrops == 0 &&
+                           timing.allSamplesPresent() && playback->starvationFrames() == 0 &&
+                           sources.failedSources == 0 && nonFinite == 0 && checksum > 0 && cueChecksum > 0 &&
+                           quietBlocks == 0 && backgroundError.empty() && libraryJobs > 0 &&
+                           analysisJobs > 0 && seekCancellations > 0 && paints > 0;
+    // Build frame-correlated rows before distribution() sorts the exact samples.
+    auto trace = timingTrace(timing, begin);
+    const bool traceComplete = timing.traceComplete();
+    for (auto *values : {&timing.callbacks, &timing.wakes, &timing.outer})
+        std::erase(*values, StressTiming::missing);
+    const auto maximum = timing.callbacks.empty()
+                             ? second
+                             : *std::max_element(timing.callbacks.begin(), timing.callbacks.end());
+    auto callbackDistribution = distribution(timing.callbacks);
     const auto budget = double(blockFrames) * 1e9 / projectRate;
     const bool headroom =
         maximum < budget && double(callbackDistribution["p999Microseconds"]) * 1000 < budget / 2;
@@ -465,9 +522,10 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
     out->setProperty("blockFrames", blockFrames);
     out->setProperty("callbacks", juce::int64(stats.blocks));
     out->setProperty("callbackExecution", callbackDistribution);
-    out->setProperty("virtualHostWakeLateness", distribution(wakes));
-    out->setProperty("callbackAndSinkExecution", distribution(outer));
-    out->setProperty("virtualDeadlineMisses", juce::int64(virtualMisses));
+    out->setProperty("virtualHostWakeLateness", distribution(timing.wakes));
+    out->setProperty("callbackAndSinkExecution", distribution(timing.outer));
+    out->setProperty("virtualDeadlineMisses", juce::int64(timing.virtualMisses));
+    out->setProperty("timingTrace", trace);
     out->setProperty("headroomTargetPassed", headroom);
     out->setProperty("softwareIntegrityPassed", integrity);
     out->setProperty("hourTargetPassed", false); // Set only when the memory measurement is available below.
@@ -505,6 +563,15 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
     out->setProperty("quietBlocks", juce::int64(quietBlocks));
     out->setProperty("arrangementPaints", juce::int64(paints));
     out->setProperty("missedPaintIntervals", juce::int64(missedPaintIntervals));
+    out->setProperty("targetArrangementPaints", juce::int64(expectedPaints));
+    out->setProperty("targetArrangementPaintHz", 50);
+    out->setProperty("maximumPaintWakeLatenessMicroseconds", double(maximumPaintWake) / 1000);
+    paintExecution.resize(paints);
+    paintSpacing.resize(paints > 0 ? paints - 1 : 0);
+    out->setProperty("arrangementUpdateAndPaintExecution", distribution(paintExecution));
+    out->setProperty("arrangementPaintStartSpacing", distribution(paintSpacing));
+    const bool paintTargetPassed = paints == expectedPaints && missedPaintIntervals == 0;
+    out->setProperty("arrangementPaintTargetPassed", paintTargetPassed);
     out->setProperty("libraryJobs", juce::int64(libraryJobs));
     out->setProperty("analysisJobs", juce::int64(analysisJobs));
     out->setProperty("seekCancellations", juce::int64(seekCancellations));
@@ -522,9 +589,11 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
     // Correlations and distributions are already in the aggregate. Releasing
     // qualification-only history before storage keeps its lifetime separate
     // from the product model. ru_maxrss below still includes every earlier stage.
-    std::vector<HostTime>().swap(callbacks);
-    std::vector<HostTime>().swap(wakes);
-    std::vector<HostTime>().swap(outer);
+    std::vector<HostTime>().swap(timing.callbacks);
+    std::vector<HostTime>().swap(timing.wakes);
+    std::vector<HostTime>().swap(timing.outer);
+    std::vector<HostTime>().swap(paintExecution);
+    std::vector<HostTime>().swap(paintSpacing);
     std::vector<HostTime>().swap(receiptJitter);
     std::vector<HostTime>().swap(outputLatency);
     inputByValue.clear();
@@ -557,10 +626,10 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
         out->setProperty("peakResidentBytes", bytes);
         out->setProperty("memoryMeasurementAvailable", true);
         out->setProperty("memoryBudgetPassed", bytes <= 128 * 1024 * 1024);
-        out->setProperty("hourTargetPassed", seconds == 3600 && integrity && persisted && headroom &&
-                                                 latencyPassed && virtualMisses == 0 &&
-                                                 bytes <= 128 * 1024 * 1024 &&
-                                                 sources.pcmBytes <= 1024 * 1024);
+        out->setProperty("hourTargetPassed",
+                         seconds == 3600 && integrity && persisted && headroom && latencyPassed &&
+                             timing.virtualMisses == 0 && traceComplete && paintTargetPassed &&
+                             bytes <= 128 * 1024 * 1024 && sources.pcmBytes <= 1024 * 1024);
     }
 #endif
     return out;
