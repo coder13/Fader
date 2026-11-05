@@ -124,7 +124,81 @@ int main() {
         cueProject.clips[0].cue = true;
         Engine cue(cueProject), noCue(project);
         require(render(cue, 128, 12000) == render(noCue, 128, 12000), "cue leaked to master");
-        std::cout << "PASS: block independence, exact seek state, applied-event capture/replay, retake, "
+        auto clips = fixture();
+        clips.perClip = true;
+        clips.clips[0].automation[0].points = {{0, 0.7f}, {6000, 0.4f}};
+        clips.clips[0].automation[1].points = {{0, 0}, {3000, 0.55f}};
+        clips.clips[0].automation[2].points = {{0, 1}, {7500, 0.4f}};
+        clips.clips[1].automation[0].points = {{0, 0.3f}, {8000, 0.8f}};
+        Engine clipEngine(clips);
+        const auto clipBaseline = render(clipEngine, 64, clips.end());
+        for (int block : {1, 127, 512}) {
+            Engine e(clips);
+            require(render(e, block, clips.end()) == clipBaseline,
+                    "clip/filter render depends on block size");
+        }
+        Engine clipSeek(clips, 5311);
+        const auto clipSuffix = render(clipSeek, 128, clips.end());
+        require(std::equal(clipSuffix.begin(), clipSuffix.end(), clipBaseline.begin() + 5311),
+                "seek lost filter history");
+        auto single = clips;
+        single.clips.resize(1);
+        Engine originalClip(single);
+        const auto originalAudio = render(originalClip, 128, single.end());
+        const auto originalPoints = single.clips[0].automation[0].points;
+        const auto originalLength = single.clips[0].length;
+        single.clips[0].start = 5000;
+        single.clips[0].row = 24;
+        Engine moved(single);
+        const auto movedAudio = render(moved, 128, single.end());
+        require(single.clips[0].length == originalLength &&
+                    single.clips[0].automation[0].points == originalPoints,
+                "moving clip resized or detached automation");
+        require(std::equal(originalAudio.begin(), originalAudio.end(), movedAudio.begin() + 5000),
+                "moving clip changed its rendered sound");
+        Engine performingClip(clips, 1000);
+        performingClip.arm(1000, 5000, 7, 0);
+        performingClip.command({1001, Param::volume, 0.2f, 0});
+        performingClip.command({2500, Param::highPass, 0.7f, 0});
+        const auto performedClip = render(performingClip, 128, clips.end());
+        std::vector<Event> clipTake;
+        while (performingClip.captured(event))
+            clipTake.push_back(event);
+        const auto otherClip = clips.clips[1].automation[0].points;
+        commitTake(clips, clipTake, 1000, 5000);
+        Engine clipReplay(clips, 1000);
+        const auto replayedClip = render(clipReplay, 127, clips.end());
+        require(clips.clips[1].automation[0].points == otherClip, "recording one clip changed another");
+        for (std::size_t i = 0; i < performedClip.size(); ++i)
+            require(std::abs(performedClip[i] - replayedClip[i]) < 1e-6f, "clip capture replay mismatch");
+        auto energy = [](float hz, float hp, float lp) {
+            Project p;
+            p.perClip = true;
+            p.clips.resize(1);
+            auto a = std::make_shared<AudioData>();
+            for (auto &c : a->samples) {
+                c.resize(48000);
+                for (std::size_t i = 0; i < c.size(); ++i)
+                    c[i] = 0.1f * std::sin(float(i) * hz * 6.28318530718f / 48000);
+            }
+            p.clips[0].audio = a;
+            p.clips[0].length = 48000;
+            for (unsigned i = 0; i < 3; ++i) {
+                const auto v = i == 0 ? 1.0f : i == 1 ? hp : lp;
+                p.clips[0].automation[i] = {v, true, {{0, v}}};
+            }
+            Engine e(p);
+            const auto pcm = render(e, 128, p.end());
+            double sum = 0;
+            for (std::size_t i = 24000; i < pcm.size(); ++i)
+                sum += pcm[i] * pcm[i];
+            return sum;
+        };
+        const float cutoff = std::log(1000.0f / 20.0f) / std::log(1000.0f);
+        require(energy(50, cutoff, 1) < energy(50, 0, 1) * 0.01, "high-pass failed to reject bass");
+        require(energy(8000, 0, cutoff) < energy(8000, 0, 1) * 0.01, "low-pass failed to reject treble");
+        std::cout << "PASS: clip-owned movement, filter response/seek/replay, independent clip capture, "
+                     "legacy block independence, exact seek state, applied-event capture/replay, retake, "
                      "bounded queue, validation, cue isolation\n";
         return 0;
     } catch (const std::exception &e) {

@@ -1,62 +1,57 @@
-# Native prototype quickstart
+# Native arrangement prototype quickstart
 
-This is the first software experiment, not a completed Mac/S4 qualification. It runs without a controller.
+Version 0.2 is a software experiment that runs without a controller. The Mac/S4 hardware qualification remains open.
 
 ## Build on macOS
 
-Install the Xcode Command Line Tools and CMake 3.22 or newer. A first configure downloads the pinned JUCE source; subsequent builds use the cached checkout.
+Install the Xcode Command Line Tools and CMake 3.22 or newer. The first configure fetches pinned JUCE 9.0.5 (`d60b7a78030661574a615b586d9325ba7a7fa7dd`). To use an existing checkout, add `-DFADER_JUCE_PATH=/path/to/JUCE`.
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --parallel 4
 ctest --test-dir build --output-on-failure
+codesign --force --deep --sign - build/Fader_artefacts/Release/Fader.app
 open build/Fader_artefacts/Release/Fader.app
 ```
 
-For an existing JUCE checkout, add `-DFADER_JUCE_PATH=/path/to/JUCE` to configure. The pinned revision is JUCE 9.0.5, `d60b7a78030661574a615b586d9325ba7a7fa7dd`. The application currently builds as the host architecture; Intel, Windows, and Linux builds are unqualified.
-
-The pure C++ audio-core tests need no JUCE or network:
-
-```sh
-cmake -S . -B build-core -DFADER_BUILD_APP=OFF -DCMAKE_BUILD_TYPE=Release
-cmake --build build-core
-ctest --test-dir build-core --output-on-failure
-```
+Host-architecture macOS build only; Intel, Windows and Linux remain unqualified. Pure core tests need no JUCE/network: configure a separate build with `-DFADER_BUILD_APP=OFF`.
 
 ## Try the workflow
 
-1. Generate quiet synthetic tracks with `python3 tools/make_demo.py`. Open `build/demo/demo.faderset` with **Open set**. These contain no user music.
-2. Alternatively, use **Load A/B**, double-click in the folder browser, or drag files from Finder onto the two waveform lanes. The folder browser uses the selected automation lane to choose A or B; crossfader selection targets B.
-3. Drag a waveform to move its clip. Set start, length, or static speed in the text boxes and press Return. Speed changes pitch; there is no key lock.
-4. Choose A gain, B gain, or crossfader below the timeline. Click to add automation points, drag to adjust, and right-click to remove. Points cannot cross their neighbors while dragging. Step targets are smoothed over 5 ms; Linear interpolates between points before smoothing.
-5. Press **Play**. Audio requests 48 kHz with 128-frame buffers, trying 256 if the device refuses 128. This setting is not a latency measurement. **Audio settings** selects the output device. Master uses the first stereo pair; cue needs a second stereo pair on that same device. Physical routing is not yet verified.
-6. To record fader moves, keep the lanes in **Step targets**, enter retake start/end seconds (end 0 means the set end), and press **Record take**. Move the A/B gain or crossfader sliders. Press **Finish take** to commit. Only lanes touched in the interval are replaced. **Undo** restores the previous edit/take.
-7. **Save set** writes a `.faderset` JSON project with relative source references, source hashes, and automation. **Open set** verifies those hashes and restores the curves. Keep the project and its source files together when moving it.
-8. **Export WAV** renders the saved timeline to stereo 24-bit PCM at 48 kHz using the same engine. An over-range mix fails with a message to lower gains instead of silently clipping the export. Output replaces its destination only on success.
+1. Open **Preferences**. Music defaults to `~/Music/DJ` when present; select another root if needed. Select Traktor's `collection.nml`, or disable its import. **Apply & close** saves library preferences. Audio-device changes apply immediately; master uses channels 1/2 and headphone cue requires 3/4 on the same device.
+2. Search the library by title, artist, BPM or key; sort with column headers and filter with the folder list. Traktor metadata is labeled. Missing/unknown values stay visible. Drag a song to the arrangement, double-click to add at the playhead on a new row, or drop files from Finder.
+3. Move a clip by its **header**. Horizontal movement changes its start; vertical movement changes its row. Neither changes duration, waveform scale or clip-owned automation. Scroll for more time/rows; use **Zoom** to change scale explicitly.
+4. Select **Volume**, **Low cut (HP)** or **High cut (LP)** above the grid. Click its waveform to add a point; drag points; right-click a point to remove it. Only the selected parameter is overlaid, independently for every clip. Volume is shown in dB in the inspector; filters show cutoff Hz and explicit Off endpoints.
+5. Click empty timeline space to seek. **Play** reads the saved curves. Moving an inspector slider during playback makes a temporary **OVERRIDE**; **Resume automation** returns to the saved curves. Stopped slider edits write a point at the playhead within that clip, otherwise at its beginning.
+6. Select a clip and press **Record clip**. Its volume/HP/LP controls are captured; other clips continue their saved curves. Retake From/To are absolute seconds; 0 means current/clip end. **Finish take** keeps the gestures. Only touched parameters are replaced, and **Undo** restores the previous edit/take.
+7. **Save** writes a versioned `.faderset` containing source references/hashes, placement, metadata and per-clip automation. **Open** verifies media identity. Keep sources with the project when moving it. Unsaved changes prompt before New/Open/quit; there is no autosave yet.
+8. **Export** renders a stereo 24-bit/48 kHz WAV through the same engine. Clipping is rejected with a request to lower gains. The destination is replaced only after a successful render.
 
-Opening/replacing source media clears the edit undo history to avoid retaining large decoded files. Other edits keep up to 24 undo states. This prototype has no autosave or unsaved-changes prompt: save before closing or opening another set.
+For quiet synthetic material, run `python3 tools/make_demo.py` and open `build/demo/demo.faderset`. No user music is included. Media import clears older undo snapshots to bound retained PCM; other edits keep up to 24 undo states.
 
-## Command-line probes
+## Probes
 
 ```sh
 build/fader_probe_artefacts/Release/fader_probe --devices
+build/fader_probe_artefacts/Release/fader_probe --library
 build/fader_probe_artefacts/Release/fader_probe --audio-smoke
 build/fader_probe_artefacts/Release/fader_probe --inspect /path/to/audio.mp3
 build/fader_probe_artefacts/Release/fader_probe --render build/demo/demo.faderset build/demo/mix.wav
 ```
 
-`--audio-smoke` opens the default output for two seconds with silent two-source rendering and reports actual rate/buffer size, callback timing, and the device's output-latency estimate. An xrun value of -1 means the driver does not report it. This is not an acoustic latency or reliability test.
-
-`--inspect` decodes the whole file within the memory limit and prints aggregate format information. `--devices` reads audio-output names and matching S4 HID interface properties; it does not open or control the S4.
+`--library` prints aggregate counts only. `--inspect` fully decodes one file within the memory limit. `--audio-smoke` runs two seconds of silent clip/filter rendering on the default device; driver xrun value -1 means unavailable. This does not measure acoustic latency or establish sustained reliability.
 
 ## Deliberate limits
 
-- Two clips, at most two hours of project time. A source must fit within 33,554,432 decoded stereo frames (256 MiB per deck; about 12.7 minutes at 44.1 kHz). Sources are decoded on a worker before playback; streaming long tracks is a later step. Importing replacement media can temporarily retain old and new buffers.
-- WAV and MP3 are the initial compatibility targets. Other JUCE-provided decoders may work, but are unqualified. Mono is duplicated to stereo; multichannel sources and incomplete downloads are rejected.
-- Linear interpolation is the prototype resampler and aliases at high playback rates. It is not a production-quality DJ resampler. Exact seeking reconstructs automation history and can delay the UI on long, dense sets.
-- Gain/crossfader capture only. No S4 controls/feedback, generic MIDI routing, raw-audio recording, editable beat grid, transport-action capture, plug-ins, MP3 export, or source relinking dialog yet.
-- Retakes restore the original target at punch-out through the normal smoother and preserve all later stored points. Live/replay PCM matches; baseline PCM outside the selection may differ during smoothing. The stricter finite return-region contract in the design remains open.
-- Cue switches are monitoring state, not saved arrangement automation. No capture during device reconfiguration; playback stops on a device stop notification.
-- No long-run deadline/underrun qualification, acoustic latency measurement, hardware cue-routing test, or cross-platform support claim yet. Read [the complete POC gates](poc-plan.md) and the experiment report before treating this as performance software.
+- The grid expands as clips move, within 64 clips, 4,096 row positions and two hours. It is not mathematically infinite. Fixed zoom prevents moving the final song from rescaling every clip.
+- Each unique decoded source is capped at 256 MiB; each set at 1 GiB unique PCM. Decode/load can temporarily retain old and new buffers. Streaming long sets remains necessary.
+- MP3 and WAV are the initial import targets. Other registered JUCE decoders may work, but broader formats and every file in the music library are not qualified. Mono duplicates to stereo; multichannel/incomplete sources are rejected.
+- Traktor import covers metadata, first nonnegative grid marker and cue count. Full cue/loop/playlist import, beat analysis and editing variable grids remain pending. No source files or Traktor data are modified.
+- Snap is Off, 1 second or a fixed 120-BPM bar. Imported BPM/grid is displayed, not automatically used for sync, warping or variable-tempo snap.
+- The prototype filters are two cascaded one-pole stages per side, 12 dB/octave, without resonance. Volume and filter targets smooth over 5 ms. Pitch-preserving stretching and production resampling remain future work.
+- Exact seeking reconstructs filter history on a worker; long seeks can take time. Playback preparation is not yet cancellable. Timeline editing stops playback.
+- Recorded targets use held segments; drawn points use linear interpolation. Retakes restore the original target through smoothing. Saved later points are preserved, but baseline audio immediately outside punch-out may differ during that return.
+- Version 1 sets retain exact original global crossfader playback/export. Start a new set for version 2 clip editing; there is no approximate automatic migration.
+- No controller input/feedback, raw audio recording, VST hosting, transport/rate capture, MP3 export, autosave, missing-source relinking UI or complete keyboard envelope editor yet. Cue is monitoring state and is not saved automation. Audio-device selection lasts for the current session; library preferences persist.
 
-The experimental source uses AGPL-3.0-or-later; see the root LICENSE. The long-term stack/reuse decision remains provisional.
+See [current evidence](experiments/2026-11-04-clip-arrangement.md), [POC qualification gates](poc-plan.md), and [ADR 0002](decisions/0002-clip-owned-automation.md). The source uses AGPL-3.0-or-later; the long-term stack/reuse choice remains provisional.

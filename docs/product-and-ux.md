@@ -16,25 +16,24 @@ The [competitive workflow audit](research/competitive-workflow-audit.md) finds s
 2. **Capture a performance.** Load tracks into decks, arm automation recording, perform a transition, and stop. The timeline shows the resulting clips and parameter changes. Optional master recording preserves an audio reference.
 3. **Replace a section.** Select a transition, arm only the parameters to replace, hear a preroll, perform a new take, and keep or discard it. Unarmed parameters keep playing their existing automation. One undo restores the previous take.
 
-An arrangement lane is not permanently the same thing as a physical deck. The POC deliberately fixes two lanes to two deck roles; the mature product separates clip lanes, mix buses, and the two/four currently controlled decks. This prevents hardware layout from limiting the arrangement format.
+An arrangement lane is not permanently the same thing as a physical deck. The v0.2 prototype follows the user’s new requirement: independently placed clips on extensible rows, each owning volume, high-pass and low-pass automation. The primary editor has no global A/B crossfader. Controller deck assignment remains a later routing decision.
 
 ## Interface direction
 
 Use Audacity as the reference for readable waveforms, obvious transport, direct envelope manipulation, and a visible relationship between clips and time. Use Ableton's arrangement/automation concepts as a workflow reference. This is a visual and interaction direction, not a request to copy either application's implementation. Reference observations and sources are in [product references](research/product-references.md).
 
 ```text
-Project name       Save   Undo   Play/Stop   Record actions [ ] Audio [ ]   Export
-Time / bars ruler ---------------- playhead ------------------ tempo map -------
-Files / Search   | Lane A   [ Track 1 waveform --------------------- ]
-Preview / BPM    |   Gain      ───────────╲____
-Folders         | Lane B                    [ Track 2 waveform ------------ ]
-                |   Gain                    ____╱───────────────────────────
-                | Master crossfader        A ─────╲───── B
-Selected clip / automation details            Compact deck and mixer controls
-Audio device • buffer • cue routing      Controller status      Recording state
+Project     New / Open / Save / Undo / Preferences    Play / Record clip / Export
+Volume / Low cut / High cut       Snap / Zoom         READ / OVERRIDE / RECORD
+Time ruler ---------------------------------------------------------------
+Track 1  [ Song waveform + selected envelope ------- ] | Selected clip
+Track 2             [ Song waveform + envelope ----- ] | Volume / HP / LP
+Track 3  ... scroll in time and vertically ...          | Placement / Retake
+Library: folders | Search | Title / Artist / BPM / Key / Time / Genre / Source
 ```
 
-This is a proposed layout, not an implemented screenshot. At normal use, the timeline should dominate the window. Show only selected/used automation lanes by default. Keep a compact deck/mixer strip available for rehearsal; do not fill the initial screen with four large turntable graphics. Tempo, selected range, snap mode, automation arm, and override state must remain visible.
+
+This arrangement-first layout is implemented in v0.2; the richer interaction and accessibility requirements below remain targets. At normal use, the timeline should dominate the window. Show only selected/used automation lanes by default. Keep a compact deck/mixer strip available for rehearsal; do not fill the initial screen with four large turntable graphics. Tempo, selected range, snap mode, automation arm, and override state must remain visible.
 
 The file browser needs folders, search, supported-format status, duration, BPM/grid state, preview, and drag/drop. It must use the existing music-folder layout without moving or converting source files. Large-library indexing and metadata analysis run in the background. The completed POC browses a chosen folder and imports MP3/WAV; the alpha qualifies the whole collection and broader common formats. See [audio import](audio-import-and-library.md).
 
@@ -53,9 +52,9 @@ The file browser needs folders, search, supported-format status, duration, BPM/g
 
 | Capability | First complete POC | Following milestones |
 | --- | --- | --- |
-| Tracks and mixing | Two stereo sources, gain and crossfader, master/cue | Four decks, EQ/filter/effects, flexible arrangement buses |
+| Tracks and mixing | Independent clip volume and HP/LP, master/cue; two-source hardware qualification | Four decks, EQ/filter/effects, flexible arrangement buses |
 | Tempo and beat grids | Manual BPM/first beat; fixed project tempo; static per-clip varispeed before capture | Captured rate gestures, editable detected grids, key-lock quality, changing tempo and variable grids |
-| Automation | Gains/crossfader, starts/stops/source offsets, manual editing, range replacement | Touch/latch, tempo/loop/jog/FX gestures, take comparison |
+| Automation | Clip volume/HP/LP, placement, manual envelope editing, range replacement | Touch/latch, tempo/loop/jog/FX gestures, take comparison |
 | Controller | S4 essential controls and LED feedback | Four-deck layers, jog behavior, screens and motors qualified individually |
 | Files | MP3/WAV import, source relinking, set save/reopen, WAV export | AIFF/FLAC/AAC/ALAC/Vorbis/Opus import, full-library qualification, MP3/FLAC export, collect-media bundle |
 | Platforms | Apple Silicon macOS | Windows, Linux; web editor/hybrid based on experiments |

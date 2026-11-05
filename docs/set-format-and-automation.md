@@ -1,6 +1,8 @@
 # Set format and automation
 
-Status: Proposed design contract, not an implemented schema. Updated 2026-11-04.
+Status: Long-term design contract with a bounded implemented subset. Updated 2026-11-04.
+
+The v0.2 prototype writes schema/engine version 2: an array of clips, each with row, start, source offset, length, metadata and three clip-local envelopes. Values are normalized 0–1; volume is linear amplitude (displayed as dB), filters map logarithmically to 20–20,000 Hz. Drawn points interpolate linearly; recorded target points carry `hold: true`. Smoothing is 240 project frames. Moving a clip changes only start/row. Schema 1 retains its original global gains/equal-power crossfader renderer and opens for playback/export without silent conversion. The detailed future schema below is not the literal prototype file format. See [ADR 0002](decisions/0002-clip-owned-automation.md).
 
 ## What a set must preserve
 
@@ -66,7 +68,7 @@ Capture initial deck/clip state and all resolved software actions that affect th
 
 At equal timestamps, use a stable sequence number and documented ordering. Resolve a load/start or seek/gain interaction consistently. Record resolved launch positions and playback-rate changes rather than relying on a future beat analysis or sync heuristic to make the same decision again.
 
-POC supported actions are clip activation/stop/source placement plus gain and crossfader targets. Set each clip's static varispeed ratio before capture and persist it; changing rate during capture is deferred until rate events are supported. Loading a different track during a performance requires a new clip/source identity in the recording. Unsupported actions must be shown as unsupported for capture, not silently presented as fully replayable.
+The current software prototype captures clip volume/high-pass/low-pass targets and persists static placement. Transport-action capture is still pending. The completed hardware POC must route controls to clip identity. Set each clip's static varispeed ratio before capture and persist it; changing rate during capture is deferred until rate events are supported. Loading a different track during a performance requires a new clip/source identity in the recording. Unsupported actions must be shown as unsupported for capture, not silently presented as fully replayable.
 
 Cue/headphone controls affect monitoring and stay outside the rendered master by default. Physical S4 Main/Booth/Headphone controls may affect hardware output outside the software mix. External microphone/line input requires an audio capture asset to be reproducible. See [controller findings](research/traktor-and-controller-integration.md).
 

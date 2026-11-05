@@ -1,6 +1,8 @@
 # Audio import and existing-library compatibility
 
-Status: User-confirmed requirement; proposed implementation and qualification. Updated 2026-11-04. The reference library is `~/Music`. A local inventory is evidence about files on disk, not proof that the unbuilt application can decode them.
+Status: User-confirmed requirement; proposed implementation and qualification. Updated 2026-11-04. The broad reference library is `~/Music`; the v0.2 app defaults to its `DJ` subfolder when present. Metadata inventory is not proof that every file decodes.
+
+Implemented browser: recursive background scan, folder filters, title/artist/BPM/key search, sortable metadata columns, missing-file status, drag/drop and Preferences. Traktor `collection.nml` is read-only: title/artist/album/genre, BPM, Open Key, duration and the earliest nonnegative grid marker are imported; cues are counted but not yet editable pads. Exact paths are preferred, then verified physical-file identity handles case/Unicode differences. Basic ID3 text tags are a fallback; unknown values remain unknown. No title/basename guessing, automatic analysis, playlist import or tag write-back is performed. The local run matched all 949 existing DJ files and showed one missing entry. See [evidence](experiments/2026-11-04-clip-arrangement.md).
 
 ## Requirement and delivery
 

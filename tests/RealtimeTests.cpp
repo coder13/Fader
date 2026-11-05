@@ -40,6 +40,7 @@ void operator delete[](void *p, std::size_t) noexcept {
 int main() {
     using namespace fader;
     Project project;
+    project.perClip = true;
     auto audio = std::make_shared<AudioData>();
     for (auto &channel : audio->samples) {
         channel.resize(48000);
@@ -50,6 +51,11 @@ int main() {
         clip.audio = audio;
         clip.length = 48000;
         clip.cue = true;
+        for (auto &curve : clip.automation) {
+            curve.points.clear();
+            for (int i = 0; i < 400; ++i)
+                curve.points.push_back({i * 120, float(i % 10) / 10});
+        }
     }
     for (auto &curve : project.curves)
         for (int i = 0; i < 400; ++i)
@@ -81,7 +87,7 @@ int main() {
         return 1;
     }
     std::sort(times.begin(), times.end());
-    std::cout << "PASS: 20000 core process calls, no ordinary new/delete; two sources + automation + cue\n"
+    std::cout << "PASS: 20000 core process calls, no ordinary new/delete; two clips + volume/filters + cue\n"
               << "microseconds p50=" << times[10000] << " p95=" << times[19000] << " p99.9=" << times[19980]
               << " max=" << times.back() << '\n'
               << "Synthetic offline timing only; not device latency or sustained audio qualification.\n";

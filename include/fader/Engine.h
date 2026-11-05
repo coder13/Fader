@@ -11,10 +11,11 @@ namespace fader {
 using Frame = std::int64_t;
 constexpr int projectRate = 48000;
 constexpr int rampFrames = 240; // 5 ms, serialized as engine version 1 behavior.
-enum class Param : unsigned { gainA, gainB, crossfader };
+enum class Param : unsigned { volume, highPass, lowPass, gainA = 0, gainB = 1, crossfader = 2 };
 struct Point {
     Frame frame{};
     float value{};
+    bool hold = false;
     bool operator==(const Point &) const = default;
 };
 struct Curve {
@@ -33,14 +34,19 @@ struct AudioData {
 };
 struct Clip {
     std::shared_ptr<const AudioData> audio;
-    std::string path, hash, name;
+    std::string path, hash, name, artist, key;
     Frame start = 0, sourceOffset = 0, length = 0;
     double rate = 1.0;
-    double bpm = 120.0, firstBeatSeconds = 0.0;
+    double bpm = 0.0, firstBeatSeconds = 0.0;
+    bool hasGrid = false;
     bool cue = false;
+    int row = 0;
+    std::array<Curve, 3> automation{
+        {Curve{0.7f, true, {{0, 0.7f}}}, Curve{0.0f, true, {{0, 0.0f}}}, Curve{1.0f, true, {{0, 1.0f}}}}};
 };
 struct Project {
-    std::array<Clip, 2> clips;
+    std::vector<Clip> clips = std::vector<Clip>(2);
+    bool perClip = false; // Version 1 remains a separate playback-compatible path.
     std::array<Curve, 3> curves{{Curve{}, Curve{}, Curve{0.0f, false, {}}}};
     Frame end() const noexcept;
     void validate() const;
@@ -49,6 +55,7 @@ struct Event {
     Frame frame{};
     Param param{};
     float value{};
+    unsigned clip = 0;
 };
 
 // One producer and one consumer only. No allocation, lock, or reference reclamation.
@@ -97,7 +104,7 @@ class Engine {
     bool captured(Event &e) noexcept {
         return capture.pop(e);
     }
-    void arm(Frame in, Frame out, unsigned mask = 7) noexcept;
+    void arm(Frame in, Frame out, unsigned mask = 7, int clip = -1) noexcept;
     void process(float *const *output, int channels, int frames) noexcept;
     Frame position() const noexcept {
         return publishedFrame.load(std::memory_order_relaxed);
@@ -122,6 +129,19 @@ class Engine {
         float next(float value) noexcept;
     };
     void targets(Frame) noexcept;
+    void processClips(float *const *, int, int) noexcept;
+    struct ChannelFilter {
+        std::array<float, 2> hpIn{}, hpOut{}, lp{};
+    };
+    struct ClipState {
+        std::array<Ramp, 3> ramps;
+        std::array<float, 3> values{};
+        unsigned overrides = 0;
+        std::array<ChannelFilter, 2> filters;
+        float hpAlpha = 0, lpAlpha = 0;
+    };
+    std::vector<ClipState> clipStates;
+    int armedClip = -1;
     Project project;
     Frame cursor = 0, punchIn = 0, punchOut = 0;
     unsigned armedMask = 0, overrides = 0;
@@ -139,4 +159,5 @@ class Engine {
 // punch-out, restore the original target through the normal 5 ms smoother.
 // This preserves live/replay parity, not baseline PCM identity at the boundary.
 void commitTake(Project &, const std::vector<Event> &, Frame in, Frame out);
+float cutoffHz(float normalized) noexcept;
 } // namespace fader

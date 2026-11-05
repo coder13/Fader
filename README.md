@@ -2,7 +2,7 @@
 
 An open-source DJ application for preparing, performing, editing, and exporting sets. The central feature is a performance that remains editable: record musical actions and automation, revise a transition on a timeline, and render the finished set without performing it again.
 
-**Current stage: first native software prototype.** This branch adds a C++20/JUCE app with two waveform lanes, MP3/WAV import, editable gain/crossfader automation, recording/retakes, set persistence, and WAV export. See the [quickstart](docs/poc-quickstart.md) and [measured results and limitations](docs/experiments/2026-11-04-native-prototype.md). The complete Mac/S4 POC has not passed: controller integration and sustained performance qualification remain pending. Fader is the working project name.
+**Current stage: native arrangement prototype, v0.2.** This branch adds a scrollable DAW-style arrangement with fixed-duration clip dragging; clip-owned volume, high-pass and low-pass envelopes drawn on waveforms; a searchable metadata browser; Preferences; and read-only Traktor collection import. Recording/retakes, set persistence, MP3/WAV import and WAV export use the same rendering core. See the [quickstart](docs/poc-quickstart.md), [current evidence and limits](docs/experiments/2026-11-04-clip-arrangement.md), and [clip-automation decision](docs/decisions/0002-clip-owned-automation.md). The complete Mac/S4 POC has not passed: controller integration and sustained performance qualification remain pending. Fader is the working project name.
 
 ## Start here
 
@@ -29,7 +29,8 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 
 - Open source; macOS first, Windows required, Linux a bonus; investigate web as a platform.
 - Initial hardware is **Native Instruments Traktor Kontrol S4 MK3**.
-- Arrange local audio files on a timeline with visible track boundaries, beat grids, and editable automation.
+- Arrange local audio on a scrollable grid; move clips in time and between tracks without changing their length. Draw independent volume, high-pass and low-pass automation on each waveform.
+- Use a Traktor-inspired table with title, artist, BPM, key and other metadata. Configure the DJ subfolder in Preferences and import existing Traktor metadata read-only.
 - Use the existing `~/Music` library directly: MP3/WAV import in the completed POC, broader common DJ formats and collection-wide qualification for the usable alpha.
 - Record a performance as automation, optionally alongside audio; record replacement sections of a prepared set.
 - Save portable, versioned set projects and export WAV, MP3, and further formats in stages.

@@ -1,6 +1,6 @@
 # Mac and S4 MK3 proof of concept
 
-Status: Proposed experiments and acceptance criteria. Updated 2026-11-04. **The first software experiment exercises parts of these gates; the complete POC has not passed.** See [2026-11-04 native prototype evidence](experiments/2026-11-04-native-prototype.md) for measured results and remaining work. The user authorized proceeding without the S4 hardware for now.
+Status: Proposed experiments and acceptance criteria. Updated 2026-11-04. **The software experiments exercise parts of these gates; the complete POC has not passed.** The user-authorized v0.2 slice adds independent clip volume/HP/LP, waveform envelopes, a scrollable arrangement, Preferences and Traktor metadata. [Current results](experiments/2026-11-04-clip-arrangement.md). These explicit additions supersede older two-lane/crossfader-only editor scope below; hardware gates remain open. See [2026-11-04 native prototype evidence](experiments/2026-11-04-native-prototype.md) for measured results and remaining work. The user authorized proceeding without the S4 hardware for now.
 
 ## Demonstration that counts as success
 

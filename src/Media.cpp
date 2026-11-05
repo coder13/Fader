@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <charconv>
 #include <cmath>
+#include <filesystem>
 #include <stdexcept>
+#include <unordered_map>
 
 namespace fader {
 namespace {
@@ -38,6 +40,37 @@ double number(const juce::var &v) {
     if (!std::isfinite(d))
         fail("Non-finite project value");
     return d;
+}
+juce::var writeCurve(const Curve &curve) {
+    auto v = object();
+    put(v, "initial", curve.initial);
+    put(v, "interpolation", curve.linear ? "linear" : "step");
+    juce::Array<juce::var> points;
+    for (const auto &point : curve.points) {
+        auto p = object();
+        put(p, "frame", juce::String(point.frame));
+        put(p, "value", point.value);
+        put(p, "hold", point.hold);
+        points.add(p);
+    }
+    put(v, "points", points);
+    return v;
+}
+Curve readCurve(const juce::var &v) {
+    Curve curve;
+    curve.initial = static_cast<float>(number(required(v, "initial")));
+    const auto mode = required(v, "interpolation").toString();
+    if (mode != "step" && mode != "linear")
+        fail("Unknown automation interpolation");
+    curve.linear = mode == "linear";
+    const auto points = required(v, "points");
+    if (!points.isArray() || points.size() > 200000)
+        fail("Invalid automation points");
+    for (const auto &p : *points.getArray())
+        curve.points.push_back({integer(required(p, "frame")),
+                                static_cast<float>(number(required(p, "value"))),
+                                static_cast<bool>(p["hold"])});
+    return curve;
 }
 } // namespace
 Clip loadClip(const juce::File &file) {
@@ -93,9 +126,14 @@ Clip loadClip(const juce::File &file) {
 }
 void saveProject(const Project &project, const juce::File &file) {
     project.validate();
+    // Relative paths must share the same physical base, even if a native chooser
+    // returns a directory alias such as /tmp instead of /private/tmp on macOS.
+    const auto base = juce::File(
+        std::filesystem::weakly_canonical(file.getParentDirectory().getFullPathName().toStdString())
+            .string());
     auto root = object();
-    put(root, "schemaVersion", 1);
-    put(root, "engineVersion", 1);
+    put(root, "schemaVersion", project.perClip ? 2 : 1);
+    put(root, "engineVersion", project.perClip ? 2 : 1);
     put(root, "sampleRate", projectRate);
     juce::Array<juce::var> clips;
     for (const auto &clip : project.clips) {
@@ -106,7 +144,8 @@ void saveProject(const Project &project, const juce::File &file) {
         auto v = object();
         put(v, "path",
             clip.path.empty() ? juce::String{}
-                              : juce::File(clip.path).getRelativePathFrom(file.getParentDirectory()));
+                              : juce::File(std::filesystem::weakly_canonical(clip.path).string())
+                                    .getRelativePathFrom(base));
         put(v, "sha256", juce::String(clip.hash));
         put(v, "start", juce::String(clip.start));
         put(v, "sourceOffset", juce::String(clip.sourceOffset));
@@ -114,6 +153,17 @@ void saveProject(const Project &project, const juce::File &file) {
         put(v, "rate", clip.rate);
         put(v, "bpm", clip.bpm);
         put(v, "firstBeatSeconds", clip.firstBeatSeconds);
+        if (project.perClip) {
+            put(v, "row", clip.row);
+            put(v, "name", juce::String(clip.name));
+            put(v, "artist", juce::String(clip.artist));
+            put(v, "key", juce::String(clip.key));
+            put(v, "hasGrid", clip.hasGrid);
+            juce::Array<juce::var> automation;
+            for (const auto &c : clip.automation)
+                automation.add(writeCurve(c));
+            put(v, "automation", automation);
+        }
         clips.add(v);
     }
     put(root, "clips", clips);
@@ -143,16 +193,20 @@ Project loadProject(const juce::File &file) {
     if (!file.existsAsFile() || file.getSize() > 8 * 1024 * 1024)
         fail("Missing or oversized project file");
     const auto root = juce::JSON::parse(file);
-    if (number(required(root, "schemaVersion")) != 1 || number(required(root, "engineVersion")) != 1 ||
+    const auto version = number(required(root, "schemaVersion"));
+    if ((version != 1 && version != 2) || number(required(root, "engineVersion")) != version ||
         number(required(root, "sampleRate")) != projectRate)
         fail("Unsupported project or engine version");
     const auto clips = required(root, "clips");
     const auto lanes = required(root, "automation");
-    if (!clips.isArray() || clips.size() != 2 || !lanes.isArray() || lanes.size() != 3)
+    if (!clips.isArray() || clips.size() > 64 || (version == 1 && clips.size() != 2) || !lanes.isArray() ||
+        lanes.size() != 3)
         fail("Invalid project lane count");
     Project p;
+    p.perClip = version == 2;
+    p.clips.resize(static_cast<std::size_t>(clips.size()));
     // Validate the manifest before any media decode.
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < clips.size(); ++i) {
         const auto c = clips[i];
         auto &clip = p.clips[static_cast<std::size_t>(i)];
         clip.path = required(c, "path").toString().toStdString();
@@ -163,6 +217,22 @@ Project loadProject(const juce::File &file) {
         clip.rate = number(required(c, "rate"));
         clip.bpm = number(required(c, "bpm"));
         clip.firstBeatSeconds = number(required(c, "firstBeatSeconds"));
+        clip.row = i;
+        if (p.perClip) {
+            const auto row = number(required(c, "row"));
+            if (row < 0 || row > 4095 || std::floor(row) != row)
+                fail("Invalid arrangement row");
+            clip.row = static_cast<int>(row);
+            clip.name = required(c, "name").toString().toStdString();
+            clip.artist = required(c, "artist").toString().toStdString();
+            clip.key = required(c, "key").toString().toStdString();
+            clip.hasGrid = static_cast<bool>(c["hasGrid"]);
+            const auto a = required(c, "automation");
+            if (!a.isArray() || a.size() != 3)
+                fail("Invalid clip automation count");
+            for (int j = 0; j < 3; ++j)
+                clip.automation[static_cast<std::size_t>(j)] = readCurve(a[j]);
+        }
     }
     for (int i = 0; i < 3; ++i) {
         const auto l = lanes[i];
@@ -180,19 +250,33 @@ Project loadProject(const juce::File &file) {
                 {integer(required(point, "frame")), static_cast<float>(number(required(point, "value")))});
     }
     p.validate();
+    std::unordered_map<std::string, Clip> media;
+    std::size_t decodedBytes = 0;
     for (auto &clip : p.clips) {
         if (clip.path.empty()) {
             if (clip.length > 0)
                 fail("Clip has no source file");
             continue;
         }
-        const auto source = file.getParentDirectory().getChildFile(clip.path);
-        auto loaded = loadClip(source);
+        const auto base = juce::File(
+            std::filesystem::weakly_canonical(file.getParentDirectory().getFullPathName().toStdString())
+                .string());
+        const auto source = base.getChildFile(clip.path);
+        const auto path = source.getFullPathName().toStdString();
+        if (!media.contains(path)) {
+            auto loaded = loadClip(source);
+            decodedBytes += loaded.audio->frames() * 8;
+            if (decodedBytes > 1024ULL * 1024 * 1024)
+                fail("Set exceeds the prototype's 1 GiB decoded-media budget");
+            media.emplace(path, std::move(loaded));
+        }
+        const auto &loaded = media.at(path);
         if (loaded.hash != clip.hash)
             fail("Source content changed. Restore the original file before opening this set.");
         clip.audio = loaded.audio;
         clip.path = loaded.path;
-        clip.name = loaded.name;
+        if (clip.name.empty())
+            clip.name = loaded.name;
     }
     p.validate();
     return p;

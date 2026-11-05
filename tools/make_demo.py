@@ -34,12 +34,19 @@ def main():
         clips.append({"path": paths[deck].name,
                       "sha256": hashlib.sha256(paths[deck].read_bytes()).hexdigest(),
                       "start": str(deck * 6 * 48000), "sourceOffset": "0", "length": str(12 * 48000),
-                      "rate": 1.0, "bpm": 120.0, "firstBeatSeconds": 0.0})
+                      "rate": 1.0, "bpm": 120.0, "firstBeatSeconds": 0.0, "hasGrid": True,
+                      "row": deck, "name": "Pulse A" if deck == 0 else "Pulse B", "artist": "Fader demo", "key": "",
+                      "automation": [
+                          {"initial": 0.7 if deck == 0 else 0.0, "interpolation": "linear", "points":
+                           [{"frame": "0", "value": 0.7}, {"frame": str(6*48000), "value": 0.7}, {"frame": str(12*48000), "value": 0.0}]
+                           if deck == 0 else [{"frame": "0", "value": 0.0}, {"frame": str(6*48000), "value": 0.7}]},
+                          {"initial": 0.0, "interpolation": "linear", "points": [{"frame": "0", "value": 0.0}]},
+                          {"initial": 1.0, "interpolation": "linear", "points": [{"frame": "0", "value": 1.0}]}]})
     automation = [{"initial": 0.7, "interpolation": "step", "points": []} for _ in range(2)]
     automation.append({"initial": -1.0, "interpolation": "step", "points": [
         {"frame": str(round((6 + step * 0.15) * 48000)), "value": -1 + step * 0.05}
         for step in range(41)]})
-    paths[2].write_text(json.dumps({"schemaVersion": 1, "engineVersion": 1, "sampleRate": 48000,
+    paths[2].write_text(json.dumps({"schemaVersion": 2, "engineVersion": 2, "sampleRate": 48000,
                                   "clips": clips, "automation": automation}, indent=2) + "\n")
     print(paths[2].resolve())
 

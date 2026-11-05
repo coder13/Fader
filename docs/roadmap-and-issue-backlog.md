@@ -1,5 +1,18 @@
 # Roadmap and draft GitHub issues
 
+## Current software slice and next checks (2026-11-04)
+
+The user requested the v0.2 arrangement iteration while hardware is unavailable. Implemented: clip-owned volume/HP/LP envelopes, fixed-duration horizontal/vertical clip movement, scroll/zoom, metadata search/sort, DJ-folder Preferences and read-only Traktor metadata. [Evidence and limits](experiments/2026-11-04-clip-arrangement.md). These requirements supersede the global crossfader as the primary editor in older drafts below; the historical hardware/reuse gates remain open.
+
+Next, in order:
+
+1. Owner usability session: import real tracks, align an overlap, draw all three envelopes, record a short retake, move the clips, save/reopen/export. Check zoom, discoverability and filter feel before expanding features.
+2. Streaming/recovery: remove full-decode memory constraints, make long seeks cancellable, add autosave and source relinking; qualify the complete music folder through full decode and exports.
+3. Musical timing: editable imported beat grids and beat/bar snap driven by actual tempo, then high-quality time stretch/key lock and tempo changes.
+4. S4 qualification when available: channel faders/filter routing to clip identity, pickup/LED state, master/cue routing, and sustained audio measurements. Preserve versioned render semantics.
+
+
+
 Status: Proposed backlog, not published issues. Updated 2026-11-04. IDs such as `DJ-001` are local planning IDs, not GitHub issue numbers. Repository: [coder13/Fader](https://github.com/coder13/Fader). Documentation pushes are authorized; issue publication is a separate pending step. Research is complete for this planning pass; implementation has not begun.
 
 The order prioritizes an adoption/reuse decision, hardware feasibility and the editable-performance loop. The [competitive audit](research/competitive-workflow-audit.md) expands M0 beyond a Mixxx-versus-new-core choice. M1 onward describes the custom implementation fallback, to be revised if adoption or contribution wins. Web research starts early; a production browser host depends on measured capability. Milestones have exit criteria instead of speculative release dates.

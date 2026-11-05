@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#include "Library.h"
 #include "Media.h"
 #include <algorithm>
 #include <chrono>
@@ -19,12 +20,17 @@ class SilentDeviceProbe final : public juce::AudioIODeviceCallback {
     void audioDeviceStopped() override {}
     static fader::Project makeProject() {
         fader::Project project;
+        project.perClip = true;
         auto audio = std::make_shared<fader::AudioData>();
         for (auto &channel : audio->samples)
             channel.assign(48000 * 4, 0.1f);
         for (auto &clip : project.clips) {
             clip.audio = audio;
             clip.length = 48000 * 4;
+            clip.automation[0].initial = 0;
+            clip.automation[0].points = {{0, 0}}; // silent physical output
+            clip.automation[1].points = {{0, 0.1f}, {192000, 0.6f}};
+            clip.automation[2].points = {{0, 0.9f}, {192000, 0.4f}};
         }
         project.curves[0].initial = project.curves[1].initial = 0; // silent physical output
         return project;
@@ -74,6 +80,27 @@ void audioSmoke() {
 int main(int argc, char **argv) {
     try {
         juce::ScopedJuceInitialiser_GUI juce;
+        if (argc == 2 && std::string(argv[1]) == "--library") {
+            const auto library = fader::scanLibrary(fader::Preferences::load());
+            auto *o = new juce::DynamicObject();
+            juce::var json(o);
+            int bpm = 0, key = 0, grids = 0;
+            for (const auto &t : library.tracks) {
+                bpm += t.bpm > 0;
+                key += t.key.isNotEmpty();
+                grids += t.hasGrid;
+            }
+            o->setProperty("tracks", static_cast<int>(library.tracks.size()));
+            o->setProperty("traktorEntries", library.traktorEntries);
+            o->setProperty("matchedTraktor", library.matched);
+            o->setProperty("missing", library.missing);
+            o->setProperty("withBPM", bpm);
+            o->setProperty("withKey", key);
+            o->setProperty("withGrid", grids);
+            o->setProperty("warning", library.warning);
+            std::cout << juce::JSON::toString(json, true) << '\n';
+            return 0;
+        }
         if (argc == 2 && std::string(argv[1]) == "--audio-smoke") {
             audioSmoke();
             return 0;
@@ -100,8 +127,9 @@ int main(int argc, char **argv) {
             std::cout << "WAV export complete\n";
             return 0;
         }
-        std::cerr << "Usage: fader_probe --devices | --audio-smoke | --inspect <audio> | --render "
-                     "<set.faderset> <output.wav>\n";
+        std::cerr
+            << "Usage: fader_probe --devices | --library | --audio-smoke | --inspect <audio> | --render "
+               "<set.faderset> <output.wav>\n";
         return 2;
     } catch (const std::exception &e) {
         std::cerr << e.what() << '\n';
