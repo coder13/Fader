@@ -1,0 +1,179 @@
+{
+  "scope": "Exact-source functional evidence-retention qualification, not sustained performance or physical audio/MIDI. Raw path contexts remain local.",
+  "qualifiedSource": "bb994cc90fcde2ea988ecd58711ad49261f0691a",
+  "workflowRun": 42074528793,
+  "mac": {
+    "source": "bb994cc90fcde2ea988ecd58711ad49261f0691a",
+    "jobId": 127412227870,
+    "buildInfo": {
+      "project": "Fader",
+      "version": "0.2.0",
+      "sourceRevision": "bb994cc90fcde2ea988ecd58711ad49261f0691a",
+      "cmakeVersion": "4.4.4",
+      "generator": "Unix Makefiles",
+      "system": "Darwin",
+      "systemVersion": "24.6.0",
+      "architecture": "arm64",
+      "compiler": "AppleClang",
+      "compilerVersion": "17.0.0.17000013",
+      "cxxStandard": "20",
+      "buildType": "Release",
+      "nativeApp": "ON",
+      "uiFixtures": "OFF",
+      "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+    },
+    "junit": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "pythonHelperTests": 16,
+    "driver": {
+      "requestedSeconds": 2,
+      "faultsExitCode": 0,
+      "timedExitCode": 0,
+      "archiveExitCode": 0,
+      "finishedUtc": "2026-11-05T17:34:26.352588+00:00",
+      "metadataMatchesAggregate": true,
+      "probe": {
+        "file": "fader_probe",
+        "bytes": 13489720,
+        "sha256": "1c59968150a72fcf51787001c0731346c3d20f70092d4900c46ea6b52a400a5c"
+      },
+      "allSixFaultHashesChecked": true,
+      "originalCaptureHashChecked": true,
+      "allNonPathTypesAndFieldsChecked": true,
+      "float64ValuesChecked": 235,
+      "physicalIdentityCheckRecordedByRunner": true,
+      "physicalIdentityIndependentlyReestablishedAfterDownload": false,
+      "limitation": "Runner source files are not in the downloaded artifact. File identity is checked on the runner; downloaded original/archive non-path values, types and float bits are independently compared.",
+      "capturedInputs": 247,
+      "virtualDeadlineMisses": 506,
+      "latePaintStarts": 60,
+      "hourTargetPassed": false,
+      "freshReaderMatchesArchived": true
+    },
+    "suiteSmokes": {
+      "timedSmoke": {
+        "hostRows": 259,
+        "paintRows": 64,
+        "virtualMisses": 492,
+        "latePaintStarts": 62,
+        "hourTargetPassed": false
+      },
+      "cpuDiagnosticSmoke": {
+        "hostRows": 260,
+        "paintRows": 59,
+        "virtualMisses": 504,
+        "latePaintStarts": 56,
+        "hourTargetPassed": false
+      }
+    },
+    "scope": "Functional native CI and evidence retention only; not sustained timing, physical audio/MIDI or native interaction qualification."
+  },
+  "windows": {
+    "source": "bb994cc90fcde2ea988ecd58711ad49261f0691a",
+    "jobId": 127412227818,
+    "buildInfo": {
+      "project": "Fader",
+      "version": "0.2.0",
+      "sourceRevision": "bb994cc90fcde2ea988ecd58711ad49261f0691a",
+      "cmakeVersion": "4.4.5",
+      "generator": "Ninja",
+      "system": "Windows",
+      "systemVersion": "10.0.26100",
+      "architecture": "AMD64",
+      "compiler": "MSVC",
+      "compilerVersion": "19.51.36260.0",
+      "cxxStandard": "20",
+      "buildType": "Release",
+      "nativeApp": "ON",
+      "uiFixtures": "OFF",
+      "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+    },
+    "junit": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "pythonHelperTests": 16,
+    "driver": {
+      "requestedSeconds": 2,
+      "faultsExitCode": 0,
+      "timedExitCode": 0,
+      "archiveExitCode": 0,
+      "finishedUtc": "2026-11-05T17:53:00.236186+00:00",
+      "metadataMatchesAggregate": true,
+      "probe": {
+        "file": "fader_probe.exe",
+        "bytes": 6916096,
+        "sha256": "3be571b04a3776dde534cc8169fc5de1f9e478b1a997dd9042c5c0c54a3fb3b4"
+      },
+      "allSixFaultHashesChecked": true,
+      "originalCaptureHashChecked": true,
+      "allNonPathTypesAndFieldsChecked": true,
+      "float64ValuesChecked": 286,
+      "physicalIdentityCheckRecordedByRunner": true,
+      "physicalIdentityIndependentlyReestablishedAfterDownload": false,
+      "limitation": "Runner source files are not in the downloaded artifact. File identity is checked on the runner; downloaded original/archive non-path values, types and float bits are independently compared.",
+      "capturedInputs": 247,
+      "virtualDeadlineMisses": 12,
+      "latePaintStarts": 0,
+      "hourTargetPassed": false,
+      "freshReaderMatchesArchived": true
+    },
+    "suiteSmokes": {
+      "timedSmoke": {
+        "hostRows": 258,
+        "paintRows": 2,
+        "virtualMisses": 0,
+        "latePaintStarts": 0,
+        "hourTargetPassed": false,
+        "zeroCpuDeltas": 0,
+        "cpuDeltasAboveEnclosingWall": 0
+      },
+      "cpuDiagnosticSmoke": {
+        "hostRows": 259,
+        "paintRows": 3,
+        "virtualMisses": 0,
+        "latePaintStarts": 0,
+        "hourTargetPassed": false,
+        "zeroCpuDeltas": 261,
+        "cpuDeltasAboveEnclosingWall": 1
+      }
+    },
+    "scope": "Functional native CI and evidence retention only; not sustained timing, physical audio/MIDI or native interaction qualification."
+  },
+  "linux": {
+    "jobId": 127412227812,
+    "buildInfo": {
+      "project": "Fader",
+      "version": "0.2.0",
+      "sourceRevision": "bb994cc90fcde2ea988ecd58711ad49261f0691a",
+      "cmakeVersion": "3.31.6",
+      "generator": "Unix Makefiles",
+      "system": "Linux",
+      "systemVersion": "7.0.0-1017-azure",
+      "architecture": "x86_64",
+      "compiler": "GNU",
+      "compilerVersion": "13.3.0",
+      "cxxStandard": "20",
+      "buildType": "Release",
+      "nativeApp": "OFF",
+      "uiFixtures": "OFF",
+      "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+    },
+    "junit": {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "helperTests": 16,
+    "helperSeconds": 0.211,
+    "fullJobLogsInspected": true,
+    "nativeDriverRun": false
+  }
+}

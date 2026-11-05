@@ -8,6 +8,8 @@ from pathlib import Path
 import platform
 import subprocess
 import sys
+from stress_archive import (ArchiveError, digest, preserve_capture, preserve_faults,
+                            preserve_probe, verify_project_archive)
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--source-root", type=Path, required=True, help="Clean committed source checkout")
@@ -27,14 +29,6 @@ if not 1 <= args.seconds <= 3600:
 
 def git(*command):
     return subprocess.check_output(["git", "-C", str(args.source_root), *command])
-
-
-def digest(path):
-    result = hashlib.sha256()
-    with path.open("rb") as source:
-        for block in iter(lambda: source.read(1024 * 1024), b""):
-            result.update(block)
-    return result.hexdigest()
 
 
 if git("status", "--porcelain").strip():
@@ -76,7 +70,7 @@ def run(label, command):
     (args.output / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     with (args.output / f"{label}.json").open("w") as output, (args.output / f"{label}.log").open("w") as log:
         print(f"Starting {label}", file=sys.stderr, flush=True)
-        result = subprocess.run([str(args.probe), *map(str, command)], stdout=output, stderr=log)
+        result = subprocess.run([str(preserved_probe), *map(str, command)], stdout=output, stderr=log)
     metadata[f"{label}ExitCode"] = result.returncode
     metadata[f"{label}FinishedUtc"] = datetime.now(timezone.utc).isoformat()
     try:
@@ -87,10 +81,16 @@ def run(label, command):
     return data
 
 
+summary = None
 try:
+    # Execute the retained copy, so later build replacement cannot destroy the
+    # exact executable evidence. Copy/hash work precedes the timed process.
+    metadata["preservedProbe"] = preserve_probe(args.probe, args.output, metadata["probeSha256"])
+    preserved_probe = (args.output / metadata["preservedProbe"]["file"]).resolve()
     faults = run("faults", ["--stress-faults", args.fixtures])
     if metadata["faultsExitCode"]:
         sys.exit("Fault qualification failed. Read faults.log.")
+    metadata["preservedFaultFiles"] = preserve_faults(args.fixtures, args.output)
     command = ["--stress-software", args.fixtures, args.seconds, args.block]
     if args.scheduler == "realtime":
         command.append("--realtime")
@@ -99,26 +99,34 @@ try:
     timed = run("timed", command)
     metadata["timedPhaseFinishedUtc"] = datetime.now(timezone.utc).isoformat()
     captured = args.fixtures / f"stress-captured-{args.block}.faderset"
-    # A prior run can leave this fixture-side path behind. A failed save must
-    # never archive that older project as if the current take had persisted.
-    if timed.get("capturePersistencePassed") and captured.is_file():
-        metadata["capturedProjectSha256"] = digest(captured)
-        metadata["capturedProjectBytes"] = captured.stat().st_size
+    raw_capture = preserve_capture(timed, captured, args.output)
+    if raw_capture is not None:
+        metadata["preservedOriginalCapture"] = raw_capture
+        metadata["capturedProjectSha256"] = raw_capture["sha256"]
+        metadata["capturedProjectBytes"] = raw_capture["bytes"]
         # Archive through the production loader/writer, so relative media paths
         # remain valid at the evidence destination. Fixtures remain local.
-        resave = subprocess.run([str(args.probe), "--resave-project", str(captured),
+        resave = subprocess.run([str(preserved_probe), "--resave-project", str(captured),
                                  str(args.output / "captured.faderset")], capture_output=True, text=True)
         metadata["archiveProjectExitCode"] = resave.returncode
         (args.output / "archive-project.log").write_text(resave.stdout + resave.stderr)
         if resave.returncode == 0:
             metadata["archivedProjectSha256"] = digest(args.output / "captured.faderset")
+            metadata["archiveVerification"] = verify_project_archive(
+                args.output / raw_capture["file"], args.output / "captured.faderset", captured.parent)
     summary = {"metadata": metadata, "faults": faults, "timed": timed}
-    (args.output / "aggregate.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(json.dumps({key: timed.get(key) for key in (
         "requestedSeconds", "blockFrames", "softwareIntegrityPassed", "hourTargetPassed",
         "callbackExecution", "virtualDeadlineMisses", "sourceStarvationFrames",
         "capturedInputs", "peakResidentBytes")}, indent=2))
-    sys.exit(metadata["timedExitCode"] or metadata.get("archiveProjectExitCode", 1))
+    # Archive failure is an evidence failure even if timing also failed.
+    sys.exit(metadata["timedExitCode"] if "archiveVerification" in metadata else 1)
+except (ArchiveError, OSError, UnicodeError, json.JSONDecodeError) as error:
+    metadata["evidenceArchiveError"] = {"type": type(error).__name__, "details": "archive-error.log"}
+    (args.output / "archive-error.log").write_text(str(error) + "\n", encoding="utf-8")
+    sys.exit("Evidence preservation failed. Read metadata.json; retained files are not a complete archive.")
 finally:
     metadata["finishedUtc"] = datetime.now(timezone.utc).isoformat()
     (args.output / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
+    if summary is not None:
+        (args.output / "aggregate.json").write_text(json.dumps(summary, indent=2) + "\n")
