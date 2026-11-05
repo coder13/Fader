@@ -2,7 +2,7 @@
 
 An open-source DJ application for preparing, performing, editing, and exporting sets. The central feature is a performance that remains editable: record musical actions and automation, revise a transition on a timeline, and render the finished set without performing it again.
 
-**Current stage: research and design.** No audio engine, controller integration, benchmark, or executable POC has been built or tested. Research reviewed on 2026-11-04. Fader is the working project name.
+**Current stage: native POC validation.** A [C++20/JUCE v0.2 prototype](https://github.com/coder13/Fader/blob/3a3b58456065f6cfed4c9f23f1a0252047d80a89/README.md) implements clip-owned automation, an arrangement editor, library/Traktor metadata, save/reopen and WAV export. Its software tests pass; sustained streaming, recovery, Windows and S4 hardware gates remain open. [10 milestones and 43 issues](docs/roadmap-and-issue-backlog.md) now track the path from POC to product. Fader is the working project name.
 
 ## Start here
 
@@ -17,7 +17,7 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 | [Plugin effects for v2/v3](docs/plugin-effects.md) | VST3 racks, parameter automation, state, latency, and export |
 | [Audio import and library compatibility](docs/audio-import-and-library.md) | Common formats, existing-library workflow, and qualification |
 | [POC plan](docs/poc-plan.md) | Smallest useful Mac + S4 MK3 demonstration and pass/fail evidence |
-| [Roadmap and issue backlog](docs/roadmap-and-issue-backlog.md) | Dependency-ordered milestones and draft GitHub issues |
+| [Roadmap and issue backlog](docs/roadmap-and-issue-backlog.md) | Published milestones, dependencies and POC-to-product exit gate |
 | [Stack decision](docs/decisions/0001-platform-and-engine.md) | Conditional C++ fallback after application/engine reuse evaluation |
 | [Risks and open questions](docs/risks-and-open-questions.md) | Unresolved decisions and how to resolve them |
 | [Experiment report template](docs/experiments/README.md) | Evidence format for hardware, timing, and design decisions |
@@ -30,7 +30,8 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 
 - Open source; macOS first, Windows required, Linux a bonus; investigate web as a platform.
 - Initial hardware is **Native Instruments Traktor Kontrol S4 MK3**.
-- Arrange local audio files on a timeline with visible track boundaries, beat grids, and editable automation.
+- Arrange local audio on extensible rows; move clips without resizing them and draw independent volume/HP/LP envelopes directly on each waveform.
+- Use a flat dark interface, discoverable context menus, a Traktor-style metadata browser and read-only Traktor import; configure the DJ folder in Preferences.
 - Model the UI on the lessons of the Audacity 4 redesign: understandable defaults, direct and reversible editing, discoverable controls, and accessible presentation; validate the concrete DJ interactions.
 - Use the existing `~/Music` library directly: MP3/WAV import in the completed POC, broader common DJ formats and collection-wide qualification for the usable alpha.
 - Record a performance as automation, optionally alongside audio; record replacement sections of a prepared set.
@@ -38,15 +39,11 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 - Support tempo changes, controller input/feedback, and external MIDI output in the roadmap.
 - Version 2/3: host third-party audio effects, starting with VST3, with editable parameter automation and saved plugin state; excluded from the POC.
 
-## Current recommendation
+## Current direction
 
-**Evaluate adoption or a focused contribution before building another audio engine.** The [deeper audit](docs/research/competitive-workflow-audit.md) identifies GlideMix as the leading arranger-reuse investigation and Mixxx as the strongest documented S4 performance foundation. Density and DJ.Studio are important workflow benchmarks; MixCanvas and a focused DAW template are additional alternatives. None has passed the user's complete workflow here. Published UI/manual evidence is not hands-on qualification.
+Continue the C++20/JUCE prototype while testing the risks that could change the production architecture: bounded streaming, fast cancellable seeking, sustained audio/capture, real S4 HID/master-cue behavior and early Windows compilation. The [published roadmap](docs/roadmap-and-issue-backlog.md) contains the next work and the [POC exit decision](https://github.com/coder13/Fader/issues/17).
 
-The next proposed milestone is an adoption/reuse decision: perform or record one transition, correct one parameter, replace a range, move the transition, save/reopen and export. Record exact blockers. Personal adoption of commercial software may solve the immediate workflow but does not replace the confirmed open-source product requirement.
-
-If existing applications prove unsuitable, evaluate Tracktion Engine before a custom **C++20 headless audio core with a thin JUCE desktop host**. The existing native architecture remains a conditional fallback, subject to license/dependency review and measured S4 HID/Core Audio results. Web UI and browser-only hardware experiments remain proposals. No stack or product pivot has been accepted.
-
-The first complete POC imports two tracks, records a short S4 transition, edits its automation, saves/reopens it, and exports WAV. Full controller screens, motors, four-deck performance, and a complete DAW are later milestones.
+The [competitive audit](docs/research/competitive-workflow-audit.md) remains evidence for bounded reuse investigations. The working prototype is now the comparison baseline; language/framework choice is provisional until the qualification and architecture decision. Web/hybrid delivery remains a measured scope decision. VST3 effects are planned for product versions 2 and 3, after the native POC.
 
 ## Keeping these documents useful
 
@@ -54,4 +51,4 @@ This repository is the source of truth for design. Each implementation issue sho
 
 Record experiments under `docs/experiments/` with date, commit, dependency versions, machine/OS, firmware, settings, measurements, and conclusion. Keep research claims linked to primary sources and recheck changing claims at the point of adoption. Preserve rejected alternatives and their reasons in decision records. Keep hardware support claims tied to completed qualification reports.
 
-Repository: [coder13/Fader](https://github.com/coder13/Fader). The user authorizes direct commits and pushes of documentation updates to `main`; see [working conventions](AGENTS.md). GitHub issues have not been published; the local backlog is ready for review and publication. No project license file has been selected yet.
+Repository: [coder13/Fader](https://github.com/coder13/Fader). The user authorizes direct commits and pushes of documentation updates to `main`; see [working conventions](AGENTS.md). [GitHub issues](https://github.com/coder13/Fader/issues) and [milestones](https://github.com/coder13/Fader/milestones) are published; the roadmap maps stable planning IDs to them. The experimental implementation declares AGPL-3.0-or-later; the maintainer's final product licensing preference remains deferred.

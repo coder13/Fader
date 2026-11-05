@@ -10,7 +10,7 @@ Open source, macOS and Windows, S4 MK3 first, Audacity-inspired clarity, editabl
 
 | Risk | Impact | Next evidence or mitigation | Gate |
 | --- | --- | --- | --- |
-| Building capabilities an existing app already supplies | Unnecessary engine/editor work and long-term maintenance | Common-task adoption/reuse gate; compare GlideMix, Mixxx and focused commercial/DAW workflows before custom implementation | M0 / DJ-037 |
+| Building capabilities an existing app already supplies | Unnecessary engine/editor work and long-term maintenance | Common-task adoption/reuse gate; compare GlideMix, Mixxx and focused commercial/DAW workflows before committing to the production architecture | M0 / DJ-037 |
 | Published features conceal workflow or source-build gaps | Attractive UI leads to a costly port/fork or unusable controller path | Exact-version trial, build reproducibility, selective-retake and automation-ownership probes; screenshots remain research evidence only | M0 / DJ-037 |
 | S4 HID access or initialization differs by firmware | Cannot control the actual target device | Exact report inventory, known parser fixtures, one LED round-trip | M0/M1 |
 | Hardware monitoring differs from software mix | Recorded/exported sound differs from what user heard | Explicit monitor boundary; digital vs physical routing test | A03/A09 |
@@ -23,9 +23,9 @@ Open source, macOS and Windows, S4 MK3 first, Audacity-inspired clarity, editabl
 | Web hardware/routing APIs unavailable | Browser version cannot satisfy S4 live workflow | Chromium qualification; native bridge or arrangement-only scope | M0/M6 |
 | Long decode/export exhausts memory | Crash or failed long sets | Bounded caches and streaming encoder; long-set memory report | A15/M4 |
 | Project media/DSP dependencies change | Old sets sound different or fail to open | Content hashes, grid snapshots, migrations, pinned render semantics | M2/M4 |
-| Timeline editor becomes a general DAW project | POC loses focus | Gate features against the flagship workflow; two lanes and few parameters first | M2 |
+| Timeline editor becomes a general DAW project | POC loses focus | Gate features against the flagship workflow; two active-source qualification and clip volume/HP/LP first | M2 |
 | Windows driver behavior varies | Second required platform delayed | Version-specific current ASIO/WASAPI qualification | M5 |
-| Plugin latency, crashes, or unavailable versions change a set | Third-party effects break live reliability or reproducible export | Isolated scanning, state/parameter identity, delay compensation, compatibility tests and freeze path | M8 / v2–v3 |
+| Plugin latency, crashes, or unavailable versions change a set | Third-party effects break live reliability or reproducible export | Isolated scanning, state/parameter identity, delay compensation, compatibility tests and freeze path | M8/M9 / v2–v3 |
 | Decoder/format differences reject existing songs or shift cues | The user's collection cannot be used reliably | Header-based probing, MP3/WAV POC, full-library decode report and cross-platform fixtures | A16/M4 |
 
 ## Decisions still needed
@@ -37,7 +37,7 @@ Open source, macOS and Windows, S4 MK3 first, Audacity-inspired clarity, editabl
 5. **DSP candidate and sound quality:** compare Rubber Band and Signalsmith at relevant tempos and latency; no algorithm selected yet.
 6. **Musical edit semantics:** validate beat-anchored versus absolute placements and automation movement rules with the user on a prototype.
 7. **Distribution baseline:** set supported macOS/Windows versions and Apple Silicon/Intel policy after build and hardware evidence. Cross-platform does not imply every old OS.
-8. **GitHub issue publication:** repository is [coder13/Fader](https://github.com/coder13/Fader); documentation pushes are authorized. The issue backlog remains draft and needs the planned publication step.
+8. **Milestone execution:** the [43 published issues and 10 milestones](roadmap-and-issue-backlog.md) now track the work. DJ-017 is the explicit POC-to-product decision; open hardware and long-run gates remain visible.
 
 ## Hardware details to collect during the first experiment
 
