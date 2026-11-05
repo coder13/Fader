@@ -131,6 +131,8 @@ It requires capture and source integrity, but it does not enforce performance ta
 Use a clean committed checkout and byte-identical build source for the driver.
 The driver writes the exact revision, binary hash, fixture hashes, build metadata and aggregate results.
 It also archives the captured project through the production loader and writer.
+The [evidence-preservation candidate](experiments/2026-11-05-stress-archive.md) retains the executable and original project bytes automatically.
+Its short native CI run tests the driver, not hour performance.
 The following example uses a separate build-source folder for an existing local JUCE checkout.
 
 ```sh
