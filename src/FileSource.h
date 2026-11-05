@@ -4,7 +4,9 @@
 #include <juce_audio_formats/juce_audio_formats.h>
 
 namespace fader {
+class DecodedCache;
 std::shared_ptr<const StreamSource> makeFileSource(const juce::File &, SourceFrame frames, double sampleRate,
                                                    unsigned channels, juce::int64 bytes,
-                                                   juce::int64 modifiedMillis);
+                                                   juce::int64 modifiedMillis, bool sequentialReplay,
+                                                   std::shared_ptr<const DecodedCache> cache = {});
 } // namespace fader

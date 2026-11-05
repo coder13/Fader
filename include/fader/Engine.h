@@ -14,6 +14,11 @@ constexpr int projectRate = 48000;
 constexpr Frame maxProjectFrames = Frame{24} * 3600 * projectRate;
 constexpr Frame maxSourceFrames = Frame{24} * 3600 * 384000;
 constexpr int rampFrames = 240; // 5 ms, serialized as engine version 1 behavior.
+constexpr Frame seekPrerollFrames = 2 * projectRate;
+struct Preparation {
+    std::shared_ptr<std::atomic<bool>> cancellation;
+    bool exactFromStart = false;
+};
 enum class Param : unsigned { volume, highPass, lowPass, gainA = 0, gainB = 1, crossfader = 2 };
 struct Point {
     Frame frame{};
@@ -103,7 +108,7 @@ class Engine {
     static_assert(std::atomic<Frame>::is_always_lock_free && std::atomic<float>::is_always_lock_free &&
                   std::atomic<bool>::is_always_lock_free && std::atomic<std::uint64_t>::is_always_lock_free);
     // Construct/seek on control thread while callback detached. Project immutable in process().
-    explicit Engine(Project, Frame start = 0);
+    explicit Engine(Project, Frame start = 0, Preparation = {});
     // Worker/offline only. Never call this readiness barrier from an audio callback.
     void prepareSources(int frames);
     void cancelSourceReads() noexcept;
@@ -111,6 +116,11 @@ class Engine {
     std::uint64_t starvationFrames() const noexcept {
         return publishedStarvation.load(std::memory_order_relaxed);
     }
+    Frame preparationFrames() const noexcept {
+        return preparedFrames;
+    }
+    // Preparation-owner only, before attaching a callback. Not a live UI snapshot.
+    std::array<float, 3> preparedParameters(unsigned clip = 0) const noexcept;
     bool command(Event e) noexcept {
         return incoming.push(e);
     }
@@ -153,6 +163,8 @@ class Engine {
     std::unique_ptr<StreamBank> streams;
     std::uint64_t missingFrames = 0;
     std::atomic<std::uint64_t> publishedStarvation{0};
+    Preparation preparation;
+    Frame preparedFrames = 0;
     void processClips(float *const *, int, int) noexcept;
     struct ChannelFilter {
         std::array<float, 2> hpIn{}, hpOut{}, lp{};

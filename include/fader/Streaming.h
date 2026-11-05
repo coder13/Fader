@@ -23,6 +23,12 @@ class StreamSource {
     virtual ~StreamSource() = default;
     virtual SourceFrame frames() const noexcept = 0;
     virtual std::unique_ptr<SourceDecoder> open() const = 0;
+    virtual bool sequentialSeek() const noexcept {
+        return false;
+    }
+    virtual std::uint64_t diskCacheBytes() const noexcept {
+        return 0;
+    }
 };
 enum class SourceError : unsigned { none, open, read, nonFinite };
 struct StreamStats {
@@ -39,7 +45,8 @@ class StreamBank {
     static constexpr int pageFrames = 8192, pagesPerSource = 8;
     static constexpr unsigned maxSources = 64;
     static constexpr std::uint64_t pcmBytesPerSource = 2 * sizeof(float) * pageFrames * pagesPerSource;
-    explicit StreamBank(std::vector<std::shared_ptr<const StreamSource>>);
+    explicit StreamBank(std::vector<std::shared_ptr<const StreamSource>>,
+                        std::shared_ptr<std::atomic<bool>> cancellation = {});
     ~StreamBank();
     StreamBank(const StreamBank &) = delete;
     StreamBank &operator=(const StreamBank &) = delete;

@@ -6,6 +6,7 @@
 #include "Theme.h"
 #include <cmath>
 #include <deque>
+#include <fader/PlaybackPreparation.h>
 #include <set>
 
 using namespace fader;
@@ -13,7 +14,8 @@ namespace {
 const auto ink = ui::text, paper = ui::background, accent = ui::accent, muted = ui::muted;
 class Workspace final : public juce::Component, public juce::DragAndDropContainer, private juce::Timer {
   public:
-    explicit Workspace(bool fixtureMode = false) : workers(2), libraryWorker(1) {
+    explicit Workspace(PlaybackPreparation &preparation, int fixtureMode = 0)
+        : workers(2), libraryWorker(1), preparation(preparation), fixtureMode(fixtureMode) {
         setLookAndFeel(&look);
         tooltips.setLookAndFeel(&look);
         for (auto *c : std::array<juce::Component *, 18>{
@@ -78,6 +80,7 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
         newButton.onClick = [this] {
             confirmDiscard([this] {
                 stop();
+                planSnapshot.reset();
                 project = Project{};
                 project.perClip = true;
                 project.clips.clear();
@@ -98,6 +101,7 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
             if (busy || history.empty())
                 return;
             stop();
+            planSnapshot.reset();
             project = history.back();
             history.pop_back();
             dirty = true;
@@ -110,13 +114,13 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
             arrangement.revealPlayhead();
         };
         play.onClick = [this] {
-            if (engine)
+            if (engine || preparing)
                 stop();
             else
                 start(false);
         };
         record.onClick = [this] {
-            if (recording)
+            if (recording || preparing)
                 stop();
             else
                 start(true);
@@ -161,6 +165,7 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                 return;
             const auto enabled = cue.getToggleState();
             stop();
+            planSnapshot.reset();
             project.clips[static_cast<std::size_t>(arrangement.selected)].cue = enabled;
             syncControls();
             setStatus("Cue uses output channels 3/4 on the selected audio device.");
@@ -185,6 +190,8 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
             return true;
         };
         arrangement.changed = [this] {
+            cancelPreparation();
+            planSnapshot.reset();
             dirty = true;
             syncControls();
             updateTitle();
@@ -209,9 +216,12 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
         arrangement.seek = [this](Frame f) {
             if (busy)
                 return;
+            const bool continuePlayback = (engine || preparing) && !recording && !preparingCapture;
             stop();
             cursor = std::min(f, project.end());
             sync();
+            if (continuePlayback && cursor < project.end())
+                start(false);
         };
         arrangement.drop = [this](const juce::File &f, Frame at, int row) { addFile(f, at, row); };
         library.addTrack = [this](const TrackInfo &t) {
@@ -283,6 +293,7 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                 juce::MessageManager::callAsync([safe, p = std::move(p), f, fixtureCase]() mutable {
                     if (!safe)
                         return;
+                    safe->planSnapshot.reset();
                     safe->project = std::move(p);
                     safe->currentFile = f;
                     safe->history.clear();
@@ -296,10 +307,8 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                                         : "Version 1 set: original playback and export preserved. Choose New "
                                           "set to use clip automation.");
 #if FADER_ENABLE_UI_FIXTURES
-                    if (fixtureCase == 1)
-                        safe->simulateInterruptedCapture();
-                    else if (fixtureCase == 2)
-                        safe->simulateSourceGap();
+                    if (fixtureCase != 0)
+                        safe->start(false);
 #else
                     juce::ignoreUnused(fixtureCase);
 #endif
@@ -315,9 +324,7 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
     void simulateSourceGap() {
         if (project.clips.empty() || project.end() < 1024)
             return;
-        engine = std::make_shared<Playback>(project, 0, ++nextSegment);
         engine->deviceStarted(projectRate);
-        audioPlayback = std::make_unique<AudioPlayback>(*engine);
         std::array<float, 512> left{}, right{};
         float *out[]{left.data(), right.data()};
         engine->process(out, 2, 128, monotonicTime());
@@ -329,7 +336,6 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
     void simulateInterruptedCapture() {
         if (project.clips.empty() || project.end() < 512)
             return;
-        engine = std::make_shared<Playback>(project, 0, ++nextSegment);
         engine->arm(0, project.end(), 7, 0);
         engine->deviceStarted(projectRate);
         const auto now = monotonicTime();
@@ -337,7 +343,6 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
         std::array<float, 128> left{}, right{};
         float *out[]{left.data(), right.data()};
         engine->process(out, 2, 128, now);
-        audioPlayback = std::make_unique<AudioPlayback>(*engine);
         audioPlayback->audioDeviceStopped();
         takeIn = 0;
         takeOut = project.end();
@@ -578,6 +583,8 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
         });
     }
     void checkpoint() {
+        cancelPreparation();
+        planSnapshot.reset();
         history.push_back(project);
         undo.setEnabled(!busy);
         if (history.size() > 24)
@@ -649,6 +656,8 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
         }
         if (!sliderGesture)
             checkpoint();
+        cancelPreparation();
+        planSnapshot.reset();
         auto &c = project.clips[selected];
         auto &curve = c.automation[static_cast<std::size_t>(parameter)];
         const auto frame = cursor >= c.start && cursor < c.start + c.length ? cursor - c.start : Frame{0};
@@ -765,6 +774,7 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                     if (!safe)
                         return;
                     safe->history.clear();
+                    safe->planSnapshot.reset();
                     safe->project = std::move(base);
                     safe->arrangement.selected = static_cast<int>(safe->project.clips.size() - 1);
                     safe->busy = false;
@@ -953,7 +963,7 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
             setStatus("Save or discard the incomplete take from the Set menu before recording again.");
             return;
         }
-        if (!ensureAudio())
+        if (!fixtureMode && !ensureAudio())
             return;
         if (cursor >= project.end())
             cursor = 0;
@@ -977,48 +987,74 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
             }
             cursor = in;
         }
-        busy = true;
+        if (!planSnapshot)
+            planSnapshot = std::make_shared<const Project>(project);
+        preparing = true;
+        preparingCapture = capture;
+        preparingClip = selected;
+        takeIn = in;
+        takeOut = out;
+        requestGeneration = preparation.request(planSnapshot, cursor, ++nextSegment);
+        play.setButtonText("Cancel");
         sync();
-        setStatus("Preparing playback and filter history...");
-        auto snapshot = project;
-        const auto startFrame = cursor;
-        const auto segment = ++nextSegment;
-        auto safe = juce::Component::SafePointer<Workspace>(this);
-        workers.addJob([safe, snapshot = std::move(snapshot), startFrame, segment, capture, in, out,
-                        selected] {
-            try {
-                auto prepared = std::make_shared<Playback>(snapshot, startFrame, segment);
-                if (capture)
-                    prepared->arm(in, out, 7, selected);
-                juce::MessageManager::callAsync([safe, prepared = std::move(prepared), capture, in, out,
-                                                 selected] {
-                    if (!safe)
-                        return;
-                    safe->engine = prepared;
-                    safe->take.clear();
-                    safe->captureLost = false;
-                    safe->recording = capture;
-                    safe->recordingClip = selected;
-                    safe->overriding = false;
-                    safe->sourceGapSeen = false;
-                    safe->takeIn = in;
-                    safe->takeOut = out;
-                    safe->busy = false;
-                    safe->audioPlayback = std::make_unique<AudioPlayback>(*prepared);
-                    safe->audioPlayback->attach(safe->audio);
-                    safe->play.setButtonText("Stop");
-                    safe->record.setButtonText(capture ? "Finish take" : "Record clip");
-                    safe->sync();
-                    safe->setStatus(
-                        capture
-                            ? "Recording the selected clip's volume and filters. Finish take keeps the "
-                              "editable gestures."
-                            : "Playing saved automation. Fader moves are temporary until you record them.");
-                });
-            } catch (const std::exception &e) {
-                postError(safe, e.what());
-            }
-        });
+        bool sequential = false;
+        for (const auto &clip : project.clips)
+            sequential |= clip.audio && clip.audio->stream && clip.audio->stream->sequentialSeek();
+        setStatus(sequential
+                      ? "Preparing playback. An uncached MP3 needs a slower seek; Cancel is available."
+                      : "Preparing playback... Cancel, or click the ruler to choose another position.");
+    }
+    void cancelPreparation() {
+        if (!preparing)
+            return;
+        preparing = false;
+        preparingCapture = false;
+        preparation.cancel();
+        play.setButtonText("Play");
+        setStatus("Playback preparation cancelled.");
+    }
+    void acceptPreparation() {
+        auto result = preparation.poll();
+        if (!result || !preparing || result->generation != requestGeneration)
+            return;
+        preparing = false;
+        if (!result->playback) {
+            preparingCapture = false;
+            play.setButtonText("Play");
+            setStatus(juce::String(result->error));
+            sync();
+            return;
+        }
+        engine = result->playback;
+        take.clear();
+        captureLost = false;
+        recording = preparingCapture;
+        preparingCapture = false;
+        recordingClip = preparingClip;
+        overriding = false;
+        sourceGapSeen = false;
+        if (recording)
+            engine->arm(takeIn, takeOut, 7, recordingClip);
+        audioPlayback = std::make_unique<AudioPlayback>(*engine);
+        if (!fixtureMode)
+            audioPlayback->attach(audio);
+        play.setButtonText("Stop");
+        record.setButtonText(recording ? "Finish take" : "Record clip");
+        sync();
+        setStatus(
+            recording
+                ? "Recording the selected clip's volume and filters. Finish take keeps the editable gestures."
+                : "Playing saved automation. Fader moves are temporary until you record them.");
+#if FADER_ENABLE_UI_FIXTURES
+        if (fixtureMode == 1)
+            simulateInterruptedCapture();
+        else if (fixtureMode == 2)
+            simulateSourceGap();
+        else if (fixtureMode == 3) {
+            engine->deviceStarted(projectRate);
+            setStatus("Synthetic seek ready at the latest position; no audio device is open.");
+        }
+#endif
     }
     void drain() {
         if (!engine)
@@ -1032,6 +1068,7 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
         }
     }
     void stop() {
+        cancelPreparation();
         if (!engine)
             return;
         audioPlayback->detach();
@@ -1066,7 +1103,8 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                       : hadMediaGaps        ? "Playback stopped after source gaps. Check the source files "
                                               "and storage before playing again."
                                             : "Playback stopped.");
-        engine.reset();
+        engine = nullptr;
+        preparation.cancel(); // worker owns retirement; the callback is already detached
         recording = false;
         overriding = false;
         play.setButtonText("Play");
@@ -1103,6 +1141,7 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
         preferencesWindow = options.launchAsync();
     }
     void timerCallback() override {
+        acceptPreparation();
         if (engine) {
             cursor = engine->position();
             if (!sourceGapSeen &&
@@ -1128,12 +1167,12 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                                  .paddedLeft('0', 5) +
                              (engine && engine->peak() > 1 ? "  CLIPPING" : ""),
                          juce::dontSendNotification);
-        mode.setText(busy             ? "Preparing"
-                     : recording      ? (sourceGapSeen ? "REC GAP" : "RECORD")
-                     : overriding     ? (sourceGapSeen ? "OVR GAP" : "OVERRIDE")
-                     : engine         ? (sourceGapSeen ? "READ GAP" : "READ")
-                     : incompleteTake ? "INCOMPLETE"
-                                      : "EDIT",
+        mode.setText((busy || preparing) ? "Preparing"
+                     : recording         ? (sourceGapSeen ? "REC GAP" : "RECORD")
+                     : overriding        ? (sourceGapSeen ? "OVR GAP" : "OVERRIDE")
+                     : engine            ? (sourceGapSeen ? "READ GAP" : "READ")
+                     : incompleteTake    ? "INCOMPLETE"
+                                         : "EDIT",
                      juce::dontSendNotification);
         mode.setColour(juce::Label::textColourId,
                        recording || incompleteTake || (engine && sourceGapSeen) ? ui::danger : accent);
@@ -1163,7 +1202,13 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
     juce::ToggleButton cue;
     juce::ThreadPool workers, libraryWorker;
     juce::AudioDeviceManager audio;
-    std::shared_ptr<Playback> engine;
+    PlaybackPreparation &preparation;
+    const int fixtureMode;
+    Playback *engine = nullptr; // borrowed from preparation until stop()
+    std::shared_ptr<const Project> planSnapshot;
+    std::uint64_t requestGeneration = 0;
+    int preparingClip = -1;
+    bool preparing = false, preparingCapture = false;
     std::unique_ptr<AudioPlayback> audioPlayback;
     std::shared_ptr<const IncompleteTake> incompleteTake;
     std::uint64_t nextSegment = 0;
@@ -1199,11 +1244,24 @@ class App final : public juce::JUCEApplication {
 #if FADER_ENABLE_UI_FIXTURES
         fixture = path.startsWith("--incomplete-take-fixture ") ? 1
                   : path.startsWith("--source-gap-fixture ")    ? 2
+                  : path.startsWith("--seek-fixture ")          ? 3
                                                                 : 0;
         if (fixture)
             path = path.fromFirstOccurrenceOf(" ", false, false).trim();
 #endif
-        window = std::make_unique<Window>(fixture);
+        PlaybackPreparation::Factory factory;
+#if FADER_ENABLE_UI_FIXTURES
+        if (fixture == 3)
+            factory = [](const Project &p, Frame at, std::uint64_t segment,
+                         std::shared_ptr<std::atomic<bool>> cancelled) {
+                // Deterministic delayed readiness for inspecting Cancel/supersede.
+                for (unsigned i = 0; i < 5000 && !cancelled->load(); ++i)
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                return std::make_unique<Playback>(p, at, segment, Preparation{cancelled});
+            };
+#endif
+        preparation = std::make_unique<PlaybackPreparation>(std::move(factory));
+        window = std::make_unique<Window>(*preparation, fixture);
         path = path.unquoted();
         if (path.isNotEmpty()) {
             auto file = juce::File::getCurrentWorkingDirectory().getChildFile(path);
@@ -1213,6 +1271,7 @@ class App final : public juce::JUCEApplication {
     }
     void shutdown() override {
         window.reset();
+        preparation.reset(); // decoder joins after the window and its callbacks are gone
     }
     void systemRequestedQuit() override {
         if (window)
@@ -1223,9 +1282,10 @@ class App final : public juce::JUCEApplication {
 
   private:
     struct Window final : juce::DocumentWindow {
-        explicit Window(bool fixture) : DocumentWindow("Fader - arrangement prototype", paper, allButtons) {
+        explicit Window(PlaybackPreparation &preparation, int fixture)
+            : DocumentWindow("Fader - arrangement prototype", paper, allButtons) {
             setUsingNativeTitleBar(true);
-            setContentOwned(new Workspace(fixture), true);
+            setContentOwned(new Workspace(preparation, fixture), true);
             setResizable(true, false);
             setResizeLimits(1250, 920, 2400, 1700);
             centreWithSize(getWidth(), getHeight());
@@ -1235,6 +1295,7 @@ class App final : public juce::JUCEApplication {
             juce::JUCEApplication::getInstance()->systemRequestedQuit();
         }
     };
+    std::unique_ptr<PlaybackPreparation> preparation;
     std::unique_ptr<Window> window;
 };
 } // namespace

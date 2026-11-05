@@ -55,11 +55,15 @@ struct Cache {
 } // namespace
 
 struct StreamBank::Impl {
-    explicit Impl(std::vector<std::shared_ptr<const StreamSource>> sources)
-        : generation(nextGeneration.fetch_add(1)) {
+    explicit Impl(std::vector<std::shared_ptr<const StreamSource>> sources,
+                  std::shared_ptr<std::atomic<bool>> cancellation)
+        : cancelled(cancellation ? std::move(cancellation) : std::make_shared<std::atomic<bool>>(false)),
+          generation(nextGeneration.fetch_add(1)) {
         if (sources.size() > maxSources)
             throw std::runtime_error("Streaming supports at most 64 clip readers");
         for (auto &source : sources) {
+            if (cancelled->load())
+                throw std::runtime_error("Playback preparation cancelled");
             if (source) {
                 caches.push_back(std::make_unique<Cache>(std::move(source)));
                 pcmBytes += pcmBytesPerSource;
@@ -72,7 +76,7 @@ struct StreamBank::Impl {
                 for (unsigned i = 0; i < workers.size(); ++i)
                     workers[i] = std::thread([this, i] { run(i); });
         } catch (...) {
-            cancelled.store(true);
+            cancelled->store(true);
             for (auto &worker : workers)
                 if (worker.joinable())
                     worker.join();
@@ -80,7 +84,7 @@ struct StreamBank::Impl {
         }
     }
     ~Impl() {
-        cancelled.store(true, std::memory_order_release);
+        cancelled->store(true, std::memory_order_release);
         for (auto &worker : workers)
             if (worker.joinable())
                 worker.join();
@@ -100,7 +104,7 @@ struct StreamBank::Impl {
             }
         }
         for (SourceFrame number = first; number < first + pagesPerSource; ++number) {
-            if (number * pageFrames >= cache.length || cancelled.load(std::memory_order_acquire))
+            if (number * pageFrames >= cache.length || cancelled->load(std::memory_order_acquire))
                 break;
             auto &page = cache.pages[static_cast<std::size_t>(number % pagesPerSource)];
             auto state = page.state.load(std::memory_order_acquire);
@@ -113,7 +117,7 @@ struct StreamBank::Impl {
             float *destinations[]{page.pcm[0].data(), page.pcm[1].data()};
             auto error = SourceError::none;
             try {
-                if (!cache.decoder->read(number * pageFrames, count, destinations, cancelled))
+                if (!cache.decoder->read(number * pageFrames, count, destinations, *cancelled))
                     error = SourceError::read;
                 if (error == SourceError::none)
                     for (const auto &channel : page.pcm)
@@ -124,7 +128,7 @@ struct StreamBank::Impl {
                 error = SourceError::read;
             }
             const auto current = cache.requested.load(std::memory_order_acquire);
-            if (cancelled.load(std::memory_order_acquire) || number < current ||
+            if (cancelled->load(std::memory_order_acquire) || number < current ||
                 number >= current + pagesPerSource) {
                 discarded.fetch_add(1, std::memory_order_relaxed);
                 page.state.store(empty, std::memory_order_release);
@@ -141,10 +145,10 @@ struct StreamBank::Impl {
         return false;
     }
     void run(unsigned worker) noexcept {
-        while (!cancelled.load(std::memory_order_acquire)) {
+        while (!cancelled->load(std::memory_order_acquire)) {
             bool worked = false;
             for (std::size_t i = worker; i < caches.size(); i += workers.size()) {
-                if (cancelled.load(std::memory_order_acquire))
+                if (cancelled->load(std::memory_order_acquire))
                     break;
                 if (caches[i])
                     worked = fill(*caches[i]) || worked;
@@ -155,14 +159,15 @@ struct StreamBank::Impl {
     }
     std::vector<std::unique_ptr<Cache>> caches;
     std::array<std::thread, 2> workers;
-    std::atomic<bool> cancelled{false};
+    const std::shared_ptr<std::atomic<bool>> cancelled;
     std::atomic<std::uint64_t> decoded{0}, discarded{0};
     const std::uint64_t generation;
     std::uint64_t pcmBytes = 0;
 };
 
-StreamBank::StreamBank(std::vector<std::shared_ptr<const StreamSource>> sources)
-    : impl(std::make_unique<Impl>(std::move(sources))) {}
+StreamBank::StreamBank(std::vector<std::shared_ptr<const StreamSource>> sources,
+                       std::shared_ptr<std::atomic<bool>> cancellation)
+    : impl(std::make_unique<Impl>(std::move(sources), std::move(cancellation))) {}
 StreamBank::~StreamBank() = default;
 void StreamBank::request(unsigned clip, SourceFrame first) noexcept {
     if (clip < impl->caches.size() && impl->caches[clip]) {
@@ -175,7 +180,8 @@ void StreamBank::request(unsigned clip, SourceFrame first) noexcept {
 }
 bool StreamBank::sample(unsigned clip, SourceFrame index, std::array<float, 2> &current,
                         std::array<float, 2> &next) noexcept {
-    if (impl->cancelled.load(std::memory_order_relaxed) || clip >= impl->caches.size() || !impl->caches[clip])
+    if (impl->cancelled->load(std::memory_order_relaxed) || clip >= impl->caches.size() ||
+        !impl->caches[clip])
         return false;
     auto &cache = *impl->caches[clip];
     if (index < 0 || index >= cache.length || cache.failure.load(std::memory_order_relaxed))
@@ -219,8 +225,8 @@ StreamStats StreamBank::stats() const noexcept {
     unsigned failed = 0;
     for (unsigned i = 0; i < impl->caches.size(); ++i)
         failed += error(i) != SourceError::none;
-    return {impl->generation, impl->decoded.load(),  impl->discarded.load(), impl->pcmBytes,
-            failed,           impl->cancelled.load()};
+    return {impl->generation, impl->decoded.load(),   impl->discarded.load(), impl->pcmBytes,
+            failed,           impl->cancelled->load()};
 }
 void StreamBank::prepare(unsigned clip, SourceFrame first, SourceFrame last,
                          std::chrono::milliseconds timeout) {
@@ -234,7 +240,7 @@ void StreamBank::prepare(unsigned clip, SourceFrame first, SourceFrame last,
     request(clip, first);
     const auto deadline = std::chrono::steady_clock::now() + timeout;
     for (;;) {
-        if (impl->cancelled.load())
+        if (impl->cancelled->load())
             throw std::runtime_error("Audio preparation cancelled");
         if (error(clip) != SourceError::none)
             throw std::runtime_error("Audio source could not be read");
@@ -253,6 +259,6 @@ void StreamBank::prepare(unsigned clip, SourceFrame first, SourceFrame last,
     }
 }
 void StreamBank::cancel() noexcept {
-    impl->cancelled.store(true, std::memory_order_release);
+    impl->cancelled->store(true, std::memory_order_release);
 }
 } // namespace fader

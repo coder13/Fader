@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "Media.h"
+#include "DecodedCache.h"
 #include "FileSource.h"
 #include <algorithm>
 #include <charconv>
@@ -74,7 +75,7 @@ Curve readCurve(const juce::var &v) {
     return curve;
 }
 } // namespace
-Clip loadClip(const juce::File &file) {
+Clip loadClip(const juce::File &file, bool cacheCompressed) {
     if (!file.existsAsFile())
         fail("Audio file is missing");
     if (file.hasFileExtension("crdownload;part;download"))
@@ -105,11 +106,16 @@ Clip loadClip(const juce::File &file) {
     audio->peakStride = std::max(std::size_t{512}, ((length + maxPeaks - 1) / maxPeaks + 511) / 512 * 512);
     audio->peaks.resize((length + audio->peakStride - 1) / audio->peakStride);
     juce::AudioBuffer<float> scratch(2, 8192);
+    const bool sequentialReplay = reader->getFormatName() == "MP3 file";
+    auto decoded =
+        sequentialReplay && cacheCompressed ? DecodedCache::create(reader->lengthInSamples) : nullptr;
     for (std::size_t offset = 0; offset < length; offset += 8192) {
         const int count = static_cast<int>(std::min(std::size_t{8192}, length - offset));
         if (!reader->read(scratch.getArrayOfWritePointers(), 2, static_cast<juce::int64>(offset), count))
             fail("Audio decoding failed with " + reader->getFormatName() + " at source frame " +
                  juce::String(static_cast<juce::int64>(offset)));
+        if (reader->numChannels == 1)
+            scratch.copyFrom(1, 0, scratch, 0, 0, count);
         for (int channel = 0; channel < 2; ++channel)
             for (int i = 0; i < count; ++i)
                 if (!std::isfinite(scratch.getSample(channel, i)))
@@ -118,9 +124,14 @@ Clip loadClip(const juce::File &file) {
             auto &peak = audio->peaks[(offset + static_cast<std::size_t>(i)) / audio->peakStride];
             peak = std::max(peak, std::abs(scratch.getSample(0, i)));
         }
+        // A full/unavailable cache must not turn readable audio into an import failure.
+        if (decoded && !decoded->append(scratch, count))
+            decoded.reset();
     }
+    if (decoded && !decoded->finish())
+        decoded.reset();
     audio->stream = makeFileSource(file, reader->lengthInSamples, reader->sampleRate, reader->numChannels,
-                                   sourceBytes, sourceModified);
+                                   sourceBytes, sourceModified, sequentialReplay, std::move(decoded));
     Clip clip;
     clip.audio = audio;
     clip.path = file.getFullPathName().toStdString();

@@ -12,6 +12,7 @@ void testAudioSetup();
 void testAudioPlayback();
 void testSourceRates();
 void testStreamMedia();
+void testDecodedCache();
 void check(bool pass, const char *message) {
     if (!pass)
         throw std::runtime_error(message);
@@ -27,6 +28,7 @@ int main() {
     try {
         testSourceRates();
         testStreamMedia();
+        testDecodedCache();
         auto data = std::make_shared<AudioData>();
         for (auto &c : data->samples) {
             c.resize(48000);

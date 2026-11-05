@@ -7,7 +7,7 @@
 #include <juce_cryptography/juce_cryptography.h>
 
 namespace fader {
-Clip loadClip(const juce::File &);
+Clip loadClip(const juce::File &, bool cacheCompressed = true);
 void saveProject(const Project &, const juce::File &);
 struct IncompleteTake {
     Project original;

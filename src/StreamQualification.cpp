@@ -4,9 +4,9 @@
 #include <cmath>
 #include <stdexcept>
 
-juce::var qualifyStream(const juce::File &file) {
+juce::var qualifyStream(const juce::File &file, bool cacheCompressed) {
     using namespace fader;
-    const auto clip = loadClip(file);
+    const auto clip = loadClip(file, cacheCompressed);
     juce::AudioFormatManager formats;
     formats.registerBasicFormats();
     std::unique_ptr<juce::AudioFormatReader> reference(formats.createReaderFor(file.createInputStream()));
@@ -81,6 +81,8 @@ juce::var qualifyStream(const juce::File &file) {
     result->setProperty("seekMaxError", seekError);
     result->setProperty("seekWindows", static_cast<int>(seekWindows));
     result->setProperty("pcmCacheBytes", static_cast<int>(bank.stats().pcmBytes));
+    result->setProperty("diskCacheBytes", juce::String(clip.audio->stream->diskCacheBytes()));
+    result->setProperty("sequentialSeek", clip.audio->stream->sequentialSeek());
     if (sequentialError > 1e-6 || seekError > 1e-6)
         throw std::runtime_error("Streaming differs from sequential reference: " +
                                  juce::JSON::toString(json, true).toStdString());

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "FileSource.h"
+#include "DecodedCache.h"
 #include <stdexcept>
 
 namespace fader {
@@ -10,6 +11,8 @@ struct Description {
     double sampleRate;
     unsigned channels;
     juce::int64 bytes, modified;
+    bool sequentialReplay;
+    std::shared_ptr<const DecodedCache> cache;
     bool unchanged() const {
         return file.existsAsFile() && file.getSize() == bytes &&
                file.getLastModificationTime().toMilliseconds() == modified;
@@ -23,7 +26,7 @@ class Decoder final : public SourceDecoder {
         // sequential decode succeeds. Preserve its exact sequential sample
         // domain by replaying skipped frames on this worker. Fast compressed
         // seeking needs a separately qualified checkpoint/decoder strategy.
-        if (reader->getFormatName() == "MP3 file")
+        if (this->description.sequentialReplay)
             discard = std::make_unique<juce::AudioBuffer<float>>(2, 8192);
     }
     bool read(SourceFrame first, int frames, float *const *stereo,
@@ -68,6 +71,23 @@ class Decoder final : public SourceDecoder {
     std::unique_ptr<juce::AudioBuffer<float>> discard;
     SourceFrame position = 0;
 };
+class CachedDecoder final : public SourceDecoder {
+  public:
+    explicit CachedDecoder(Description description) : description(std::move(description)) {
+        if (!this->description.unchanged())
+            throw std::runtime_error("Decoded source cache is unavailable");
+    }
+    bool read(SourceFrame first, int frames, float *const *stereo,
+              const std::atomic<bool> &cancelled) override {
+        if (cancelled.load() || !description.unchanged() || first < 0 || frames < 0 || frames > 8192 ||
+            first > description.frames - frames)
+            return false;
+        return description.cache->read(first, frames, stereo, cancelled) && description.unchanged();
+    }
+
+  private:
+    Description description;
+};
 class FileSource final : public StreamSource {
   public:
     explicit FileSource(Description description) : description(std::move(description)) {}
@@ -75,7 +95,15 @@ class FileSource final : public StreamSource {
         return description.frames;
     }
     std::unique_ptr<SourceDecoder> open() const override {
+        if (description.cache)
+            return std::make_unique<CachedDecoder>(description);
         return std::make_unique<Decoder>(description);
+    }
+    bool sequentialSeek() const noexcept override {
+        return description.sequentialReplay && !description.cache;
+    }
+    std::uint64_t diskCacheBytes() const noexcept override {
+        return description.cache ? description.cache->bytes() : 0;
     }
 
   private:
@@ -84,8 +112,9 @@ class FileSource final : public StreamSource {
 } // namespace
 std::shared_ptr<const StreamSource> makeFileSource(const juce::File &file, SourceFrame frames,
                                                    double sampleRate, unsigned channels, juce::int64 bytes,
-                                                   juce::int64 modifiedMillis) {
-    return std::make_shared<FileSource>(
-        Description{file, frames, sampleRate, channels, bytes, modifiedMillis});
+                                                   juce::int64 modifiedMillis, bool sequentialReplay,
+                                                   std::shared_ptr<const DecodedCache> cache) {
+    return std::make_shared<FileSource>(Description{file, frames, sampleRate, channels, bytes, modifiedMillis,
+                                                    sequentialReplay, std::move(cache)});
 }
 } // namespace fader

@@ -16,7 +16,7 @@ endif()
 configure_file(cmake/build-info.json.in fader-build-info.json @ONLY)
 
 find_package(Threads REQUIRED)
-add_library(fader_core src/Engine.cpp src/Playback.cpp src/Streaming.cpp)
+add_library(fader_core src/Engine.cpp src/Playback.cpp src/Streaming.cpp src/PlaybackPreparation.cpp)
 target_link_libraries(fader_core PUBLIC Threads::Threads)
 target_include_directories(fader_core PUBLIC include)
 target_compile_options(fader_core PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-Wall;-Wextra;-Wpedantic>)
@@ -30,7 +30,10 @@ if(BUILD_TESTING)
     add_executable(fader_streaming_tests tests/StreamingTests.cpp)
     target_link_libraries(fader_streaming_tests PRIVATE fader_core)
     add_test(NAME streaming COMMAND fader_streaming_tests)
-    set_tests_properties(core realtime_core streaming PROPERTIES TIMEOUT 60)
+    add_executable(fader_seek_tests tests/SeekTests.cpp tests/PreparationTests.cpp)
+    target_link_libraries(fader_seek_tests PRIVATE fader_core)
+    add_test(NAME seeking COMMAND fader_seek_tests)
+    set_tests_properties(core realtime_core streaming seeking PROPERTIES TIMEOUT 60)
 endif()
 
 if(FADER_BUILD_APP)
@@ -53,7 +56,7 @@ if(FADER_BUILD_APP)
         FetchContent_MakeAvailable(JUCE)
     endif()
     add_library(fader_media STATIC src/Media.cpp src/Devices.cpp src/Library.cpp src/AudioSetup.cpp
-        src/AudioPlayback.cpp src/FileSource.cpp)
+        src/AudioPlayback.cpp src/FileSource.cpp src/DecodedCache.cpp)
     target_include_directories(fader_media PUBLIC src)
     target_compile_definitions(fader_media PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0
         JUCE_USE_MP3AUDIOFORMAT=1 JUCE_MODAL_LOOPS_PERMITTED=0)
@@ -67,12 +70,12 @@ if(FADER_BUILD_APP)
     target_sources(Fader PRIVATE src/Main.cpp src/Arrangement.cpp src/LibraryView.cpp)
     target_link_libraries(Fader PRIVATE fader_media)
     juce_add_console_app(fader_probe PRODUCT_NAME "fader_probe")
-    target_sources(fader_probe PRIVATE src/Probe.cpp src/StreamQualification.cpp)
+    target_sources(fader_probe PRIVATE src/Probe.cpp src/StreamQualification.cpp src/SeekBenchmark.cpp)
     target_link_libraries(fader_probe PRIVATE fader_media)
     if(BUILD_TESTING)
         juce_add_console_app(fader_media_tests PRODUCT_NAME "fader_media_tests")
         target_sources(fader_media_tests PRIVATE tests/MediaTests.cpp tests/ArrangementTests.cpp
-            tests/AudioSetupTests.cpp tests/SourceRateTests.cpp tests/StreamMediaTests.cpp
+            tests/AudioSetupTests.cpp tests/SourceRateTests.cpp tests/StreamMediaTests.cpp tests/DecodedCacheTests.cpp
             src/Arrangement.cpp src/StreamQualification.cpp)
         target_compile_definitions(fader_media_tests PRIVATE
             FADER_TEST_MP3_PATH="${JUCE_SOURCE_DIR}/examples/Assets/Notifications/sounds/served.mp3"

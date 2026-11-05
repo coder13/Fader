@@ -84,7 +84,12 @@ float Engine::Ramp::next(float value) noexcept {
     }
     return current;
 }
-Engine::Engine(Project p, Frame start) : project(std::move(p)) {
+Engine::Engine(Project p, Frame start, Preparation options)
+    : preparation(std::move(options)), project(std::move(p)) {
+    if (!preparation.cancellation)
+        preparation.cancellation = std::make_shared<std::atomic<bool>>(false);
+    if (preparation.cancellation->load())
+        throw std::runtime_error("Playback preparation cancelled");
     project.validate();
     if (start < 0 || start > project.end())
         throw std::runtime_error("Seek outside set");
@@ -97,15 +102,20 @@ Engine::Engine(Project p, Frame start) : project(std::move(p)) {
         hasStreaming = hasStreaming || sources.back() != nullptr;
     }
     if (hasStreaming)
-        streams = std::make_unique<StreamBank>(std::move(sources));
+        streams = std::make_unique<StreamBank>(std::move(sources), preparation.cancellation);
+    cursor = preparation.exactFromStart ? 0 : std::max(Frame{0}, start - seekPrerollFrames);
+    preparedFrames = start - cursor;
     for (std::size_t i = 0; i < ramps.size(); ++i)
-        ramps[i].current = ramps[i].target = project.curves[i].initial;
+        ramps[i].current = ramps[i].target =
+            cursor == 0 ? project.curves[i].initial : project.curves[i].at(cursor);
     if (project.perClip) {
         clipStates.resize(project.clips.size());
         for (std::size_t c = 0; c < clipStates.size(); ++c)
             for (std::size_t p = 0; p < 3; ++p)
                 clipStates[c].ramps[p].current = clipStates[c].ramps[p].target =
-                    project.clips[c].automation[p].initial;
+                    cursor <= project.clips[c].start
+                        ? project.clips[c].automation[p].initial
+                        : project.clips[c].automation[p].at(cursor - project.clips[c].start);
         // Filter history must be reconstructed as well as the control values.
         // The host prepares this engine on a worker, never the UI/audio thread.
         while (cursor < start) {
@@ -117,13 +127,18 @@ Engine::Engine(Project p, Frame start) : project(std::move(p)) {
         publishedFrame.store(cursor);
         return;
     }
-    // Exact automation history reconstruction, off the audio thread.
-    for (; cursor < start; ++cursor)
+    // Reconstruct the selected automation history window off the audio thread.
+    for (; cursor < start; ++cursor) {
+        if (cursor % 1024 == 0 && preparation.cancellation->load())
+            throw std::runtime_error("Playback preparation cancelled");
         targets(cursor);
+    }
     prepareSources(1024);
     publishedFrame.store(cursor);
 }
 void Engine::prepareSources(int count) {
+    if (preparation.cancellation->load())
+        throw std::runtime_error("Playback preparation cancelled");
     if (!streams || count <= 0)
         return;
     for (unsigned i = 0; i < project.clips.size(); ++i) {
@@ -150,8 +165,17 @@ void Engine::prepareSources(int count) {
     }
 }
 void Engine::cancelSourceReads() noexcept {
+    preparation.cancellation->store(true);
     if (streams)
         streams->cancel();
+}
+std::array<float, 3> Engine::preparedParameters(unsigned clip) const noexcept {
+    std::array<float, 3> result{};
+    if (project.perClip && clip >= clipStates.size())
+        return result;
+    for (unsigned i = 0; i < result.size(); ++i)
+        result[i] = project.perClip ? clipStates[clip].ramps[i].current : ramps[i].current;
+    return result;
 }
 StreamStats Engine::streamStats() const noexcept {
     return streams ? streams->stats() : StreamStats{};

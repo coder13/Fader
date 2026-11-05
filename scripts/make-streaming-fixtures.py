@@ -16,7 +16,11 @@ import wave
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("directory", type=Path, help="New output directory")
 parser.add_argument("--mp3-encoder", type=Path)
+parser.add_argument("--long-mp3-minutes", type=int, default=0,
+                    help="Also encode long seek fixtures from the three-minute rhythms")
 args = parser.parse_args()
+if args.long_mp3_minutes and (not args.mp3_encoder or not 1 <= args.long_mp3_minutes <= 120):
+    parser.error("--long-mp3-minutes requires --mp3-encoder and a value from 1 to 120")
 args.directory.mkdir(parents=True, exist_ok=False)
 
 
@@ -73,3 +77,14 @@ if args.mp3_encoder:
                     str(args.directory / "rhythm-44100.wav"), "-t", "8",
                     "-c:a", "libmp3lame", "-q:a", "2",
                     str(args.directory / "short-vbr.mp3")], check=True)
+
+    if args.long_mp3_minutes:
+        for rate, mode, encoding in ((48000, "cbr", ["-b:a", "320k"]),
+                                      (44100, "vbr", ["-q:a", "2"])):
+            source = args.directory / f"rhythm-{rate}.wav"
+            destination = args.directory / f"long-{mode}-{rate}.mp3"
+            subprocess.run([str(args.mp3_encoder), "-nostdin", "-v", "error",
+                            "-stream_loop", str(math.ceil(args.long_mp3_minutes / 3) - 1),
+                            "-i", str(source), "-t", str(args.long_mp3_minutes * 60),
+                            "-c:a", "libmp3lame", *encoding, str(destination)], check=True)
+            print(destination)

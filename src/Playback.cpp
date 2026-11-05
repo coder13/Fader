@@ -12,8 +12,8 @@ HostTime monotonicTime() noexcept {
                                      std::chrono::steady_clock::now().time_since_epoch())
                                      .count());
 }
-Playback::Playback(Project project, Frame start, std::uint64_t serial)
-    : engine(std::move(project), start), projectOrigin(start), segmentId(serial) {
+Playback::Playback(Project project, Frame start, std::uint64_t serial, Preparation preparation)
+    : engine(std::move(project), start, std::move(preparation)), projectOrigin(start), segmentId(serial) {
     if (serial == 0)
         throw std::runtime_error("A playback segment needs a nonzero identity");
 }

@@ -3,6 +3,7 @@
 #include "AudioSetup.h"
 #include "Library.h"
 #include "Media.h"
+#include "SeekBenchmark.h"
 #include "StreamQualification.h"
 #include <algorithm>
 #include <chrono>
@@ -125,6 +126,16 @@ void audioSmoke() {
 int main(int argc, char **argv) {
     try {
         juce::ScopedJuceInitialiser_GUI juce;
+        if ((argc == 4 || argc == 5) && std::string(argv[1]) == "--seek-benchmark") {
+            const auto cwd = juce::File::getCurrentWorkingDirectory();
+            if (argc == 5 && std::string(argv[4]) != "--uncached")
+                throw std::runtime_error("Expected --uncached");
+            std::cout << juce::JSON::toString(
+                             benchmarkSeeks(cwd.getChildFile(argv[2]), cwd.getChildFile(argv[3]), argc == 4),
+                             true)
+                      << '\n';
+            return 0;
+        }
         if (argc == 3 && std::string(argv[1]) == "--qualify-stream") {
             std::cout << juce::JSON::toString(
                              qualifyStream(juce::File::getCurrentWorkingDirectory().getChildFile(argv[2])),

@@ -40,7 +40,7 @@ struct PlaybackStats {
 // The owner stops producers and detaches the audio callback before destruction.
 class Playback {
   public:
-    Playback(Project, Frame projectStart, std::uint64_t segment);
+    Playback(Project, Frame projectStart, std::uint64_t segment, Preparation = {});
     void arm(Frame in, Frame out, unsigned mask = 7, int clip = -1) noexcept;
     bool submit(InputSource, ControlInput) noexcept;
     // Device lifecycle callbacks are serialized with process by the native host.
@@ -57,6 +57,9 @@ class Playback {
     }
     Frame position() const noexcept {
         return engine.position();
+    }
+    Frame preparationFrames() const noexcept {
+        return engine.preparationFrames();
     }
     std::uint64_t starvationFrames() const noexcept {
         return engine.starvationFrames();
