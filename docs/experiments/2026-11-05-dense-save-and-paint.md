@@ -54,5 +54,6 @@ Default clean CI keeps UI fixtures OFF and must cover the same numeric, geometry
 The original 128-frame hour's twelve virtual deadline misses remain unexplained by its aggregate alone.
 Its callback maximum also exceeded the deadline despite low typical execution times.
 Further diagnostics must retain outlier frames and distinguish callback duration from wake lateness before assigning a cause.
+The [follow-up timing candidate](2026-11-05-timing-trace.md) implements those bounded rows and checks painter cadence.
 Keep the original duration, density, memory and timing targets for the next qualification.
 This local repair does not close #40 or replace its failed evidence.
