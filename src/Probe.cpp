@@ -126,6 +126,12 @@ void audioSmoke() {
 int main(int argc, char **argv) {
     try {
         juce::ScopedJuceInitialiser_GUI juce;
+        if (argc == 4 && std::string(argv[1]) == "--resave-project") {
+            const auto cwd = juce::File::getCurrentWorkingDirectory();
+            fader::saveProject(fader::loadProject(cwd.getChildFile(argv[2])), cwd.getChildFile(argv[3]));
+            std::cout << "Project saved with current storage schema\n";
+            return 0;
+        }
         if ((argc == 4 || argc == 5) && std::string(argv[1]) == "--seek-benchmark") {
             const auto cwd = juce::File::getCurrentWorkingDirectory();
             if (argc == 5 && std::string(argv[4]) != "--uncached")

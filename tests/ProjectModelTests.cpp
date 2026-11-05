@@ -283,6 +283,17 @@ void testProjectModel() {
                   "Legacy migration lost stable identity");
             parity(old, upgraded);
         }
+        Project compressed;
+        compressed.perClip = true;
+        compressed.clips = {loadClip(juce::File(FADER_TEST_VBR_PATH))};
+        compressed.clips[0].sourceOffset = 123;
+        compressed.clips[0].length = 8192;
+        saveProject(compressed, file);
+        const auto mp3 = loadProject(file);
+        check(mp3.clips[0].audio->pcmHash == compressed.clips[0].audio->pcmHash &&
+                  mp3.clips[0].id == compressed.clips[0].id,
+              "MP3 decoded identity did not round-trip");
+        parity(compressed, mp3);
         check(juce::SHA256(audio).toHexString() == originalHash, "Project operations modified source audio");
         dir.deleteRecursively();
     } catch (...) {
