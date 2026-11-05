@@ -63,8 +63,28 @@ jobs:
           $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
           & $vswhere -latest -products * -format json | Set-Content build/windows-visual-studio.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Configure pinned native dependencies for MSVC x64
-        run: cmake --preset native -G "Visual Studio 17 2022" -A x64
+      - name: Initialize the installed MSVC x64 toolchain
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $installation = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if ($LASTEXITCODE -ne 0 -or !$installation) { throw "MSVC x64 tools are unavailable" }
+          $devCmd = Join-Path $installation.Trim() "Common7\Tools\VsDevCmd.bat"
+          $command = '"' + $devCmd + '" -no_logo -arch=x64 -host_arch=x64 && set'
+          $compilerEnvironment = & $env:COMSPEC /s /c $command
+          if ($LASTEXITCODE -ne 0) { throw "MSVC developer environment failed" }
+          $record = @{}
+          foreach ($line in $compilerEnvironment) {
+            if ($line -match '^(Path|INCLUDE|LIB|LIBPATH|VCToolsInstallDir|VCToolsVersion|WindowsSdkDir|WindowsSDKVersion|VSCMD_ARG_TGT_ARCH)=(.*)$') {
+              $key = $matches[1]
+              $value = $matches[2]
+              [Environment]::SetEnvironmentVariable($key, $value, 'Process')
+              "$key=$value" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+              if ($key -notmatch '^(Path|INCLUDE|LIB|LIBPATH)$') { $record[$key] = $value }
+            }
+          }
+          $record | ConvertTo-Json | Set-Content build/windows-compiler-env.json
+      - name: Configure pinned native dependencies with MSVC and Ninja
+        run: cmake --preset native -G Ninja -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
       - name: Build app, probe and tests
         run: cmake --build --preset native
       - name: Test without audio or MIDI hardware
@@ -85,6 +105,7 @@ jobs:
           path: |
             build/windows-image.json
             build/windows-visual-studio.json
+            build/windows-compiler-env.json
             build/windows-app.txt
             build/native/fader-build-info.json
             build/native/results.xml
