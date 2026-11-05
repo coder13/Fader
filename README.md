@@ -4,6 +4,8 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 
 **Current stage: native arrangement prototype, v0.2.** This branch adds a scrollable DAW-style arrangement with fixed-duration clip dragging; clip-owned volume, high-pass and low-pass envelopes drawn on waveforms; a searchable metadata browser; Preferences; and read-only Traktor collection import. Recording/retakes, set persistence, MP3/WAV import and WAV export use the same rendering core. See the [quickstart](docs/poc-quickstart.md), [arrangement evidence](docs/experiments/2026-11-04-clip-arrangement.md), [streaming evidence and limits](docs/experiments/2026-11-04-bounded-streaming.md), and [clip-automation decision](docs/decisions/0002-clip-owned-automation.md). The complete Mac/S4 POC has not passed: controller integration and sustained performance qualification remain pending. Fader is the working project name.
 
+Current recording captures clip volume/HP/LP controls in memory. Raw master audio recording and a durable original-action journal remain planned in [#12](https://github.com/coder13/Fader/issues/12). Native seek/export cancellation checks are complete; the [sustained timing tests](docs/experiments/2026-11-05-software-stress-followup.md) still fail their original gates. The [implementation boundary](docs/architecture.md#current-implementation-boundary) separates these results from the proposed production system.
+
 ## Start here
 
 | Document | Purpose |
@@ -55,7 +57,7 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 
 ## Current direction
 
-Continue the C++20/JUCE prototype while testing the risks that could change the production architecture: bounded streaming, fast cancellable seeking, sustained audio/capture, real S4 HID/master-cue behavior and early Windows compilation. The [published roadmap](docs/roadmap-and-issue-backlog.md) contains the next work and the [POC exit decision](https://github.com/coder13/Fader/issues/17).
+Continue the C++20/JUCE prototype while testing the risks that could change the production architecture: bounded streaming, fast cancellable seeking, sustained audio/capture, real S4 HID/master-cue behavior and native platform behavior. Early [Windows build/common-project portability](docs/experiments/2026-11-05-windows-portability.md) now passes its software scope; Windows GUI, driver and installer qualification remain open. The [published roadmap](docs/roadmap-and-issue-backlog.md) contains the next work and the [POC exit decision](https://github.com/coder13/Fader/issues/17).
 
 The [competitive audit](docs/research/competitive-workflow-audit.md) remains evidence for bounded reuse investigations. The working prototype is now the comparison baseline; language/framework choice is provisional until the qualification and architecture decision. Web/hybrid delivery remains a measured scope decision. VST3 effects are planned for product versions 2 and 3, after the native POC.
 

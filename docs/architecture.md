@@ -1,10 +1,30 @@
 # System architecture
 
-Status: Proposed production architecture; bounded native v0.2 implementation. Updated 2026-11-04.
+Status: Proposed production architecture; bounded native v0.2 implementation. Updated 2026-11-05.
 
 Implemented v0.2: immutable playback snapshots, preallocated per-clip DSP state, worker-thread decoding/seek preparation, clip-local automation and a shared live/offline renderer. The DSP order is source interpolation → two-pole high-pass → two-pole low-pass → volume → sum. Dry monitoring cue precedes these controls. Filter coefficients update every 16 clip-local frames; state reconstruction runs off the audio callback. The editor owns mutable projects only while the engine is detached. Limits and evidence are in [the arrangement experiment](experiments/2026-11-04-clip-arrangement.md). See [stack decision](decisions/0001-platform-and-engine.md) for alternatives and [audio research](research/audio-engine-and-stack.md) for evidence.
 
 This is a custom-implementation design, conditional on the [adoption/reuse gate](research/competitive-workflow-audit.md#proposed-adoption-and-reuse-gate). Use its behavior requirements to assess existing applications and engines; do not require a candidate to adopt these exact internal components if it meets the workflow. No implementation route has been accepted.
+
+## Current implementation boundary
+
+The diagram and responsibilities below describe the intended production system.
+They do not imply that every shown service is implemented.
+The following boundaries describe the current prototype and its published evidence.
+
+| Area | Implemented and checked | Still open |
+| --- | --- | --- |
+| Render core and timing | Immutable playback snapshots, per-clip volume/HP/LP, bounded producer queues, applied-frame capture and synthetic block/PCM parity. See the [clock contract](playback-clock.md). | Durable original-action history, complete transport/source-action capture and physical control latency. |
+| Sources and seeking | Bounded decode workers/PCM pages, generation-aware preparation and cancellation, cached MP3 seeking with measured preroll accuracy. [Native Preparing/Cancel and superseding requests pass](experiments/2026-11-05-native-seek-export.md). | Uncached long MP3 sources can miss the interactive seek target; broad user-library and common-format qualification remain open. |
+| Storage | Version 3 project identities, strict validation, renderer/decoder domain preservation and tested legacy migration. See [project storage](project-format-v3.md). | Autosave, interrupted-recording recovery and a missing-media relinking interface. A manual incomplete-take archive is not a durable journal. |
+| Offline render | Independent worker-owned renderer, exact ranges, slow-source readiness and checked WAV publication. [Full-hour PCM/memory checks pass](experiments/2026-11-05-offline-render.md), supplemented by [native progress/Cancel checks](experiments/2026-11-05-native-seek-export.md). | MP3/other output formats, complete crash durability and future effect-chain qualification. |
+| Performance capture | The app drains applied clip controls into an in-memory take and can compile editable curves. | Audio-only/combined master recording, original action ordinals, independent writers and checkpoint recovery. The [capture contract](capture-contract.md) and [implementation plan](capture-implementation-plan.md) remain proposals. |
+| Sustained performance | Exact-source software hosts, fault injection and full-hour measurements preserve controls and now meet the save/memory limits. | The [128/256-frame hours](experiments/2026-11-05-software-stress-followup.md) and [CPU diagnostic](experiments/2026-11-05-boundary-hour.md) still fail original timing/painter gates. A running policy experiment is not a repair result. |
+| Hosts and devices | Native Mac development preview, shared project/model tests and [Windows build/common-project portability](experiments/2026-11-05-windows-portability.md). | Native Windows UI/driver/installer qualification, physical S4 input/feedback/master-cue proof, virtual MIDI output and web-host experiments. |
+
+The [work order](work-order.md) keeps all remaining software work in scope.
+Neither successful native cancellation nor a clean build accepts the production stack or completes the POC.
+The architecture decision and full POC gate remain open.
 
 ## One musical model and one rendering core
 
