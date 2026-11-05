@@ -3,7 +3,7 @@
 The initial native Windows x64 build passes all seven software test suites.
 The same source passes Linux and macOS CI.
 This is an early [#41](https://github.com/coder13/Fader/issues/41) portability result, not audio-device, installer or controller qualification.
-The next build adds a shared project fixture and remains pending.
+The final build also reads and resaves one shared project fixture on both native hosts.
 
 ## Exact build and evidence
 
@@ -71,9 +71,13 @@ This build does not establish universal MP3 project interchange between those de
 Source `b256cc0` adds [one fixed project](../../tests/fixtures/portable-v3.json) for every native host to read and resave.
 It has stable project, clip and asset identities and references the independently defined WAV recipe through a Unicode relative path.
 It strengthens the check beyond each host reopening its own writer output.
-Its clean CI result remains pending, and it is not included in the qualified initial source above.
+Exact final source `b256cc09b45144facc057e01012e62ced991190a` passes [run 42011432683](https://github.com/coder13/Fader/actions/runs/42011432683).
+Linux passes 5/5 and both native hosts pass 7/7.
+Downloaded build metadata, JUnit and logs match that source and JUCE pin, with fixtures OFF and zero failed or skipped cases.
+The [final aggregate](data/2026-11-05-windows-final.json) also records the common fixture hash and final executable hash.
 
-Keep #41 open until that final build's evidence is verified and published.
+#41 passes its early software build, Unicode, codec and project-fixture gates at that exact source.
 Actual Windows audio, ASIO/WASAPI routing, installation and S4 behavior remain in [#27](https://github.com/coder13/Fader/issues/27).
 Native Windows UI startup, visual layout and distribution remain unqualified here.
-The separate Mac [sustained run](2026-11-05-software-stress.md) continues on its original source without local builds.
+The separate Mac [sustained run](2026-11-05-software-stress.md) completed on source `566b0ca` and failed deadline, dense-save and memory targets.
+Those #40 findings remain open and do not become passes through this portability result.
