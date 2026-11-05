@@ -4,7 +4,7 @@ The local regression stores the dense capture model within the existing 8 MiB li
 The painter visits a bounded slice of visible handles while keeping the stored curves intact.
 Exact local source: `e2842daa54da2cb419360019af819f282d162f96`.
 Clean CI passes on Linux, macOS and Windows at that exact source.
-A repeated sustained run remains separate and has not yet completed.
+The [repeated sustained run](2026-11-05-software-stress-followup.md) now passes save and memory while timing and painter-start targets still fail.
 
 ## Storage
 

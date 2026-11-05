@@ -1,6 +1,7 @@
 # Software stress qualification
 
-The full software hour fails its deadline, storage and process-memory targets.
+The first full software hour fails its deadline, storage and process-memory targets.
+The [repeated hour after repair](2026-11-05-software-stress-followup.md) passes save and memory, but still fails timing and painter-start targets.
 It retains every applied control and reports zero source starvation.
 [#40](https://github.com/coder13/Fader/issues/40) remains open for remediation and qualification.
 The first hour attempt used source `6e25222c8e615e0e1b406d3075032758b1e6e4b6`.

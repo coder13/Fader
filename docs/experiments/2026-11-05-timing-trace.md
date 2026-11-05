@@ -3,9 +3,9 @@
 Candidate `0fc6ddeafb02306e607329ac098acc692afaf878` adds bounded diagnostic rows to the
 [storage and viewport repair](2026-11-05-dense-save-and-paint.md).
 It keeps the original workload, block deadline, input rates, automation density and memory/storage limits.
-The first failed hour remains the authoritative sustained result until another hour completes.
+The [repeated hour](2026-11-05-software-stress-followup.md) now provides complete frame-correlated sustained evidence.
 Clean candidate [CI](https://github.com/coder13/Fader/actions/runs/42022680469) passes on all three hosts.
-The dedicated candidate hour is still running at publication; no new hour result is claimed here.
+It passes save and memory but still fails timing and painter-start targets; the diagnostics are not an hour pass.
 
 ## Measurement changes
 
@@ -92,7 +92,7 @@ The dedicated real-time run retains its original timing, memory, storage and pai
 
 ## Remaining work
 
-Run the exact candidate for the full declared hour and report its result even if a target fails.
-Report the separate 256-frame fallback.
+The exact candidate's full declared hour is now reported, including its failed targets.
+Finish the separate 256-frame fallback and use the observed boundary correlation to choose the next timing diagnostic.
 Keep native seek/export observations and physical-device evidence separate.
 The controller remains excluded from current work, and no audio or MIDI device opens in these tests.
