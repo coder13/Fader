@@ -12,6 +12,7 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 | [Build and CI](docs/build-and-ci.md) | Clean-checkout presets, pinned dependencies and test evidence |
 | [Playback timing and capture integrity](docs/playback-clock.md) | Clock segments, controller/UI queues, interruption handling and callback audit |
 | [Source streaming](docs/streaming-contract.md) | Bounded PCM, source ownership, live gaps and offline readiness |
+| [Project storage](docs/project-format-v3.md) | Stable IDs, named curves, decoder domain, validation and legacy migration |
 | [Seek preparation](docs/seek-contract.md) | Latest-request cancellation, filter preroll, MP3 cache and measured limits |
 | [Mixer contract](docs/mixer-contract.md) | Source-rate, gain, filter, clipping and master/cue behavior |
 | [Roadmap completeness review](docs/research/roadmap-completeness-review.md) | Feature coverage, proposed backlog gaps and evidence needed for a polished release |

@@ -2,7 +2,7 @@
 
 Status: Long-term design contract with a bounded implemented subset. Updated 2026-11-04.
 
-The v0.2 prototype writes schema/engine version 2: an array of clips, each with row, start, source offset, length, metadata and three clip-local envelopes. Values are normalized 0–1; volume is linear amplitude (displayed as dB), filters map logarithmically to 20–20,000 Hz. Drawn points interpolate linearly; recorded target points carry `hold: true`. Smoothing is 240 project frames. Moving a clip changes only start/row. Schema 1 retains its original global gains/equal-power crossfader renderer and opens for playback/export without silent conversion. The detailed future schema below is not the literal prototype file format. See [ADR 0002](decisions/0002-clip-owned-automation.md).
+The native prototype now writes [storage schema 3](project-format-v3.md): stable project/clip/asset IDs, named parameter curves, render/grid snapshots and decoded-source identity. It reads legacy schemas 1 and 2 while preserving their original renderer. Saving an old set upgrades its storage; use a new filename to retain the old file. The detailed future model below still includes unimplemented features. [ADR 0002](decisions/0002-clip-owned-automation.md) records clip-owned automation.
 
 ## What a set must preserve
 

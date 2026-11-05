@@ -314,7 +314,7 @@ GitHub: [#39](https://github.com/coder13/Fader/issues/39). Labels: `phase:poc`, 
 
 GitHub: [#11](https://github.com/coder13/Fader/issues/11). Labels: `phase:poc`, `type:feature`, `area:storage`.
 
-**Current evidence:** Schema v2 stores clip placement, metadata and volume/HP/LP curves; legacy v1 playback/export is preserved. The wider identity and migration contract is still provisional.
+**Current evidence:** [Storage schema 3](project-format-v3.md) adds stable project/clip/asset IDs, named curves, decoded-domain identity, render/grid snapshots and strict read/write validation. Local migration/render/type tests pass; clean CI is pending. Legacy v1/v2 renderer behavior is preserved during storage migration.
 
 **Scope:** Validate stable clip/asset/parameter addressing, initial state, units/time domains, malformed input and future render-version compatibility using the existing model.
 
