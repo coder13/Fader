@@ -1,0 +1,66 @@
+{
+  "sourceRevision": "806f4252b7c442e077a0ea9463b360b3814d97ad",
+  "platform": "macOS",
+  "build": {
+    "project": "Fader",
+    "version": "0.2.0",
+    "sourceRevision": "806f4252b7c442e077a0ea9463b360b3814d97ad",
+    "cmakeVersion": "4.4.4",
+    "generator": "Unix Makefiles",
+    "system": "Darwin",
+    "systemVersion": "24.6.0",
+    "architecture": "arm64",
+    "compiler": "AppleClang",
+    "compilerVersion": "17.0.0.17000013",
+    "cxxStandard": "20",
+    "buildType": "Release",
+    "nativeApp": "ON",
+    "uiFixtures": "OFF",
+    "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+  },
+  "suites": 7,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0,
+  "modelTestsPassed": true,
+  "cpuDiagnosticSmoke": {
+    "callbacks": 750,
+    "capturedInputs": 247,
+    "softwareIntegrityPassed": true,
+    "performanceQualificationEligible": false,
+    "hourTargetPassed": false,
+    "clock": {
+      "name": "clock_gettime(CLOCK_THREAD_CPUTIME_ID); user+system thread CPU",
+      "unitNanoseconds": 1,
+      "reportedResolutionNanoseconds": 42,
+      "resolutionError": 0,
+      "callbackCpuSamples": 750,
+      "callbackCpuErrors": 0,
+      "paintCpuErrors": 0,
+      "complete": true,
+      "scope": "Enclosing thread CPU observations include clock-read overhead; units and reported resolution do not guarantee accounting precision. No hour pass.",
+      "enclosingCallbackThreadCpu": {
+        "samples": 750,
+        "p50Microseconds": 13.208,
+        "p95Microseconds": 39.583,
+        "p99Microseconds": 45.208,
+        "p999Microseconds": 61.958,
+        "maximumMicroseconds": 61.958
+      },
+      "enclosingPaintThreadCpu": {
+        "samples": 98,
+        "p50Microseconds": 505.834,
+        "p95Microseconds": 1462.917,
+        "p99Microseconds": 1962.292,
+        "p999Microseconds": 1962.292,
+        "maximumMicroseconds": 1962.292
+      }
+    },
+    "hostRowsChecked": 260,
+    "paintRowsChecked": 56,
+    "cpuDeltaExceedsOuterWallWindowHostRows": 0,
+    "virtualDeadlineMisses": 477,
+    "paintStartsLate": 53,
+    "tailRowsOmitted": 364
+  }
+}

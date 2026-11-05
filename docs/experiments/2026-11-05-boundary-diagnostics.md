@@ -1,6 +1,6 @@
 # Boundary and CPU diagnostic candidate
 
-Status: implementation candidate `806f4252b7c442e077a0ea9463b360b3814d97ad`; clean CI is pending.
+Status: implementation candidate `806f4252b7c442e077a0ea9463b360b3814d97ad`; macOS native and Linux core CI pass, Windows remains pending.
 This is instrumentation, not a repair or a successful hour qualification.
 The [completed 128-frame run](2026-11-05-software-stress-followup.md) remains failed.
 The separate 256-frame run continues with its original checkout and binary.
@@ -74,7 +74,25 @@ The native stress smoke adds a separate two-second CPU-mode run and checks compl
 musical/wall integrity, painter context and the explicit performance exclusion.
 Default and instrumented results are kept as separate objects.
 Existing callback allocation tests remain enabled on the unchanged production core.
-Those checks require actual CI results before they become qualification evidence.
+The checked macOS results below supply partial functional evidence; Windows still needs its own result.
+
+## macOS artifact check
+
+[CI 42036581905](https://github.com/coder13/Fader/actions/runs/42036581905) passes all seven macOS suites and five Linux core suites.
+Downloaded macOS metadata and JUnit match exact source `806f4252b7c442e077a0ea9463b360b3814d97ad`, pinned JUCE and UI fixtures OFF.
+There are no failed, erroneous or skipped native suites.
+The [verified macOS aggregate](data/2026-11-05-boundary-mac-ci.json) records the build and diagnostic results.
+
+The native mode retains all 750 callback CPU observations and all 98 actual painter CPU observations, with zero CPU read errors.
+All 247 controls survive, and the musical/wall-timing integrity check passes.
+The API reports a 42 ns nominal resolution on that runner; the precision caveat still applies.
+Independent checks validate CPU deltas, query brackets, frame-boundary populations and painter context on 260 serialized host rows and 56 painter rows.
+Maximum rows may repeat frames already present in the bounded tail lists.
+
+The ordinary-priority shared-runner diagnostic has 477 virtual misses, 53 late paint starts and 364 omitted host tail rows.
+It explicitly marks performance qualification ineligible and the hour target false.
+This proves functional collection and visible limits, not performance, an owner-Mac cause, or a timing repair.
+The Windows build must complete and its own artifacts must be checked before integration.
 
 ## Commands after the current fallback finishes
 
