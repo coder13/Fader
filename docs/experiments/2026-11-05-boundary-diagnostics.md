@@ -126,9 +126,11 @@ python3 scripts/run-software-stress.py \
   --build-info /path/to/candidate-build-source/build/native/fader-build-info.json \
   --fixtures /path/to/unchanged/synthetic-fixtures \
   --output /path/to/new/diagnostic-evidence \
-  --seconds 1200 --block 128 --scheduler realtime --cpu-diagnostics
+  --seconds 3600 --block 128 --scheduler realtime --cpu-diagnostics
 ```
 
-A twenty-minute diagnostic can provide more boundary observations; it cannot satisfy the full-hour gate.
-Preserve its counts and uncertainties even if no deadline is missed.
+Use the full hour so the stored curves, timeline and baseline timing histories retain the original scale.
+The extra CPU observations still add memory and query cost, so this instrumented hour cannot satisfy the original performance gate.
+Shorter diagnostics change the timeline and history size and must be labeled accordingly.
+Preserve all counts and uncertainties even if no deadline is missed.
 Select an actual repair from the resulting evidence, then repeat qualification without the CPU instrumentation.

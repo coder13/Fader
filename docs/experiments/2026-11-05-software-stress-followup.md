@@ -100,8 +100,52 @@ The completed captured set and raw logs also remain local; no user library or pr
 
 ## Next qualification
 
-Report the separate 256-frame fallback with the same source, workload and limits.
+The separate 256-frame result below uses the same source, workload and limits.
 It cannot substitute for the failed 128-frame result.
 Use the observed boundary correlation and CPU-versus-wall diagnostics to select the next timing repair.
 Measure painter tails with enough context to distinguish computation from scheduling delay.
 Keep native seek/export observations and physical-device evidence separate and unqualified until actually performed.
+
+## Separate 256-frame hour
+
+The [256-frame aggregate and final metadata](data/2026-11-05-software-stress-followup-256.json) record a full 3,600.003701-second run at the same source and binary.
+All 675,000 callback/host measurements and 107,999 controls survive with zero correlation or loss counters.
+Source starvation, failures, non-finite output and quiet blocks remain zero; PCM cache remains 1 MiB.
+The same background work completes 360 library scans, 360 analysis imports and 120 seek cancellations.
+No local build or additional local host runs alongside the timed workload.
+
+| Measurement | Target | Separate 256-frame hour |
+| --- | --- | ---: |
+| Virtual deadline misses | 0 | 25 |
+| Callback p99.9 | Below 2.667 ms | 0.158625 ms |
+| Callback maximum | Below 5.333 ms | 2.783458 ms |
+| Host wake lateness maximum | Report separately | 69.771542 ms |
+| Receipt to predicted output p95 | Below 10 ms | 10.237000 ms |
+| Peak RSS including save | At most 128 MiB | 102.656 MiB |
+| Compiled-set manifest | Within 8 MiB | 7,415,532 bytes |
+| Compiled points reopened after archive | Preserve all points and identities | 149,578 |
+| Paints completed | 180,000 | 180,000 |
+| Paint starts more than 20 ms late | 0 under the stated follow-up gate | 135 |
+
+The callback headroom target passes at this larger block size.
+However, the deadline, predicted-latency and painter-start gates still fail, and the driver correctly exits 3.
+The predicted output still assumes one virtual block of buffering, now 5.333 ms.
+Do not relax the existing 10 ms target or call this fallback a passing replacement.
+
+All twenty-five missed blocks have planned start times between 112 and 373.333333 ms after the timed origin.
+The retained trace shows late wakes followed by catch-up callbacks with short internal execution.
+No later block misses its deadline in this observation.
+This localizes the recorded failures to startup scheduling under the declared workload; it does not identify a kernel, process policy or initialization cause.
+Do not drop those first blocks, move the timed origin or discard initial background jobs to turn the result into a pass.
+
+The trace retains all twenty-eight qualifying tail blocks with zero omitted rows.
+An independent check validates all thirty-one serialized rows, including maxima, and finds every missed row in that startup interval.
+The longest internal callback later in the run is still below its 5.333 ms block deadline.
+Painter update-and-paint p99.9 is 27.262 ms and maximum is 86.061 ms, including possible descheduling.
+The result still does not measure native presentation or acoustic/device latency.
+
+Save and memory limits pass without removing points.
+Production archive load/resave succeeds, and an independent comparison preserves every field, curve and identity after rebasing only asset paths.
+The archived manifest is 7,415,586 bytes because its paths differ in length.
+Original manifest bytes, the exact executable and fault-prefix bytes are preserved locally before later experiments can overwrite fixture-side files.
+The repeated 128-frame result remains failed and unchanged; neither one observation nor comparison of raw miss counts estimates reliability.
