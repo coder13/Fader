@@ -205,15 +205,15 @@ GitHub: [#6](https://github.com/coder13/Fader/issues/6). Labels: `phase:poc`, `t
 
 GitHub: [#7](https://github.com/coder13/Fader/issues/7). Labels: `phase:poc`, `type:feature`, `area:audio`.
 
-**Current evidence:** The prototype mixes decoded sources with independent per-clip volume, HP/LP filters and cue. Full decoding and limited device evidence remain constraints.
+**Completed:** Synthetic source-rate/gain/master/cue and export fixtures passed locally and in Linux/Mac CI at `b18e22aa807ae5642f1920dffd20da1fb4be002d`. See [mixer contract](mixer-contract.md) and [qualification evidence](experiments/2026-11-04-mixer-qualification.md). Full decoding, production resampling quality and physical routing remain separate gates.
 
 **Scope:** Audit the existing mixer/resampler and define source-rate, gain, filter, clipping and monitoring behavior. A global A/B crossfader is not the primary editor model; preserve legacy v1 playback compatibility.
 
 **Acceptance:**
 
-- [ ] Synthetic mono/stereo and source-rate fixtures verify gain, duration and declared resampling behavior.
-- [ ] Master and cue buses are independently testable; cue is absent from export (A03/A06).
-- [ ] All callback work is bounded and nonblocking; streaming memory limits are addressed by [DJ-038](https://github.com/coder13/Fader/issues/38).
+- [x] Synthetic mono/stereo and source-rate fixtures verify gain, duration and declared resampling behavior.
+- [x] Master and cue buses are independently testable; cue is absent from export (A03/A06).
+- [x] All callback work is bounded and nonblocking; streaming memory limits are addressed by [DJ-038](https://github.com/coder13/Fader/issues/38).
 
 **Dependencies:** [DJ-006](https://github.com/coder13/Fader/issues/6)
 
