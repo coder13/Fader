@@ -176,6 +176,7 @@ void testExportFailures() {
         check(reader && reader->lengthInSamples == 1934 && reader->numChannels == 2 &&
                   reader->usesFloatingPointData,
               "Range output header/format invalid");
+        reader.reset(); // release the output before fixture cleanup on Windows
         check(p.id == originalId && p.clips[0].id == clipId && p.clips[0].automation[0].points == curve,
               "Offline export mutated active project");
         // A successful replacement publishes the new sound only at the end.
