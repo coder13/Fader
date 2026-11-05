@@ -61,6 +61,61 @@ void timingModelTests() {
     complete.host(first);
     require(complete.traceComplete() && complete.tails.empty(),
             "A complete timing trace needs no outliers to be valid");
+    require(timing.boundaryCallbacks.samples == count / 32 &&
+                timing.boundaryCallbacks.samples + timing.otherCallbacks.samples == count &&
+                timing.boundaryCallbacks.maximum == 355 && timing.otherCallbacks.maximum == 358,
+            "Boundary populations lost samples or their correctly indexed maximum");
+}
+void cpuModelTests() {
+    using namespace qualification;
+    CpuObservation cpu{{1002, 1004, 10, 0, true}, {1011, 1013, 18, 0, true}};
+    require(cpu.valid() && cpu.elapsed() == 8, "CPU sample brackets lost their delta");
+    StressTiming timing(3, 128, true);
+    for (int i = 0; i < 3; ++i)
+        timing.callback({9001, i * 128, i * 128, 128, 5, 0});
+    timing.host({0, 1000, 1001, 1010, 1020, 2000, cpu});
+    auto bad = cpu;
+    bad.first.valid = false;
+    bad.first.error = 5;
+    timing.host({128, 1000, 1001, 1010, 1020, 2000, bad});
+    bad = cpu;
+    bad.last.cpu = 9;
+    require(!bad.valid(), "Backwards CPU accounting was treated as a valid delta");
+    timing.host({256, 1000, 1001, 1010, 1020, 2000, bad});
+    require(timing.allSamplesPresent() && timing.cpuSamples == 1 && timing.cpuErrors == 2 &&
+                timing.cpu[0] == 8 && timing.cpu[1] == StressTiming::missing &&
+                timing.cpu[2] == StressTiming::missing && timing.maximumCpu && timing.maximumCpu->frame == 0,
+            "Optional CPU clock errors hid wall samples or became zero CPU measurements");
+    bad = cpu;
+    bad.last.before = 1003;
+    require(!bad.valid(), "Overlapping/reversed CPU reading brackets were accepted");
+
+    PaintTiming paints;
+    for (std::size_t i = 0; i < PaintTiming::tailLimit + 3; ++i) {
+        const auto begin = HostTime(1000 + i * 10000);
+        const bool last = i == PaintTiming::tailLimit + 2;
+        paints.add({i,
+                    begin,
+                    begin + (last ? 2000 : 1),
+                    begin + (last ? 12000 : 1001),
+                    Frame(i * 128),
+                    i % 2 ? projectRate : 0,
+                    int(i * 3),
+                    int(i % 3),
+                    {}},
+                   1000);
+    }
+    require(paints.samples == PaintTiming::tailLimit + 3 && paints.tails.size() == PaintTiming::tailLimit &&
+                paints.omittedTails == 3 && paints.maximumExecution && paints.maximumWake &&
+                paints.maximumExecution->index == PaintTiming::tailLimit + 2 &&
+                paints.maximumWake->index == PaintTiming::tailLimit + 2 && paints.errors == 0,
+            "Painter outlier capacity lost context, truncation or later global maxima");
+    const auto &last = *paints.maximumExecution;
+    require(last.viewportX == int(last.index * 3) && last.parameter == int(last.index % 3) &&
+                last.playhead == Frame(last.index * 128),
+            "Painter maxima were paired with another frame");
+    paints.add(last, 1000);
+    require(paints.errors == 1, "Duplicate painter metadata was not rejected");
 }
 std::vector<Event> captured(Playback &playback) {
     std::vector<Event> events;
@@ -277,6 +332,7 @@ juce::var qualifyStressFaults(const juce::File &folder) {
 }
 juce::var stressSelfTest() {
     timingModelTests();
+    cpuModelTests();
     const auto root = juce::File::getSpecialLocation(juce::File::tempDirectory)
                           .getNonexistentChildFile("fader-stress-self-test", {}, false);
     require(root.createDirectory().wasOk(), "Cannot create stress self-test folder");
@@ -310,5 +366,23 @@ juce::var stressSelfTest() {
                     juce::int64(timed["arrangementPaints"]) - 1,
             "Stress timing or painter telemetry did not cover its actual samples");
     result->setProperty("timedSmoke", timed);
+    auto diagnostic = qualifySoftwareStress(root, 2, 128, false, true);
+    require(bool(diagnostic["softwareIntegrityPassed"]) && bool(diagnostic["cpuDiagnosticsEnabled"]) &&
+                !bool(diagnostic["performanceQualificationEligible"]) &&
+                !bool(diagnostic["hourTargetPassed"]),
+            "Instrumented capture lost integrity or could be called a performance qualification");
+    const auto cpu = diagnostic["cpuDiagnostics"];
+    require(bool(cpu["complete"]) &&
+                juce::int64(cpu["callbackCpuSamples"]) == juce::int64(diagnostic["callbacks"]) &&
+                juce::int64(cpu["callbackCpuErrors"]) == 0 && juce::int64(cpu["paintCpuErrors"]) == 0 &&
+                juce::int64(cpu["enclosingPaintThreadCpu"]["samples"]) ==
+                    juce::int64(diagnostic["arrangementPaints"]),
+            "Native CPU clock reads failed or did not cover every instrumented observation");
+    require(juce::int64(diagnostic["paintTrace"]["samples"]) ==
+                    juce::int64(diagnostic["arrangementPaints"]) &&
+                juce::int64(diagnostic["paintTrace"]["invalidOrDuplicateMetrics"]) == 0,
+            "Painter context did not cover its actual frames");
+    result->setProperty("cpuDiagnosticSmoke", diagnostic);
+    result->setProperty("cpuAndPaintModelPassed", true);
     return json;
 }

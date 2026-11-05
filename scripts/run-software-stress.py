@@ -19,6 +19,7 @@ parser.add_argument("--output", type=Path, required=True, help="New evidence dir
 parser.add_argument("--seconds", type=int, default=3600)
 parser.add_argument("--block", type=int, choices=(128, 256), default=128)
 parser.add_argument("--scheduler", choices=("normal", "realtime"), default="normal")
+parser.add_argument("--cpu-diagnostics", action="store_true", help="Instrument thread CPU time; cannot qualify hour performance")
 args = parser.parse_args()
 if not 1 <= args.seconds <= 3600:
     parser.error("--seconds must be 1..3600")
@@ -64,6 +65,7 @@ metadata = {
     "seconds": args.seconds,
     "blockFrames": args.block,
     "scheduler": args.scheduler,
+    "cpuDiagnostics": args.cpu_diagnostics,
     "scope": "Software sink and offscreen production painter. No audio/MIDI device or native UI interaction.",
 }
 (args.output / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
@@ -92,6 +94,8 @@ try:
     command = ["--stress-software", args.fixtures, args.seconds, args.block]
     if args.scheduler == "realtime":
         command.append("--realtime")
+    if args.cpu_diagnostics:
+        command.append("--cpu-diagnostics")
     timed = run("timed", command)
     metadata["timedPhaseFinishedUtc"] = datetime.now(timezone.utc).isoformat()
     captured = args.fixtures / f"stress-captured-{args.block}.faderset"

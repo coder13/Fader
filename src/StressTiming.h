@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #pragma once
+#include "StressClock.h"
 #include <algorithm>
 #include <fader/Playback.h>
 #include <limits>
@@ -10,6 +11,7 @@ namespace fader::qualification {
 struct HostMetric {
     Frame frame{};
     HostTime target{}, woke{}, returned{}, finished{}, deadline{};
+    CpuObservation cpu;
 };
 
 // Consumer-thread history. Index by frame before any percentile calculation so
@@ -20,9 +22,9 @@ class StressTiming {
   public:
     static constexpr std::size_t tailLimit = 256;
     static constexpr HostTime missing = std::numeric_limits<HostTime>::max();
-    StressTiming(std::size_t blocks, int blockFrames)
+    StressTiming(std::size_t blocks, int blockFrames, bool cpuDiagnostics = false)
         : callbacks(blocks, missing), wakes(blocks, missing), outer(blocks, missing),
-          blockFrames(blockFrames) {
+          cpu(cpuDiagnostics ? blocks : 0, missing), blockFrames(blockFrames) {
         tails.reserve(tailLimit);
     }
     void callback(const CallbackMetric &metric) {
@@ -34,6 +36,10 @@ class StressTiming {
         }
         callbacks[*index] = metric.executionNs;
         ++callbackSamples;
+        const bool boundary = (metric.engineFrame + blockFrames) % 4096 == 0;
+        auto &group = boundary ? boundaryCallbacks : otherCallbacks;
+        ++group.samples;
+        group.maximum = std::max(group.maximum, metric.executionNs);
     }
     void host(const HostMetric &metric) {
         const auto index = indexFor(metric.frame);
@@ -48,6 +54,18 @@ class StressTiming {
         wakes[*index] = wake;
         outer[*index] = metric.finished - metric.woke;
         ++hostSamples;
+        if (!cpu.empty()) {
+            if (metric.cpu.valid() && metric.woke <= metric.cpu.first.before &&
+                metric.cpu.first.after <= metric.returned && metric.returned <= metric.cpu.last.before &&
+                metric.cpu.last.after <= metric.finished) {
+                cpu[*index] = metric.cpu.elapsed();
+                ++cpuSamples;
+                if (!maximumCpu || metric.cpu.elapsed() > maximumCpu->cpu.elapsed())
+                    maximumCpu = metric;
+            } else {
+                ++cpuErrors;
+            }
+        }
         virtualMisses += unsigned(metric.finished > metric.deadline);
         if (!maximumWake || wake > maximumWake->woke - maximumWake->target)
             maximumWake = metric;
@@ -81,11 +99,16 @@ class StressTiming {
     bool traceComplete() const {
         return allSamplesPresent() && omittedTails == 0;
     }
-    std::vector<HostTime> callbacks, wakes, outer;
+    struct Population {
+        std::size_t samples = 0;
+        HostTime maximum = 0;
+    } boundaryCallbacks, otherCallbacks;
+    std::vector<HostTime> callbacks, wakes, outer, cpu;
     std::vector<HostMetric> tails;
-    std::optional<HostMetric> maximumWake, maximumCall, maximumMiss;
+    std::optional<HostMetric> maximumWake, maximumCall, maximumMiss, maximumCpu;
     std::size_t callbackSamples = 0, hostSamples = 0, callbackErrors = 0, hostErrors = 0;
     std::size_t tailCount = 0, omittedTails = 0, virtualMisses = 0;
+    std::size_t cpuSamples = 0, cpuErrors = 0;
 
   private:
     std::optional<std::size_t> indexFor(Frame frame) const {
@@ -95,5 +118,47 @@ class StressTiming {
         return index < callbacks.size() ? std::optional(index) : std::nullopt;
     }
     const int blockFrames;
+};
+
+struct PaintMetric {
+    std::size_t index{};
+    HostTime scheduled{}, began{}, finished{};
+    Frame playhead{}, movedClipFrames{};
+    int viewportX{}, parameter{};
+    CpuObservation cpu;
+};
+class PaintTiming {
+  public:
+    static constexpr std::size_t tailLimit = 256;
+    PaintTiming() {
+        tails.reserve(tailLimit);
+    }
+    void add(const PaintMetric &metric, HostTime period) {
+        if (period == 0 || metric.index != samples || metric.began < metric.scheduled ||
+            metric.finished < metric.began || metric.parameter < 0 || metric.parameter > 2 ||
+            metric.viewportX < 0) {
+            ++errors;
+            return;
+        }
+        ++samples;
+        const auto duration = metric.finished - metric.began;
+        const auto wake = metric.began - metric.scheduled;
+        if (!maximumExecution || duration > maximumExecution->finished - maximumExecution->began)
+            maximumExecution = metric;
+        if (!maximumWake || wake > maximumWake->began - maximumWake->scheduled)
+            maximumWake = metric;
+        if (metric.cpu.valid() && (!maximumCpu || metric.cpu.elapsed() > maximumCpu->cpu.elapsed()))
+            maximumCpu = metric;
+        if (duration >= period || wake > period) {
+            ++tailCount;
+            if (tails.size() < tailLimit)
+                tails.push_back(metric);
+            else
+                ++omittedTails;
+        }
+    }
+    std::size_t samples = 0, errors = 0, tailCount = 0, omittedTails = 0;
+    std::vector<PaintMetric> tails;
+    std::optional<PaintMetric> maximumExecution, maximumWake, maximumCpu;
 };
 } // namespace fader::qualification

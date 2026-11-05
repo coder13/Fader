@@ -131,7 +131,29 @@ Project makeStressProject(const juce::File &folder, Frame frames) {
     }
     return project;
 }
-juce::var timingTrace(const StressTiming &timing, HostTime begin) {
+juce::var cpuObservation(const qualification::CpuObservation &cpu, HostTime begin) {
+    auto *out = new juce::DynamicObject();
+    const auto reading = [&](const qualification::CpuReading &sample) -> juce::var {
+        auto *row = new juce::DynamicObject();
+        row->setProperty("valid", sample.valid);
+        row->setProperty("error", juce::int64(sample.error));
+        row->setProperty("beforeNanosecondsFromStart", juce::int64(sample.before - begin));
+        row->setProperty("afterNanosecondsFromStart", juce::int64(sample.after - begin));
+        if (sample.valid)
+            row->setProperty("threadCpuNanoseconds", juce::int64(sample.cpu));
+        return row;
+    };
+    out->setProperty("first", reading(cpu.first));
+    out->setProperty("last", reading(cpu.last));
+    out->setProperty("valid", cpu.valid());
+    if (cpu.valid()) {
+        out->setProperty("threadCpuDeltaNanoseconds", juce::int64(cpu.elapsed()));
+        out->setProperty("minimumWallWindowNanoseconds", juce::int64(cpu.last.before - cpu.first.after));
+        out->setProperty("maximumWallWindowNanoseconds", juce::int64(cpu.last.after - cpu.first.before));
+    }
+    return out;
+}
+juce::var timingTrace(const StressTiming &timing, HostTime begin, bool cpuDiagnostics) {
     const auto row = [&](const HostMetric &metric) -> juce::var {
         auto *out = new juce::DynamicObject();
         out->setProperty("projectFrame", juce::int64(metric.frame));
@@ -150,6 +172,9 @@ juce::var timingTrace(const StressTiming &timing, HostTime begin) {
         out->setProperty("callbackMetricMatched", execution.has_value());
         if (execution)
             out->setProperty("internalCallbackNanoseconds", juce::int64(*execution));
+        out->setProperty("projectFrameModulo4096", juce::int64(metric.frame % 4096));
+        if (cpuDiagnostics)
+            out->setProperty("cpuObservation", cpuObservation(metric.cpu, begin));
         return out;
     };
     auto *out = new juce::DynamicObject();
@@ -175,6 +200,51 @@ juce::var timingTrace(const StressTiming &timing, HostTime begin) {
         out->setProperty("maximumProcessCall", row(*timing.maximumCall));
     if (timing.maximumMiss)
         out->setProperty("maximumDeadlineMiss", row(*timing.maximumMiss));
+    if (timing.maximumCpu)
+        out->setProperty("maximumEnclosingThreadCpu", row(*timing.maximumCpu));
+    const auto population = [](const StressTiming::Population &group) -> juce::var {
+        auto *out = new juce::DynamicObject();
+        out->setProperty("samples", juce::int64(group.samples));
+        out->setProperty("maximumInternalCallbackNanoseconds", juce::int64(group.maximum));
+        return out;
+    };
+    out->setProperty("blocksEndingAt4096FrameBoundary", population(timing.boundaryCallbacks));
+    out->setProperty("otherBlocks", population(timing.otherCallbacks));
+    return out;
+}
+juce::var paintTrace(const qualification::PaintTiming &timing, HostTime begin, bool cpuDiagnostics) {
+    const auto row = [&](const qualification::PaintMetric &metric) -> juce::var {
+        auto *out = new juce::DynamicObject();
+        out->setProperty("paintIndex", juce::int64(metric.index));
+        out->setProperty("scheduledNanosecondsFromStart", juce::int64(metric.scheduled - begin));
+        out->setProperty("beginNanosecondsFromStart", juce::int64(metric.began - begin));
+        out->setProperty("endNanosecondsFromStart", juce::int64(metric.finished - begin));
+        out->setProperty("updateAndPaintNanoseconds", juce::int64(metric.finished - metric.began));
+        out->setProperty("startLatenessNanoseconds", juce::int64(metric.began - metric.scheduled));
+        out->setProperty("playheadFrame", juce::int64(metric.playhead));
+        out->setProperty("movedClipFrames", juce::int64(metric.movedClipFrames));
+        out->setProperty("viewportX", metric.viewportX);
+        out->setProperty("parameter", metric.parameter);
+        if (cpuDiagnostics)
+            out->setProperty("cpuObservation", cpuObservation(metric.cpu, begin));
+        return out;
+    };
+    auto *out = new juce::DynamicObject();
+    out->setProperty("samples", juce::int64(timing.samples));
+    out->setProperty("invalidOrDuplicateMetrics", juce::int64(timing.errors));
+    out->setProperty("tailLimit", int(qualification::PaintTiming::tailLimit));
+    out->setProperty("tailCount", juce::int64(timing.tailCount));
+    out->setProperty("omittedTails", juce::int64(timing.omittedTails));
+    juce::Array<juce::var> rows;
+    for (const auto &metric : timing.tails)
+        rows.add(row(metric));
+    out->setProperty("tails", rows);
+    if (timing.maximumExecution)
+        out->setProperty("maximumUpdateAndPaint", row(*timing.maximumExecution));
+    if (timing.maximumWake)
+        out->setProperty("maximumStartLateness", row(*timing.maximumWake));
+    if (timing.maximumCpu)
+        out->setProperty("maximumEnclosingThreadCpu", row(*timing.maximumCpu));
     return out;
 }
 class VirtualCallbackThread final : public juce::Thread {
@@ -195,7 +265,8 @@ class VirtualCallbackThread final : public juce::Thread {
 };
 } // namespace
 
-juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int blockFrames, bool realtimeThread) {
+juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int blockFrames, bool realtimeThread,
+                                bool cpuDiagnostics) {
     require(seconds >= 1 && seconds <= 3600 && (blockFrames == 128 || blockFrames == 256),
             "Stress duration must be 1..3600 seconds and block size 128 or 256");
     const auto importing = monotonicTime();
@@ -237,10 +308,15 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
     auto hostQueue = std::make_unique<Queue<HostMetric, 4096>>();
     std::vector<Event> take;
     std::vector<ControlMetric> controls;
-    StressTiming timing(blocks, blockFrames);
+    StressTiming timing(blocks, blockFrames, cpuDiagnostics);
+    qualification::PaintTiming painterTiming;
+    const auto cpuClock =
+        cpuDiagnostics ? qualification::threadCpuClockInfo() : qualification::CpuClockInfo{"disabled", 0};
     constexpr HostTime paintPeriod = second / 50;
     const auto expectedPaints = std::size_t((frameTime(frames) + paintPeriod - 1) / paintPeriod);
     std::vector<HostTime> paintExecution(expectedPaints), paintSpacing(expectedPaints);
+    std::vector<HostTime> paintCpu(cpuDiagnostics ? expectedPaints : 0, StressTiming::missing);
+    std::size_t paintCpuErrors = 0;
     take.reserve(takeLimit);
     controls.reserve(takeLimit);
     std::size_t hostDrops = 0, nonFinite = 0, quietBlocks = 0, retainedDrops = 0;
@@ -354,8 +430,13 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
             const auto target = begin + frameTime(at);
             sleepUntil(target, 100000);
             const auto woke = monotonicTime();
+            qualification::CpuObservation cpu;
+            if (cpuDiagnostics)
+                cpu.first = qualification::readThreadCpu();
             playback->process(pointers, 4, blockFrames, woke);
             const auto returned = monotonicTime();
+            if (cpuDiagnostics)
+                cpu.last = qualification::readThreadCpu();
             double blockSum = 0;
             for (int ch = 0; ch < 4; ++ch)
                 for (int i = 0; i < blockFrames; ++i) {
@@ -369,7 +450,8 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
             checksum += blockSum;
             quietBlocks += unsigned(blockSum == 0);
             const auto finished = monotonicTime();
-            if (!hostQueue->push({at, target, woke, returned, finished, begin + frameTime(at + blockFrames)}))
+            if (!hostQueue->push(
+                    {at, target, woke, returned, finished, begin + frameTime(at + blockFrames), cpu}))
                 ++hostDrops;
         }
         if (!done.load())
@@ -402,6 +484,9 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
         if (paints > 0)
             paintSpacing[paints - 1] = now - previousPaint;
         previousPaint = now;
+        qualification::CpuObservation cpu;
+        if (cpuDiagnostics)
+            cpu.first = qualification::readThreadCpu();
         arrangement.parameter = int(paints % 3);
         arrangement.playhead = playback->position();
         arrangement.viewport.setViewPosition(int((paints % 12000) * 3), 0);
@@ -411,7 +496,19 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
             arrangement.paintEntireComponent(graphics, true);
         }
         editor.clips[0].start = 0;
-        paintExecution[paints] = monotonicTime() - now;
+        const auto painted = monotonicTime();
+        if (cpuDiagnostics) {
+            cpu.last = qualification::readThreadCpu();
+            if (cpu.valid())
+                paintCpu[paints] = cpu.elapsed();
+            else
+                ++paintCpuErrors;
+        }
+        paintExecution[paints] = painted - now;
+        painterTiming.add({paints, nextPaint, now, painted, arrangement.playhead,
+                           paints % 2 ? projectRate : 0, arrangement.viewport.getViewPositionX(),
+                           arrangement.parameter, cpu},
+                          paintPeriod);
         ++paints;
         nextPaint += paintPeriod;
         if (now >= nextProgress) {
@@ -491,9 +588,10 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
                            timing.allSamplesPresent() && playback->starvationFrames() == 0 &&
                            sources.failedSources == 0 && nonFinite == 0 && checksum > 0 && cueChecksum > 0 &&
                            quietBlocks == 0 && backgroundError.empty() && libraryJobs > 0 &&
-                           analysisJobs > 0 && seekCancellations > 0 && paints > 0;
+                           analysisJobs > 0 && seekCancellations > 0 && paints > 0 &&
+                           painterTiming.samples == paints && painterTiming.errors == 0;
     // Build frame-correlated rows before distribution() sorts the exact samples.
-    auto trace = timingTrace(timing, begin);
+    auto trace = timingTrace(timing, begin, cpuDiagnostics);
     const bool traceComplete = timing.traceComplete();
     for (auto *values : {&timing.callbacks, &timing.wakes, &timing.outer})
         std::erase(*values, StressTiming::missing);
@@ -509,6 +607,30 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
                      "Real-clock software sink, production arrangement painter without native input/display, "
                      "synthetic library and virtual lifecycle. No audio/MIDI device or acoustic timing.");
     out->setProperty("requestedSeconds", seconds);
+    out->setProperty("cpuDiagnosticsEnabled", cpuDiagnostics);
+    out->setProperty("performanceQualificationEligible", !cpuDiagnostics);
+    if (cpuDiagnostics) {
+        auto *clock = new juce::DynamicObject();
+        clock->setProperty("name", cpuClock.name);
+        clock->setProperty("unitNanoseconds", juce::int64(cpuClock.unitNanoseconds));
+        clock->setProperty("reportedResolutionNanoseconds",
+                           juce::int64(cpuClock.reportedResolutionNanoseconds));
+        clock->setProperty("resolutionError", juce::int64(cpuClock.resolutionError));
+        clock->setProperty("callbackCpuSamples", juce::int64(timing.cpuSamples));
+        clock->setProperty("callbackCpuErrors", juce::int64(timing.cpuErrors));
+        clock->setProperty("paintCpuErrors", juce::int64(paintCpuErrors));
+        clock->setProperty("complete", timing.cpuSamples == blocks && timing.cpuErrors == 0 &&
+                                           paintCpuErrors == 0 && paints > 0);
+        clock->setProperty("scope",
+                           "Enclosing thread CPU observations include clock-read overhead; units and "
+                           "reported resolution do not guarantee accounting precision. No hour pass.");
+        std::erase(timing.cpu, StressTiming::missing);
+        clock->setProperty("enclosingCallbackThreadCpu", distribution(timing.cpu));
+        paintCpu.resize(paints);
+        std::erase(paintCpu, StressTiming::missing);
+        clock->setProperty("enclosingPaintThreadCpu", distribution(paintCpu));
+        out->setProperty("cpuDiagnostics", clock);
+    }
     out->setProperty("observedSeconds", double(finished - begin) / second);
     out->setProperty("importSeconds", double(imported - importing) / second);
     out->setProperty("sampleRate", projectRate);
@@ -572,6 +694,7 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
     out->setProperty("arrangementPaintStartSpacing", distribution(paintSpacing));
     const bool paintTargetPassed = paints == expectedPaints && missedPaintIntervals == 0;
     out->setProperty("arrangementPaintTargetPassed", paintTargetPassed);
+    out->setProperty("paintTrace", paintTrace(painterTiming, begin, cpuDiagnostics));
     out->setProperty("libraryJobs", juce::int64(libraryJobs));
     out->setProperty("analysisJobs", juce::int64(analysisJobs));
     out->setProperty("seekCancellations", juce::int64(seekCancellations));
@@ -592,6 +715,8 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
     std::vector<HostTime>().swap(timing.callbacks);
     std::vector<HostTime>().swap(timing.wakes);
     std::vector<HostTime>().swap(timing.outer);
+    std::vector<HostTime>().swap(timing.cpu);
+    std::vector<HostTime>().swap(paintCpu);
     std::vector<HostTime>().swap(paintExecution);
     std::vector<HostTime>().swap(paintSpacing);
     std::vector<HostTime>().swap(receiptJitter);
@@ -626,10 +751,11 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
         out->setProperty("peakResidentBytes", bytes);
         out->setProperty("memoryMeasurementAvailable", true);
         out->setProperty("memoryBudgetPassed", bytes <= 128 * 1024 * 1024);
-        out->setProperty("hourTargetPassed",
-                         seconds == 3600 && integrity && persisted && headroom && latencyPassed &&
-                             timing.virtualMisses == 0 && traceComplete && paintTargetPassed &&
-                             bytes <= 128 * 1024 * 1024 && sources.pcmBytes <= 1024 * 1024);
+        out->setProperty("hourTargetPassed", !cpuDiagnostics && seconds == 3600 && integrity && persisted &&
+                                                 headroom && latencyPassed && timing.virtualMisses == 0 &&
+                                                 traceComplete && paintTargetPassed &&
+                                                 bytes <= 128 * 1024 * 1024 &&
+                                                 sources.pcmBytes <= 1024 * 1024);
     }
 #endif
     return out;

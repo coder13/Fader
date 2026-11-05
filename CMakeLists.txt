@@ -75,7 +75,7 @@ if(FADER_BUILD_APP)
     target_link_libraries(Fader PRIVATE fader_media)
     juce_add_console_app(fader_probe PRODUCT_NAME "fader_probe")
     target_sources(fader_probe PRIVATE src/Probe.cpp src/StreamQualification.cpp src/SeekBenchmark.cpp
-        src/ExportQualification.cpp src/StressQualification.cpp src/StressFaults.cpp src/Arrangement.cpp)
+        src/ExportQualification.cpp src/StressClock.cpp src/StressQualification.cpp src/StressFaults.cpp src/Arrangement.cpp)
     target_link_libraries(fader_probe PRIVATE fader_media)
     if(BUILD_TESTING)
         juce_add_console_app(fader_media_tests PRODUCT_NAME "fader_media_tests")

@@ -148,16 +148,29 @@ int main(int argc, char **argv) {
                       << '\n';
             return 0;
         }
-        if ((argc == 5 || argc == 6) && std::string(argv[1]) == "--stress-software") {
-            if (argc == 6 && std::string(argv[5]) != "--realtime")
-                throw std::runtime_error("Expected --realtime");
+        if (argc >= 2 && std::string(argv[1]) == "--stress-software") {
+            if (argc < 5)
+                throw std::runtime_error("Expected fixture folder, duration and block size");
+            bool realtime = false, cpuDiagnostics = false;
+            for (int i = 5; i < argc; ++i) {
+                const std::string option(argv[i]);
+                if (option == "--realtime" && !realtime)
+                    realtime = true;
+                else if (option == "--cpu-diagnostics" && !cpuDiagnostics)
+                    cpuDiagnostics = true;
+                else
+                    throw std::runtime_error("Unknown or duplicate software stress option");
+            }
             const auto duration = std::stoi(argv[3]);
             const auto block = std::stoi(argv[4]);
-            auto result = qualifySoftwareStress(
-                juce::File::getCurrentWorkingDirectory().getChildFile(argv[2]), duration, block, argc == 6);
+            auto result =
+                qualifySoftwareStress(juce::File::getCurrentWorkingDirectory().getChildFile(argv[2]),
+                                      duration, block, realtime, cpuDiagnostics);
             std::cout << juce::JSON::toString(result, true) << '\n';
             if (!bool(result["softwareIntegrityPassed"]))
                 return 1;
+            if (cpuDiagnostics && !bool(result["cpuDiagnostics"]["complete"]))
+                return 4;
             return duration == 3600 && !bool(result["hourTargetPassed"]) ? 3 : 0;
         }
         if (argc == 5 && std::string(argv[1]) == "--export-soak") {
