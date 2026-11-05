@@ -2,6 +2,8 @@
 
 Reviewed 2026-11-04. **User-confirmed direction:** model Fader's UI on the lessons of the Audacity 4 redesign. The concrete Fader interactions below are proposals to validate, not implemented or measured behavior.
 
+Historical scope note: references below to a two-lane, bus-owned gain/crossfader POC predate the clip-owned v0.2 model. The current [product direction](../product-and-ux.md) and [automation contract](../set-format-and-automation.md) supersede those POC assumptions. The interaction proposals still require testing; the [completeness review](roadmap-completeness-review.md) identifies missing design evidence.
+
 Source: Tantacrul, [How We Designed Audacity 4](https://www.youtube.com/watch?v=QYM3TWf_G38), 52:46. The full English caption transcript was downloaded and read; key UI demonstrations were inspected with the player muted. Captions can contain transcription errors. The transcript remains local research material, rather than a verbatim repository copy. This is a development-era design account, not current-version qualification.
 
 ## Source map

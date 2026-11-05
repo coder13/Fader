@@ -2,6 +2,8 @@
 
 Published 2026-11-04 at the user's request: **10 milestones and 43 open issues** in [coder13/Fader](https://github.com/coder13/Fader/issues). This document records the publication baseline; GitHub holds current status. Planning IDs `DJ-001`–`DJ-043` remain stable, with actual issue links below. Milestones use exit criteria rather than speculative dates.
 
+The [completeness review](research/roadmap-completeness-review.md) assesses this backlog against the user-confirmed target of a DJ performance editor with selected DAW tools. It proposes clearer editing/DJ/library contracts, a native v1 release gate and stronger usability/visual validation. Those proposals are not additional published issues or accepted release scope; the existing issue count and milestones remain unchanged.
+
 ## Current evidence and immediate work
 
 The [v0.2 native prototype](https://github.com/coder13/Fader/blob/3a3b58456065f6cfed4c9f23f1a0252047d80a89/README.md) already has clip-owned volume/high-pass/low-pass envelopes, fixed-duration clip movement, waveform editing, capture/retakes, versioned save/reopen, MP3/WAV import, WAV export, a metadata browser, Preferences, read-only Traktor metadata and a flat dark theme. [Measured evidence](https://github.com/coder13/Fader/blob/3a3b58456065f6cfed4c9f23f1a0252047d80a89/docs/experiments/2026-11-04-clip-arrangement.md) and [theme verification](https://github.com/coder13/Fader/blob/3a3b58456065f6cfed4c9f23f1a0252047d80a89/docs/theme-and-interaction.md) describe the tested slice. This is **partial POC evidence**, not a qualified production stack. Source remains on its implementation branch; publishing this roadmap does not merge it into main.
