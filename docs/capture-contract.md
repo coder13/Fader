@@ -3,6 +3,7 @@
 Status: proposed implementation for [#12](https://github.com/coder13/Fader/issues/12).
 This document records requirements and a prototype design, not a capture qualification result.
 The current app captures clip controls in memory, but it lacks raw master recording and a durable take journal.
+The [implementation plan](capture-implementation-plan.md) records candidate queue capacities, master-bus ownership, loss boundaries and the persistence spike.
 The [clock contract](playback-clock.md) and [project format](project-format-v3.md) remain authoritative for applied timing and saved sound.
 
 ## Required behavior
