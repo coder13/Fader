@@ -128,6 +128,14 @@ void audioSmoke() {
 int main(int argc, char **argv) {
     try {
         juce::ScopedJuceInitialiser_GUI juce;
+        if (argc == 4 && std::string(argv[1]) == "--stress-snapshot") {
+            const auto cwd = juce::File::getCurrentWorkingDirectory();
+            std::cout << juce::JSON::toString(
+                             snapshotStressArrangement(cwd.getChildFile(argv[2]), cwd.getChildFile(argv[3])),
+                             true)
+                      << '\n';
+            return 0;
+        }
         if (argc == 2 && std::string(argv[1]) == "--stress-self-test") {
             std::cout << juce::JSON::toString(stressSelfTest(), true) << '\n';
             return 0;

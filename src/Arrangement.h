@@ -1,8 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #pragma once
 #include "Media.h"
+#include <span>
 
 namespace fader {
+namespace detail {
+// Conservative slice for the four-pixel handle radius, including float-position
+// rounding at the far end of the supported timeline. Curves stay intact.
+std::span<const Point> visiblePointHandles(const Curve &, float clipX, double pixelsPerSecond,
+                                           Frame clipLength, int left, int right) noexcept;
+} // namespace detail
 class Arrangement final : public juce::Component {
   public:
     Arrangement();

@@ -60,7 +60,7 @@ if(FADER_BUILD_APP)
         FetchContent_MakeAvailable(JUCE)
     endif()
     add_library(fader_media STATIC src/Media.cpp src/Devices.cpp src/Library.cpp src/AudioSetup.cpp
-        src/AudioPlayback.cpp src/FileSource.cpp src/DecodedCache.cpp src/ProjectStorage.cpp src/WavExport.cpp)
+        src/AudioPlayback.cpp src/FileSource.cpp src/DecodedCache.cpp src/ProjectStorage.cpp src/ManifestJson.cpp src/WavExport.cpp)
     target_include_directories(fader_media PUBLIC src)
     target_compile_definitions(fader_media PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0
         JUCE_USE_MP3AUDIOFORMAT=1 JUCE_MODAL_LOOPS_PERMITTED=0)

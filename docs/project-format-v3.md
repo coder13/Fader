@@ -59,6 +59,13 @@ Writes use the same manifest admission rules as reads, reject unsupported storag
 
 Persisted sound contains no audio-device handles, controller addresses, temporary PCM-cache paths, playhead, selection, UI zoom, or headphone-cue routing. Cue remains runtime monitoring state and is excluded from master export. Incomplete capture archives contain their original project plus actions and failure metadata; they are not complete sets and cannot be opened as one.
 
+The compact writer formats `initial` and `value` controls for an exact binary32 round trip.
+Other numeric metadata retains binary64 precision, even when its value originated as a float.
+Negative zero is explicit, and string/key escaping remains delegated to JUCE.
+Whitespace removal and shorter control decimals do not change the schema or remove points.
+The [dense-save regression](experiments/2026-11-05-dense-save-and-paint.md) checks the unchanged 8 MiB bound and numeric behavior.
+Its full load qualification remains pending.
+
 ## Qualification
 
 `ProjectModelTests` covers mono 44.1 kHz and VBR MP3 sources, separate clip IDs on shared assets, initial/held/linear/step curves, source offsets/rates, metadata/grid snapshots, move/reorder, parameter-array reorder, relocation, master render parity, strict malformed input, destination preservation, v1/v2 migration and decoded-domain mismatch. Local native/core suites pass 5/5, including existing callback allocation checks. The native media suite also passes with normal macOS codec access.

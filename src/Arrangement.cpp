@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "Arrangement.h"
 #include "Theme.h"
+#include <algorithm>
 #include <cmath>
 namespace fader {
 namespace {
@@ -10,6 +11,24 @@ juce::Colour curveColour(int p) {
     return ui::envelope(p);
 }
 } // namespace
+std::span<const Point> detail::visiblePointHandles(const Curve &curve, float clipX, double scale,
+                                                   Frame length, int firstX, int lastX) noexcept {
+    if (curve.points.empty() || !std::isfinite(clipX) || !std::isfinite(scale) || scale <= 0 || length < 0 ||
+        firstX > lastX)
+        return {};
+    const auto bound = double(std::min(length, maxProjectFrames));
+    // Two extra pixels cover intermediate binary32 position rounding. The
+    // painter's actual radius remains four pixels.
+    const auto first =
+        Frame(std::clamp(std::floor((double(firstX) - 6 - clipX) / scale * projectRate), 0.0, bound));
+    const auto last =
+        Frame(std::clamp(std::ceil((double(lastX) + 6 - clipX) / scale * projectRate), 0.0, bound));
+    const auto begin = std::lower_bound(curve.points.begin(), curve.points.end(), first,
+                                        [](const Point &p, Frame f) { return p.frame < f; });
+    const auto end = std::upper_bound(begin, curve.points.end(), last,
+                                      [](Frame f, const Point &p) { return f < p.frame; });
+    return {begin, end};
+}
 Arrangement::Arrangement() : canvas(*this) {
     addAndMakeVisible(viewport);
     viewport.setViewedComponent(&canvas, false);
@@ -166,9 +185,9 @@ void Arrangement::Canvas::paint(juce::Graphics &g) {
             g.setColour(curveColour(owner.parameter).withAlpha(selected ? 1.0f : 0.65f));
             g.strokePath(path, juce::PathStrokeType(selected ? 2.2f : 1.4f));
             if (selected)
-                for (const auto &point : curve.points) {
-                    if (point.frame > c.length)
-                        break;
+                for (const auto &point :
+                     detail::visiblePointHandles(curve, b.getX(), owner.pixelsPerSecond, c.length,
+                                                 visible.getX(), visible.getRight())) {
                     const float px =
                         b.getX() + float(double(point.frame) / projectRate * owner.pixelsPerSecond);
                     g.fillEllipse(px - 4, y1 - point.value * (y1 - y0) - 4, 8, 8);
