@@ -96,7 +96,7 @@ def _invalid_constant(value):
 
 
 def verify_project_archive(original, archived, original_directory):
-    """Only asset paths may change, and they must resolve to the same sources.
+    """Only asset paths may change; both must name the same existing file.
 
     Compare parsed JSON types and float64 bits, including signed zero. This is
     same-host metadata verification, not a source-content or playback check.
@@ -119,8 +119,14 @@ def verify_project_archive(original, archived, original_directory):
         left_path, right_path = left.get("path"), right.get("path")
         if not isinstance(left_path, str) or not left_path or not isinstance(right_path, str) or not right_path:
             raise ArchiveError("Project asset has no valid path")
-        if (original_directory / left_path).resolve() != (archived.parent / right_path).resolve():
-            raise ArchiveError("Archive asset path resolves to a different source")
+        # Path equality can case-fold on Windows even inside a case-sensitive
+        # directory. File identity also accepts valid hard-link aliases.
+        try:
+            same_source = (original_directory / left_path).samefile(archived.parent / right_path)
+        except OSError as error:
+            raise ArchiveError("Source file unavailable for archive path verification") from error
+        if not same_source:
+            raise ArchiveError("Archive asset path names a different source file")
         del left["path"], right["path"]
 
     floats = 0
@@ -150,7 +156,7 @@ def verify_project_archive(original, archived, original_directory):
 
     compare(before, after)
     return {
-        "scope": "Same-host path rebase and parsed project fields; not media-content, sound or timing qualification.",
+        "scope": "Same-host file identity and parsed project fields; not media-content, sound or timing qualification.",
         "allNonPathFieldsIdentical": True,
         "assetPathsResolveToSameSources": True,
         "assetsChecked": len(left_assets),

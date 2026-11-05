@@ -32,7 +32,11 @@ Copy completion and hashes do not promise recovery after power loss.
 ## Independent archive check
 
 Read the preserved original bytes and the production-rebased archive as JSON.
-Only asset paths may differ, and each must resolve to the same source in this host's path context.
+Only asset paths may differ, and both references must name the same existing physical file on this host.
+Use the filesystem's [file-identity check](https://docs.python.org/3/library/pathlib.html#pathlib.Path.samefile), rather than [path-text equality](https://docs.python.org/3/library/pathlib.html#general-properties) that can fold case on Windows.
+Windows also supports [case sensitivity per directory](https://learn.microsoft.com/en-us/windows/wsl/case-sensitivity).
+Hard-link aliases are accepted; a distinct file with equal bytes is still a different destination for this rebase check.
+Missing source files prevent verification; this helper is not the media-independent recovery reader.
 All other fields, array order, JSON types and parsed float64 bits must match, including signed zero.
 Reject duplicate keys, non-finite numbers, malformed JSON and missing asset paths.
 Do not ignore another field just because it is also named `path`.
@@ -45,9 +49,10 @@ Final aggregate and standalone metadata share the same finished timestamp.
 
 ## Checks completed and remaining
 
-Seven new filesystem/corruption tests and the eight existing observation-reader tests pass locally: 15 tests in 0.128 seconds.
+Eight new filesystem/corruption tests and the eight existing observation-reader tests cover the candidate.
+All 16 pass locally in 0.178 seconds after the file-identity change.
 They cover changed source files, exact retained bytes, wrong hashes, short copies, existing destinations, missing fault files, stale captures and missing successful saves.
-They also cover Unicode relative paths, changed IDs/lengths, JSON type changes, signed zero, non-asset path fields and malformed/non-finite metadata.
+They also cover Unicode paths, hard-link aliases, distinct files with equal bytes, missing sources, changed IDs/lengths, JSON type changes, signed zero, non-asset path fields and malformed/non-finite metadata.
 No native host, build or sanitizer runs for these Python helper tests.
 
 The new comparator also reads the completed CPU hour's preserved original and production archive.
@@ -58,6 +63,6 @@ This small read-only check is recorded as operator activity during the separate 
 
 Clean CI must execute the retained native probe on macOS and Windows, using four-second synthetic sources and a two-second normal-priority workload.
 It must preserve the six fault files and original capture, pass production rebasing and the independent observation reader, and retain the full evidence directory.
-Linux runs the helper tests alongside the existing core suites.
+All three CI platforms run the helper tests; Linux also runs the existing core suites.
 No short CI observation qualifies the hour or physical audio/MIDI gates.
 Inspect actual metadata, logs and retained files before calling this candidate complete.

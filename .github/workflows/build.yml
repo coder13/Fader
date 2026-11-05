@@ -107,6 +107,8 @@ jobs:
           Get-FileHash -Algorithm SHA256 $app | Format-List | Out-File build/windows-app.txt
       - name: Check the stress driver and retained executable
         run: |
+          python -m unittest discover -s scripts/tests -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/make-stress-fixtures.py build/native/driver-fixtures --seconds 4
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/run-software-stress.py --source-root . --build-source . --probe build/native/fader_probe_artefacts/Release/fader_probe.exe --build-info build/native/fader-build-info.json --fixtures build/native/driver-fixtures --output build/native/driver-evidence --seconds 2 --block 128
@@ -158,6 +160,7 @@ jobs:
           codesign --verify --deep --strict build/native/Fader_artefacts/Release/Fader.app
       - name: Check the stress driver and retained executable
         run: |
+          python3 -m unittest discover -s scripts/tests -v
           python3 scripts/make-stress-fixtures.py build/native/driver-fixtures --seconds 4
           python3 scripts/run-software-stress.py --source-root . --build-source . --probe build/native/fader_probe_artefacts/Release/fader_probe --build-info build/native/fader-build-info.json --fixtures build/native/driver-fixtures --output build/native/driver-evidence --seconds 2 --block 128
           python3 scripts/verify-stress-observations.py build/native/driver-evidence/timed.json --output build/native/driver-evidence/observations.json

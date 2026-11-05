@@ -2,6 +2,7 @@
 import copy
 import importlib.util
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -96,7 +97,24 @@ class ArchiveTests(unittest.TestCase):
         after["assets"][0]["path"] = "../fixtures/é.wav"
         original.write_text(json.dumps(before), encoding="utf-8")
         archived.write_text(json.dumps(after), encoding="utf-8")
+        (self.fixtures / "é.wav").write_bytes(b"synthetic file-identity fixture, not decoded audio")
         return original, archived, after
+
+    def test_file_identity_accepts_hard_link_but_rejects_distinct_equal_bytes_and_missing_source(self):
+        original, archived, after = self.projects()
+        alias = self.fixtures / "alias.wav"
+        os.link(self.fixtures / "é.wav", alias)
+        after["assets"][0]["path"] = "../fixtures/alias.wav"
+        archived.write_text(json.dumps(after), encoding="utf-8")
+        self.assertTrue(ARCHIVE.verify_project_archive(original, archived, self.fixtures)[
+            "assetPathsResolveToSameSources"])
+        alias.unlink()
+        alias.write_bytes((self.fixtures / "é.wav").read_bytes())
+        with self.assertRaises(ARCHIVE.ArchiveError):
+            ARCHIVE.verify_project_archive(original, archived, self.fixtures)
+        alias.unlink()
+        with self.assertRaises(ARCHIVE.ArchiveError):
+            ARCHIVE.verify_project_archive(original, archived, self.fixtures)
 
     def test_rebase_compares_types_signed_float_bits_and_only_asset_paths(self):
         original, archived, after = self.projects()
