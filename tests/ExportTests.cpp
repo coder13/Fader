@@ -137,6 +137,21 @@ void testExportFailures() {
         options.cancellation = std::make_shared<std::atomic<bool>>(true);
         rejects([&] { exportWavFile(p, file, options); });
         check(juce::SHA256(file) == original, "Pre-cancelled export replaced destination");
+#if JUCE_MAC || JUCE_LINUX
+        // POSIX permits unlinking an open output. Final reopen must fail with an
+        // exception, not pass a null stream into JUCE's WAV reader constructor.
+        options = {};
+        options.progress = [&](double fraction) {
+            if (fraction == 1) {
+                for (const auto &temporary :
+                     dir.findChildFiles(juce::File::findFiles, false, "keep_temp*.wav"))
+                    check(temporary.deleteFile(), "Could not unlink synthetic temporary output");
+            }
+            return true;
+        };
+        rejects([&] { exportWavFile(changed, file, options); });
+        check(juce::SHA256(file) == original, "Disappeared temporary output replaced destination");
+#endif
         auto nonfinite = p;
         auto invalid = std::make_shared<AudioData>(*p.clips[0].audio);
         invalid->samples[0][0] = std::numeric_limits<float>::quiet_NaN();

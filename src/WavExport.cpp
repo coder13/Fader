@@ -25,8 +25,13 @@ class FileDestination final : public ExportDestination {
         output.reset();
         if (!valid)
             return false;
+        auto input = temporary.getFile().createInputStream();
+        if (!input) {
+            valid = false;
+            return false;
+        }
         auto reader = std::unique_ptr<juce::AudioFormatReader>(
-            juce::WavAudioFormat{}.createReaderFor(temporary.getFile().createInputStream().release(), true));
+            juce::WavAudioFormat{}.createReaderFor(input.release(), true));
         valid = reader && reader->lengthInSamples == frames && reader->sampleRate == projectRate &&
                 reader->numChannels == 2;
         return valid;

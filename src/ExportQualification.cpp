@@ -76,8 +76,11 @@ juce::var qualifyLongExport(const juce::File &a, const juce::File &b, const juce
     const auto result = exportWavFile(delayed, output, options);
     const auto rendered = Clock::now();
     std::cerr << "Export complete; comparing entire WAV with independently hosted Playback\n";
+    auto input = output.createInputStream();
+    if (!input)
+        throw std::runtime_error("Cannot reopen long output");
     auto reader = std::unique_ptr<juce::AudioFormatReader>(
-        juce::WavAudioFormat{}.createReaderFor(output.createInputStream().release(), true));
+        juce::WavAudioFormat{}.createReaderFor(input.release(), true));
     if (!reader || reader->lengthInSamples != duration || reader->numChannels != 2 ||
         reader->sampleRate != projectRate || !reader->usesFloatingPointData)
         throw std::runtime_error("Long output format/duration mismatch");
