@@ -6,6 +6,7 @@
 #include <stdexcept>
 
 using namespace fader;
+void testMixer();
 void require(bool condition, const char *message) {
     if (!condition)
         throw std::runtime_error(message);
@@ -40,6 +41,7 @@ std::vector<float> render(Engine &engine, int block, Frame end) {
 }
 int main() {
     try {
+        testMixer();
         const auto project = fixture();
         Engine reference(project);
         const auto baseline = render(reference, 64, project.end());
@@ -197,7 +199,8 @@ int main() {
         const float cutoff = std::log(1000.0f / 20.0f) / std::log(1000.0f);
         require(energy(50, cutoff, 1) < energy(50, 0, 1) * 0.01, "high-pass failed to reject bass");
         require(energy(8000, 0, cutoff) < energy(8000, 0, 1) * 0.01, "low-pass failed to reject treble");
-        std::cout << "PASS: clip-owned movement, filter response/seek/replay, independent clip capture, "
+        std::cout << "PASS: mixer gains/rates/master/cue, clip-owned movement, filter response/seek/replay, "
+                     "independent clip capture, "
                      "legacy block independence, exact seek state, applied-event capture/replay, retake, "
                      "bounded queue, validation, cue isolation\n";
         return 0;

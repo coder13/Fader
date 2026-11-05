@@ -8,6 +8,7 @@
 using namespace fader;
 void testArrangement();
 void testAudioSetup();
+void testSourceRates();
 void check(bool pass, const char *message) {
     if (!pass)
         throw std::runtime_error(message);
@@ -20,6 +21,7 @@ int main() {
                          .getNonexistentChildFile("fader-test", {}, false);
     dir.createDirectory();
     try {
+        testSourceRates();
         auto data = std::make_shared<AudioData>();
         for (auto &c : data->samples) {
             c.resize(48000);
@@ -170,7 +172,8 @@ int main() {
         }
         check(rejected, "future schema accepted");
         dir.deleteRecursively();
-        std::cout << "PASS: content probing, full decode, project round-trip, source identity, export "
+        std::cout << "PASS: mono/stereo source rates, cue-free export, overload policy, "
+                     "content probing, full decode, project round-trip, source identity, export "
                      "parity, atomic cancellation, schema validation\n";
         return 0;
     } catch (const std::exception &e) {

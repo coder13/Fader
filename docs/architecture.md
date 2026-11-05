@@ -72,6 +72,8 @@ At 48 kHz, 128 frames give approximately 2.67 ms to process one callback. That i
 
 ## Audio signal path
 
+The [POC mixer contract](mixer-contract.md) specifies the existing source-rate, gain/filter, clipping and software master/cue behavior with synthetic qualification fixtures.
+
 The v0.2 source path already includes clip-owned volume and HP/LP filtering, with separate master/cue routing; see [implementation evidence](https://github.com/coder13/Fader/blob/3a3b58456065f6cfed4c9f23f1a0252047d80a89/docs/experiments/2026-11-04-clip-arrangement.md). Its primary editor has no global A/B crossfader. The broader proposed path adds bounded decode/prefetch, qualified resampling/stretch, EQ/FX and explicit bus routing. Version gain units, smoothing and effect order. If a controller crossfader is mapped, define its law and resolved clip-volume events without replacing independent saved envelopes; preserve the legacy version 1 renderer.
 
 The POC validates basic playback and resampling first. Pitch-preserving stretch is a separately benchmarked DSP step, not a free consequence of BPM sync. A stretcher must expose/characterize its startup, lookahead, and tail requirements. Account for algorithmic latency across parallel paths and retain preroll when seeking. Offline export must use the same declared processing mode for parity tests; an optional higher-quality export mode is an explicit different render choice.

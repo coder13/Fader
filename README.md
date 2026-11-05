@@ -9,6 +9,7 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 | Document | Purpose |
 | --- | --- |
 | [Build and CI](docs/build-and-ci.md) | Clean-checkout presets, pinned dependencies and test evidence |
+| [Mixer contract](docs/mixer-contract.md) | Source-rate, gain, filter, clipping and master/cue behavior |
 | [Roadmap completeness review](docs/research/roadmap-completeness-review.md) | Feature coverage, proposed backlog gaps and evidence needed for a polished release |
 | [Competitive workflow audit](docs/research/competitive-workflow-audit.md) | Deeper comparison, source evidence, adoption/reuse decision gate |
 | [UI evidence atlas](docs/research/ui-evidence-atlas.md) | 33 inspected published UI images/crops across nine products |
