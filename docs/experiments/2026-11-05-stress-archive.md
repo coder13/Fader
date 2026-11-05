@@ -1,6 +1,6 @@
 # Automatic preservation of stress evidence
 
-Status: implementation candidate; local helper checks pass, native driver CI remains pending.
+Status: implemented and checked on macOS/Windows native CI and Linux core/helper CI.
 This supports [#40](https://github.com/coder13/Fader/issues/40) evidence retention.
 It does not change production C++, the workload, a timing target or the running activity experiment.
 
@@ -19,6 +19,8 @@ A short or changed copy fails before it can be recorded as verified.
 
 After a successful preflight, preserve all six known fault files before timed playback starts.
 After a successful capture save, preserve the exact original set bytes before production rebasing.
+This is the unrebased compiled project, not the original-action journal required by #12.
+Saving these bytes does not preserve every original control action or prove PCM parity.
 A failed save must not cause a stale file from a previous run to be archived as the new take.
 A reported successful save with a missing file is an explicit evidence failure.
 These copies and checks run outside the measured probe interval.
@@ -61,8 +63,34 @@ The original SHA-256 is `ada2d15a2e785c60da03eb246244b8e35b26338fd70983641611852
 The rebased archive SHA-256 is `6057bee3f66b57b13a2a56304f966d727c168c3c47a23d001a51f8d6a147c535`.
 This small read-only check is recorded as operator activity during the separate timed run.
 
-Clean CI must execute the retained native probe on macOS and Windows, using four-second synthetic sources and a two-second normal-priority workload.
-It must preserve the six fault files and original capture, pass production rebasing and the independent observation reader, and retain the full evidence directory.
-All three CI platforms run the helper tests; Linux also runs the existing core suites.
-No short CI observation qualifies the hour or physical audio/MIDI gates.
-Inspect actual metadata, logs and retained files before calling this candidate complete.
+## Clean native driver checks completed
+
+[CI 42074528793](https://github.com/coder13/Fader/actions/runs/42074528793) passes at exact source `bb994cc90fcde2ea988ecd58711ad49261f0691a`.
+Downloaded metadata, JUnit and full logs match that source, the pinned JUCE revision, Release builds and UI fixtures OFF.
+There are no failures, errors or skipped suites.
+The [checked aggregate](data/2026-11-05-stress-archive-ci.json) records configurations and remaining limits.
+
+| Platform | Existing CTest suites | Python helper tests | Retained-probe driver |
+| --- | --- | --- | --- |
+| macOS arm64, AppleClang 17 | 7 pass | 16 pass, 0.173 seconds | Faults, two-second capture, production rebase and observation check pass |
+| Windows x64, MSVC 19.51 | 7 pass | 16 pass, 0.463 seconds | Faults, two-second capture, production rebase and observation check pass |
+| Linux x86_64, GCC 13 | 5 core suites pass | 16 pass, 0.211 seconds | No native driver run |
+
+The native driver uses four-second synthetic sources and the normal-priority two-second workload.
+Each runner retains all 247 planned controls, six original fault files, its executable, original compiled capture and production archive.
+Downloaded executable and original-file hashes match the recorded values.
+Standalone metadata and aggregate metadata match, including the finished timestamp.
+Independent comparisons match all non-path JSON fields/types and 235 parsed float64 values on Mac, 286 on Windows.
+Each runner's archive is compared with its own original project; this is not cross-host equality of jitter-dependent captures.
+Both existing native smoke objects and the new driver object pass fresh observation checks that match their archived reader outputs.
+
+File identity is checked by the native runner and recorded in its results.
+The downloaded artifact omits the original source files, so that remote physical identity is not independently reestablished locally.
+The downloaded original/archive fields, types, floating-point bits and retained-file hashes are independently checked.
+Windows also passes the real hard-link, distinct-equal-byte-file and missing-source regression.
+
+The driver records 506 virtual misses and 60 late painter starts on Mac, and 12 misses with no late painter starts on Windows.
+Both explicitly report `hourTargetPassed: false`.
+Existing suite smoke timing and coarse Windows CPU-accounting limits remain in the aggregate.
+These ordinary-priority shared runners qualify evidence retention, not sustained timing or physical audio/MIDI.
+The separate original-workload activity hour remains pending and unchanged.
