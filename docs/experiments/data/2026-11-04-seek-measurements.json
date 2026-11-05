@@ -1352,5 +1352,947 @@
       "diskCacheBytes": "635056128",
       "sequentialSeek": false
     }
+  },
+  "native-mp3": {
+    "importAndCacheMs": 6737.925958,
+    "projectSeconds": 9028.0,
+    "sources": [
+      {
+        "sampleRate": 48000.0,
+        "sourceFrames": "86400000",
+        "sequentialSeek": false,
+        "diskCacheBytes": "691200000",
+        "sourceOffset": "96000"
+      },
+      {
+        "sampleRate": 44100.0,
+        "sourceFrames": "79380000",
+        "sequentialSeek": false,
+        "diskCacheBytes": "635040000",
+        "sourceOffset": "88200"
+      }
+    ],
+    "diskCacheBytes": "1326240000",
+    "maxPCMBytes": "1048576",
+    "maxPrerollFrames": "96000",
+    "cold": {
+      "count": 40,
+      "p50Ms": 10.529291,
+      "p95Ms": 13.536958,
+      "maxMs": 13.974,
+      "targetMs": 500.0,
+      "misses": 0
+    },
+    "warm": {
+      "count": 40,
+      "p50Ms": 11.747,
+      "p95Ms": 13.317708,
+      "maxMs": 13.905583,
+      "targetMs": 150.0,
+      "misses": 0
+    },
+    "samples": [
+      {
+        "frame": "347520000",
+        "repeat": false,
+        "readyMs": 10.117625
+      },
+      {
+        "frame": "347520000",
+        "repeat": true,
+        "readyMs": 12.037833
+      },
+      {
+        "frame": "384260923",
+        "repeat": false,
+        "readyMs": 12.0275
+      },
+      {
+        "frame": "384260923",
+        "repeat": true,
+        "readyMs": 13.159541
+      },
+      {
+        "frame": "421001846",
+        "repeat": false,
+        "readyMs": 8.682208
+      },
+      {
+        "frame": "421001846",
+        "repeat": true,
+        "readyMs": 10.45475
+      },
+      {
+        "frame": "371293538",
+        "repeat": false,
+        "readyMs": 10.048416
+      },
+      {
+        "frame": "371293538",
+        "repeat": true,
+        "readyMs": 13.234
+      },
+      {
+        "frame": "408034461",
+        "repeat": false,
+        "readyMs": 13.536958
+      },
+      {
+        "frame": "408034461",
+        "repeat": true,
+        "readyMs": 10.029208
+      },
+      {
+        "frame": "358326153",
+        "repeat": false,
+        "readyMs": 11.517625
+      },
+      {
+        "frame": "358326153",
+        "repeat": true,
+        "readyMs": 10.533417
+      },
+      {
+        "frame": "395067076",
+        "repeat": false,
+        "readyMs": 9.020584
+      },
+      {
+        "frame": "395067076",
+        "repeat": true,
+        "readyMs": 13.317708
+      },
+      {
+        "frame": "431808000",
+        "repeat": false,
+        "readyMs": 8.564709
+      },
+      {
+        "frame": "431808000",
+        "repeat": true,
+        "readyMs": 9.021959
+      },
+      {
+        "frame": "382099692",
+        "repeat": false,
+        "readyMs": 10.394083
+      },
+      {
+        "frame": "382099692",
+        "repeat": true,
+        "readyMs": 12.031083
+      },
+      {
+        "frame": "418840615",
+        "repeat": false,
+        "readyMs": 9.956584
+      },
+      {
+        "frame": "418840615",
+        "repeat": true,
+        "readyMs": 12.018167
+      },
+      {
+        "frame": "369132307",
+        "repeat": false,
+        "readyMs": 10.066916
+      },
+      {
+        "frame": "369132307",
+        "repeat": true,
+        "readyMs": 10.527708
+      },
+      {
+        "frame": "405873230",
+        "repeat": false,
+        "readyMs": 13.974
+      },
+      {
+        "frame": "405873230",
+        "repeat": true,
+        "readyMs": 13.905583
+      },
+      {
+        "frame": "356164923",
+        "repeat": false,
+        "readyMs": 10.086583
+      },
+      {
+        "frame": "356164923",
+        "repeat": true,
+        "readyMs": 12.1065
+      },
+      {
+        "frame": "392905846",
+        "repeat": false,
+        "readyMs": 12.114458
+      },
+      {
+        "frame": "392905846",
+        "repeat": true,
+        "readyMs": 12.478709
+      },
+      {
+        "frame": "429646769",
+        "repeat": false,
+        "readyMs": 12.18325
+      },
+      {
+        "frame": "429646769",
+        "repeat": true,
+        "readyMs": 11.0295
+      },
+      {
+        "frame": "379938461",
+        "repeat": false,
+        "readyMs": 11.184042
+      },
+      {
+        "frame": "379938461",
+        "repeat": true,
+        "readyMs": 12.031542
+      },
+      {
+        "frame": "416679384",
+        "repeat": false,
+        "readyMs": 10.3415
+      },
+      {
+        "frame": "416679384",
+        "repeat": true,
+        "readyMs": 11.5735
+      },
+      {
+        "frame": "366971076",
+        "repeat": false,
+        "readyMs": 11.383834
+      },
+      {
+        "frame": "366971076",
+        "repeat": true,
+        "readyMs": 11.63175
+      },
+      {
+        "frame": "403712000",
+        "repeat": false,
+        "readyMs": 10.741542
+      },
+      {
+        "frame": "403712000",
+        "repeat": true,
+        "readyMs": 11.170375
+      },
+      {
+        "frame": "354003692",
+        "repeat": false,
+        "readyMs": 9.576709
+      },
+      {
+        "frame": "354003692",
+        "repeat": true,
+        "readyMs": 12.035541
+      },
+      {
+        "frame": "390744615",
+        "repeat": false,
+        "readyMs": 10.090917
+      },
+      {
+        "frame": "390744615",
+        "repeat": true,
+        "readyMs": 12.532083
+      },
+      {
+        "frame": "427485538",
+        "repeat": false,
+        "readyMs": 10.529291
+      },
+      {
+        "frame": "427485538",
+        "repeat": true,
+        "readyMs": 12.829208
+      },
+      {
+        "frame": "377777230",
+        "repeat": false,
+        "readyMs": 10.228583
+      },
+      {
+        "frame": "377777230",
+        "repeat": true,
+        "readyMs": 13.594083
+      },
+      {
+        "frame": "414518153",
+        "repeat": false,
+        "readyMs": 10.699125
+      },
+      {
+        "frame": "414518153",
+        "repeat": true,
+        "readyMs": 10.533375
+      },
+      {
+        "frame": "364809846",
+        "repeat": false,
+        "readyMs": 11.816958
+      },
+      {
+        "frame": "364809846",
+        "repeat": true,
+        "readyMs": 11.116541
+      },
+      {
+        "frame": "401550769",
+        "repeat": false,
+        "readyMs": 11.274667
+      },
+      {
+        "frame": "401550769",
+        "repeat": true,
+        "readyMs": 11.097417
+      },
+      {
+        "frame": "351842461",
+        "repeat": false,
+        "readyMs": 9.777208
+      },
+      {
+        "frame": "351842461",
+        "repeat": true,
+        "readyMs": 11.632542
+      },
+      {
+        "frame": "388583384",
+        "repeat": false,
+        "readyMs": 13.402167
+      },
+      {
+        "frame": "388583384",
+        "repeat": true,
+        "readyMs": 11.14025
+      },
+      {
+        "frame": "425324307",
+        "repeat": false,
+        "readyMs": 13.555041
+      },
+      {
+        "frame": "425324307",
+        "repeat": true,
+        "readyMs": 12.030833
+      },
+      {
+        "frame": "375616000",
+        "repeat": false,
+        "readyMs": 9.022916
+      },
+      {
+        "frame": "375616000",
+        "repeat": true,
+        "readyMs": 10.101958
+      },
+      {
+        "frame": "412356923",
+        "repeat": false,
+        "readyMs": 10.52675
+      },
+      {
+        "frame": "412356923",
+        "repeat": true,
+        "readyMs": 12.050917
+      },
+      {
+        "frame": "362648615",
+        "repeat": false,
+        "readyMs": 8.459125
+      },
+      {
+        "frame": "362648615",
+        "repeat": true,
+        "readyMs": 9.020917
+      },
+      {
+        "frame": "399389538",
+        "repeat": false,
+        "readyMs": 12.030834
+      },
+      {
+        "frame": "399389538",
+        "repeat": true,
+        "readyMs": 11.587333
+      },
+      {
+        "frame": "349681230",
+        "repeat": false,
+        "readyMs": 10.53
+      },
+      {
+        "frame": "349681230",
+        "repeat": true,
+        "readyMs": 13.160166
+      },
+      {
+        "frame": "386422153",
+        "repeat": false,
+        "readyMs": 11.587875
+      },
+      {
+        "frame": "386422153",
+        "repeat": true,
+        "readyMs": 11.747
+      },
+      {
+        "frame": "423163076",
+        "repeat": false,
+        "readyMs": 10.393375
+      },
+      {
+        "frame": "423163076",
+        "repeat": true,
+        "readyMs": 12.029625
+      },
+      {
+        "frame": "373454769",
+        "repeat": false,
+        "readyMs": 10.526417
+      },
+      {
+        "frame": "373454769",
+        "repeat": true,
+        "readyMs": 10.531333
+      },
+      {
+        "frame": "410195692",
+        "repeat": false,
+        "readyMs": 12.029916
+      },
+      {
+        "frame": "410195692",
+        "repeat": true,
+        "readyMs": 13.01875
+      },
+      {
+        "frame": "360487384",
+        "repeat": false,
+        "readyMs": 11.436375
+      },
+      {
+        "frame": "360487384",
+        "repeat": true,
+        "readyMs": 10.528458
+      },
+      {
+        "frame": "397228307",
+        "repeat": false,
+        "readyMs": 12.037084
+      },
+      {
+        "frame": "397228307",
+        "repeat": true,
+        "readyMs": 13.208334
+      }
+    ],
+    "scope": "40 first-visit/repeat pairs; fresh engine/readers every time. Cold is a new destination, warm is its immediate repeat. OS cache is not purged; import/cache construction is separate. 1 ms polling; native UI adds up to one 30 Hz tick. No audio device."
+  },
+  "native-uncached": {
+    "importAndCacheMs": 6128.454375,
+    "projectSeconds": 9028.0,
+    "sources": [
+      {
+        "sampleRate": 48000.0,
+        "sourceFrames": "86400000",
+        "sequentialSeek": false,
+        "diskCacheBytes": "0",
+        "sourceOffset": "96000"
+      },
+      {
+        "sampleRate": 44100.0,
+        "sourceFrames": "79380000",
+        "sequentialSeek": false,
+        "diskCacheBytes": "0",
+        "sourceOffset": "88200"
+      }
+    ],
+    "diskCacheBytes": "0",
+    "maxPCMBytes": "1048576",
+    "maxPrerollFrames": "96000",
+    "cold": {
+      "count": 40,
+      "p50Ms": 208.491833,
+      "p95Ms": 400.767791,
+      "maxMs": 417.096375,
+      "targetMs": 500.0,
+      "misses": 0
+    },
+    "warm": {
+      "count": 40,
+      "p50Ms": 208.197958,
+      "p95Ms": 406.684208,
+      "maxMs": 521.610833,
+      "targetMs": 150.0,
+      "misses": 27
+    },
+    "samples": [
+      {
+        "frame": "347520000",
+        "repeat": false,
+        "readyMs": 17.696583
+      },
+      {
+        "frame": "347520000",
+        "repeat": true,
+        "readyMs": 17.626625
+      },
+      {
+        "frame": "384260923",
+        "repeat": false,
+        "readyMs": 182.487333
+      },
+      {
+        "frame": "384260923",
+        "repeat": true,
+        "readyMs": 196.524208
+      },
+      {
+        "frame": "421001846",
+        "repeat": false,
+        "readyMs": 417.096375
+      },
+      {
+        "frame": "421001846",
+        "repeat": true,
+        "readyMs": 521.610833
+      },
+      {
+        "frame": "371293538",
+        "repeat": false,
+        "readyMs": 151.573125
+      },
+      {
+        "frame": "371293538",
+        "repeat": true,
+        "readyMs": 121.632708
+      },
+      {
+        "frame": "408034461",
+        "repeat": false,
+        "readyMs": 290.633625
+      },
+      {
+        "frame": "408034461",
+        "repeat": true,
+        "readyMs": 361.6525
+      },
+      {
+        "frame": "358326153",
+        "repeat": false,
+        "readyMs": 89.787292
+      },
+      {
+        "frame": "358326153",
+        "repeat": true,
+        "readyMs": 75.806875
+      },
+      {
+        "frame": "395067076",
+        "repeat": false,
+        "readyMs": 219.927791
+      },
+      {
+        "frame": "395067076",
+        "repeat": true,
+        "readyMs": 215.320333
+      },
+      {
+        "frame": "431808000",
+        "repeat": false,
+        "readyMs": 400.600458
+      },
+      {
+        "frame": "431808000",
+        "repeat": true,
+        "readyMs": 377.785167
+      },
+      {
+        "frame": "382099692",
+        "repeat": false,
+        "readyMs": 160.323833
+      },
+      {
+        "frame": "382099692",
+        "repeat": true,
+        "readyMs": 165.143375
+      },
+      {
+        "frame": "418840615",
+        "repeat": false,
+        "readyMs": 322.258125
+      },
+      {
+        "frame": "418840615",
+        "repeat": true,
+        "readyMs": 312.105334
+      },
+      {
+        "frame": "369132307",
+        "repeat": false,
+        "readyMs": 106.431792
+      },
+      {
+        "frame": "369132307",
+        "repeat": true,
+        "readyMs": 105.670458
+      },
+      {
+        "frame": "405873230",
+        "repeat": false,
+        "readyMs": 268.76725
+      },
+      {
+        "frame": "405873230",
+        "repeat": true,
+        "readyMs": 289.821208
+      },
+      {
+        "frame": "356164923",
+        "repeat": false,
+        "readyMs": 53.960125
+      },
+      {
+        "frame": "356164923",
+        "repeat": true,
+        "readyMs": 53.50925
+      },
+      {
+        "frame": "392905846",
+        "repeat": false,
+        "readyMs": 232.982083
+      },
+      {
+        "frame": "392905846",
+        "repeat": true,
+        "readyMs": 224.103708
+      },
+      {
+        "frame": "429646769",
+        "repeat": false,
+        "readyMs": 400.0705
+      },
+      {
+        "frame": "429646769",
+        "repeat": true,
+        "readyMs": 406.684208
+      },
+      {
+        "frame": "379938461",
+        "repeat": false,
+        "readyMs": 208.491833
+      },
+      {
+        "frame": "379938461",
+        "repeat": true,
+        "readyMs": 208.197958
+      },
+      {
+        "frame": "416679384",
+        "repeat": false,
+        "readyMs": 400.767791
+      },
+      {
+        "frame": "416679384",
+        "repeat": true,
+        "readyMs": 337.773292
+      },
+      {
+        "frame": "366971076",
+        "repeat": false,
+        "readyMs": 113.596334
+      },
+      {
+        "frame": "366971076",
+        "repeat": true,
+        "readyMs": 107.125125
+      },
+      {
+        "frame": "403712000",
+        "repeat": false,
+        "readyMs": 261.474167
+      },
+      {
+        "frame": "403712000",
+        "repeat": true,
+        "readyMs": 249.198583
+      },
+      {
+        "frame": "354003692",
+        "repeat": false,
+        "readyMs": 45.676375
+      },
+      {
+        "frame": "354003692",
+        "repeat": true,
+        "readyMs": 44.884125
+      },
+      {
+        "frame": "390744615",
+        "repeat": false,
+        "readyMs": 220.057541
+      },
+      {
+        "frame": "390744615",
+        "repeat": true,
+        "readyMs": 201.538375
+      },
+      {
+        "frame": "427485538",
+        "repeat": false,
+        "readyMs": 356.3165
+      },
+      {
+        "frame": "427485538",
+        "repeat": true,
+        "readyMs": 348.172834
+      },
+      {
+        "frame": "377777230",
+        "repeat": false,
+        "readyMs": 142.524458
+      },
+      {
+        "frame": "377777230",
+        "repeat": true,
+        "readyMs": 141.958125
+      },
+      {
+        "frame": "414518153",
+        "repeat": false,
+        "readyMs": 313.292042
+      },
+      {
+        "frame": "414518153",
+        "repeat": true,
+        "readyMs": 300.433292
+      },
+      {
+        "frame": "364809846",
+        "repeat": false,
+        "readyMs": 102.395792
+      },
+      {
+        "frame": "364809846",
+        "repeat": true,
+        "readyMs": 99.862166
+      },
+      {
+        "frame": "401550769",
+        "repeat": false,
+        "readyMs": 302.3525
+      },
+      {
+        "frame": "401550769",
+        "repeat": true,
+        "readyMs": 267.908708
+      },
+      {
+        "frame": "351842461",
+        "repeat": false,
+        "readyMs": 39.887416
+      },
+      {
+        "frame": "351842461",
+        "repeat": true,
+        "readyMs": 36.672583
+      },
+      {
+        "frame": "388583384",
+        "repeat": false,
+        "readyMs": 200.66575
+      },
+      {
+        "frame": "388583384",
+        "repeat": true,
+        "readyMs": 235.918125
+      },
+      {
+        "frame": "425324307",
+        "repeat": false,
+        "readyMs": 415.772666
+      },
+      {
+        "frame": "425324307",
+        "repeat": true,
+        "readyMs": 427.543209
+      },
+      {
+        "frame": "375616000",
+        "repeat": false,
+        "readyMs": 168.181417
+      },
+      {
+        "frame": "375616000",
+        "repeat": true,
+        "readyMs": 187.085375
+      },
+      {
+        "frame": "412356923",
+        "repeat": false,
+        "readyMs": 365.832583
+      },
+      {
+        "frame": "412356923",
+        "repeat": true,
+        "readyMs": 297.42
+      },
+      {
+        "frame": "362648615",
+        "repeat": false,
+        "readyMs": 83.258417
+      },
+      {
+        "frame": "362648615",
+        "repeat": true,
+        "readyMs": 100.415458
+      },
+      {
+        "frame": "399389538",
+        "repeat": false,
+        "readyMs": 243.562292
+      },
+      {
+        "frame": "399389538",
+        "repeat": true,
+        "readyMs": 231.196041
+      },
+      {
+        "frame": "349681230",
+        "repeat": false,
+        "readyMs": 25.320041
+      },
+      {
+        "frame": "349681230",
+        "repeat": true,
+        "readyMs": 23.363208
+      },
+      {
+        "frame": "386422153",
+        "repeat": false,
+        "readyMs": 177.315458
+      },
+      {
+        "frame": "386422153",
+        "repeat": true,
+        "readyMs": 180.832042
+      },
+      {
+        "frame": "423163076",
+        "repeat": false,
+        "readyMs": 365.0795
+      },
+      {
+        "frame": "423163076",
+        "repeat": true,
+        "readyMs": 352.7165
+      },
+      {
+        "frame": "373454769",
+        "repeat": false,
+        "readyMs": 141.219166
+      },
+      {
+        "frame": "373454769",
+        "repeat": true,
+        "readyMs": 161.865625
+      },
+      {
+        "frame": "410195692",
+        "repeat": false,
+        "readyMs": 327.179916
+      },
+      {
+        "frame": "410195692",
+        "repeat": true,
+        "readyMs": 282.286417
+      },
+      {
+        "frame": "360487384",
+        "repeat": false,
+        "readyMs": 80.286667
+      },
+      {
+        "frame": "360487384",
+        "repeat": true,
+        "readyMs": 76.026917
+      },
+      {
+        "frame": "397228307",
+        "repeat": false,
+        "readyMs": 219.779708
+      },
+      {
+        "frame": "397228307",
+        "repeat": true,
+        "readyMs": 230.802625
+      }
+    ],
+    "scope": "40 first-visit/repeat pairs; fresh engine/readers every time. Cold is a new destination, warm is its immediate repeat. OS cache is not purged; import/cache construction is separate. 1 ms polling; native UI adds up to one 30 Hz tick. No audio device."
+  },
+  "native-alignment": {
+    "cbr": {
+      "format": "CoreAudio supported file",
+      "sampleRate": 48000.0,
+      "sourceFrames": "86400000",
+      "durationSeconds": 1800.0,
+      "peakStride": 1024,
+      "sequentialMaxError": 0.0,
+      "seekMaxError": 0.0,
+      "seekWindows": 14,
+      "pcmCacheBytes": 524288,
+      "diskCacheBytes": "691200000",
+      "sequentialSeek": false
+    },
+    "vbr": {
+      "format": "CoreAudio supported file",
+      "sampleRate": 44100.0,
+      "sourceFrames": "79380000",
+      "durationSeconds": 1800.0,
+      "peakStride": 1024,
+      "sequentialMaxError": 0.0,
+      "seekMaxError": 0.0,
+      "seekWindows": 14,
+      "pcmCacheBytes": 524288,
+      "diskCacheBytes": "635040000",
+      "sequentialSeek": false
+    }
+  },
+  "native-uncached-alignment": {
+    "cbr": {
+      "format": "CoreAudio supported file",
+      "sampleRate": 48000.0,
+      "sourceFrames": "86400000",
+      "durationSeconds": 1800.0,
+      "peakStride": 1024,
+      "sequentialMaxError": 0.0,
+      "seekMaxError": 0.0,
+      "seekWindows": 14,
+      "pcmCacheBytes": 524288,
+      "diskCacheBytes": "0",
+      "sequentialSeek": false,
+      "uncachedSeek": true
+    },
+    "vbr": {
+      "format": "CoreAudio supported file",
+      "sampleRate": 44100.0,
+      "sourceFrames": "79380000",
+      "durationSeconds": 1800.0,
+      "peakStride": 1024,
+      "sequentialMaxError": 0.0,
+      "seekMaxError": 0.0,
+      "seekWindows": 14,
+      "pcmCacheBytes": 524288,
+      "diskCacheBytes": "0",
+      "sequentialSeek": false,
+      "uncachedSeek": true
+    }
   }
 }
