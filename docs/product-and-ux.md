@@ -6,17 +6,19 @@ Status: Concrete interactions proposed; Audacity 4 redesign lessons are a user-c
 
 A DJ performance editor combines familiar deck controls with a song arrangement timeline. A user can build a set entirely with a mouse, perform it using a controller, or switch between the two. The saved result contains source references, placements, playback decisions, and automation, so a mistake in one transition does not require recording the whole set again.
 
+**User-confirmed scope, 2026-11-04:** a DJ performance editor with selected DAW tools. MIDI composition, instruments and studio multitrack recording are not current requirements. The [roadmap completeness review](research/roadmap-completeness-review.md) distinguishes covered workflows, proposed additions and missing validation; it does not expand the accepted feature scope.
+
 The main promise is **perform → inspect → edit → replay → export**. Good controller behavior matters because a prepared transition should still feel natural to play. Reliable project recovery matters because the editable performance is the primary creative artifact.
 
 The [competitive workflow audit](research/competitive-workflow-audit.md) finds substantial existing overlap. This product definition is a workflow target, not a claim of novelty or a decision to build every component. First evaluate adoption, contribution or extension; the detailed custom UI below remains proposed.
 
 ## Three workflows
 
-1. **Arrange a set.** Browse local files, preview a track, drag it onto a lane, adjust its start/source offset and duration, align beats, draw gain/EQ/crossfade changes, and audition the overlap.
+1. **Arrange a set.** Browse local files, preview a track, drag it onto a row, move it without resizing it, draw independent volume/HP/LP envelopes, and audition the overlap. Source-offset/trim editing, musical alignment and EQ are staged additions with separate interaction contracts.
 2. **Capture a performance.** Load tracks into decks, arm automation recording, perform a transition, and stop. The timeline shows the resulting clips and parameter changes. Optional master recording preserves an audio reference.
 3. **Replace a section.** Select a transition, arm only the parameters to replace, hear a preroll, perform a new take, and keep or discard it. Unarmed parameters keep playing their existing automation. One undo restores the previous take.
 
-An arrangement lane is not permanently the same thing as a physical deck. The POC deliberately fixes two lanes to two deck roles; the mature product separates clip lanes, mix buses, and the two/four currently controlled decks. This prevents hardware layout from limiting the arrangement format.
+An arrangement lane is not permanently the same thing as a physical deck. The v0.2 prototype uses independently placed clips on extensible rows, each owning volume, high-pass and low-pass automation. Its primary editor has no global A/B crossfader. Two-source hardware qualification does not limit the saved arrangement to two rows. Controller deck-to-clip assignment and later mix-bus routing need explicit identity and feedback; they must not change old takes.
 
 ## Interface direction
 
@@ -27,11 +29,11 @@ Project    Save   Undo/Redo   Play/Stop   Record actions   Audio arm   Export
 Position / tempo / snap / zoom                       Audio setup   Panels
 Time / bars ruler ---------------------- playhead --------------------------
 Loop strip                  [ practice loop ]
-Files / Search | Lane A   [ header: Track 1 ------------------------ ]
+Files / Search | Row 1    [ header: Track 1 ------------------------ ]
 Preview / BPM  |          < waveform / time selection               > | Details
-Folders        |   Gain       ───────────╲____                         | Owner
-               | Lane B                  [ header: Track 2 -------- ] | Value
-               |   Gain                   ____╱───────────────────── | Read
+Folders        |   Volume/HP/LP: selected clip-owned envelope          | Owner
+               | Row 2                   [ header: Track 2 -------- ] | Value
+               |   Volume/HP/LP: selected clip-owned envelope          | Read
                | Retake range + return region; armed targets named    |
 Compact mixer: controlled source • pickup • Read/Override/Record • Resume
 Controller connection • master/cue status • active recording/errors
@@ -39,13 +41,15 @@ Controller connection • master/cue status • active recording/errors
 
 This is a proposed layout, not an implemented screenshot. The timeline dominates the default **Edit** layout. Files and details can collapse; show selected/used automation lanes with a visible reveal action. Keep a compact mixer available for rehearsal. Audio setup contains device/rate/buffer configuration, while connection, routing failures, capture errors, armed targets and override state stay visible. No customization wizard is required before importing and editing.
 
-The POC has one layout with collapsible panels and Reset layout. Later **Edit/Perform** workspace presets may change emphasis, but never transport, capture, routing, automation ownership or undo history. Layout/theme preferences stay separate from the saved musical project. Full docking and configurable toolbars are deferred until they solve observed tasks.
+The proposed POC layout improvements are collapsible panels and Reset layout. The current v0.2 host has a documented flat dark theme and a 1250 × 920 minimum window; see its pinned [theme report](https://github.com/coder13/Fader/blob/3a3b58456065f6cfed4c9f23f1a0252047d80a89/docs/theme-and-interaction.md). Later **Edit/Perform** workspace presets may change emphasis, but never transport, capture, routing, automation ownership or undo history. Layout/theme preferences stay separate from the saved musical project. Full docking and configurable toolbars are deferred until they solve observed tasks.
 
 The file browser needs folders, search, supported-format status, duration, BPM/grid state, preview, and drag/drop. It must use the existing music-folder layout without moving or converting source files. Large-library indexing and metadata analysis run in the background. The completed POC browses a chosen folder and imports MP3/WAV; the alpha qualifies the whole collection and broader common formats. See [audio import](audio-import-and-library.md).
 
 ## Editing rules
 
-- Waveform dragging selects time; a clip header moves the clip. Selected/focused clips expose visible trim handles, with keyboard/numeric alternatives for small targets. Trimming preserves the source and can be reversed by extending the handles. Future stretch has a separate labelled control; no hidden-modifier-only discovery.
+These are product interaction targets, not a claim that every gesture exists in v0.2. Current movement preserves clip duration; trim, time selection and further editing tools need separate implementation and acceptance scope.
+
+- A clip header moves the clip. Distinguish waveform time selection from editing the selected envelope. Future selected/focused clips expose visible trim handles, with keyboard/numeric alternatives for small targets. Trimming preserves the source and can be reversed by extending the handles. Future stretch has a separate labelled control; no hidden-modifier-only discovery.
 - Selection, move, trim and zoom need no persistent global pointer modes. “Show automation” never arms recording. A later split tool can support a visible command and a temporary hold shortcut with an obvious cursor and Escape cancellation.
 - A parameter's context action reveals its automation lane. Points support drag, exact numeric values, deletion, and undo.
 - Gain uses decibels in the editor, with an explicit mute value; the engine defines how values interpolate and smooth.
@@ -62,9 +66,9 @@ The file browser needs folders, search, supported-format status, duration, BPM/g
 
 | Capability | First complete POC | Following milestones |
 | --- | --- | --- |
-| Tracks and mixing | Two stereo sources, gain and crossfader, master/cue | Four decks, EQ/filter/effects, flexible arrangement buses |
+| Tracks and mixing | Independent clip volume and HP/LP, master/cue; two-source hardware qualification | Four decks, EQ/effects, flexible arrangement buses |
 | Tempo and beat grids | Manual BPM/first beat; fixed project tempo; static per-clip varispeed before capture | Captured rate gestures, editable detected grids, key-lock quality, changing tempo and variable grids |
-| Automation | Gains/crossfader, starts/stops/source offsets, manual editing, range replacement | Touch/latch, tempo/loop/jog/FX gestures, take comparison |
+| Automation | Clip volume/HP/LP, starts/stops/source offsets, manual editing, range replacement; complete action capture remains open | Touch/latch, tempo/loop/jog/FX gestures, take comparison |
 | Controller | S4 essential controls and LED feedback | Four-deck layers, jog behavior, screens and motors qualified individually |
 | Files | MP3/WAV import, source relinking, set save/reopen, WAV export | AIFF/FLAC/AAC/ALAC/Vorbis/Opus import, full-library qualification, MP3/FLAC export, collect-media bundle |
 | Platforms | Apple Silicon macOS | Windows, Linux; web editor/hybrid based on experiments |

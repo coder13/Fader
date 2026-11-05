@@ -8,6 +8,7 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 
 | Document | Purpose |
 | --- | --- |
+| [Roadmap completeness review](docs/research/roadmap-completeness-review.md) | Feature coverage, proposed backlog gaps and evidence needed for a polished release |
 | [Competitive workflow audit](docs/research/competitive-workflow-audit.md) | Deeper comparison, source evidence, adoption/reuse decision gate |
 | [UI evidence atlas](docs/research/ui-evidence-atlas.md) | 33 inspected published UI images/crops across nine products |
 | [Audacity 4 design lessons](docs/research/audacity-4-design-lessons.md) | Video/transcript research translated into Fader interaction proposals |
@@ -28,6 +29,7 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 
 ## Confirmed requirements
 
+- Build a **DJ performance editor with selected DAW tools**. MIDI composition, instruments and studio multitrack recording are not current product requirements.
 - Open source; macOS first, Windows required, Linux a bonus; investigate web as a platform.
 - Initial hardware is **Native Instruments Traktor Kontrol S4 MK3**.
 - Arrange local audio on extensible rows; move clips without resizing them and draw independent volume/HP/LP envelopes directly on each waveform.

@@ -1,6 +1,8 @@
 # Set format and automation
 
-Status: Proposed design contract, not an implemented schema. Updated 2026-11-04.
+Status: Long-term design contract with a bounded implemented subset. Updated 2026-11-04.
+
+The v0.2 prototype stores clip placement and independent clip-local volume/HP/LP envelopes in schema version 2. Legacy version 1 retains its original gain/crossfader renderer for playback/export. The wider object model below remains proposed, not a literal description of the prototype format. See the pinned [implementation evidence](https://github.com/coder13/Fader/blob/3a3b58456065f6cfed4c9f23f1a0252047d80a89/docs/experiments/2026-11-04-clip-arrangement.md) and [project-model issue](https://github.com/coder13/Fader/issues/11).
 
 ## What a set must preserve
 
@@ -66,7 +68,7 @@ Capture initial deck/clip state and all resolved software actions that affect th
 
 At equal timestamps, use a stable sequence number and documented ordering. Resolve a load/start or seek/gain interaction consistently. Record resolved launch positions and playback-rate changes rather than relying on a future beat analysis or sync heuristic to make the same decision again.
 
-POC supported actions are clip activation/stop/source placement plus gain and crossfader targets. Set each clip's static varispeed ratio before capture and persist it; changing rate during capture is deferred until rate events are supported. Loading a different track during a performance requires a new clip/source identity in the recording. Unsupported actions must be shown as unsupported for capture, not silently presented as fully replayable.
+The current software prototype captures clip volume/high-pass/low-pass targets and persists static placement. Complete transport/source-action capture remains open in [#12](https://github.com/coder13/Fader/issues/12). The completed hardware POC must resolve controls to clip identity. The planned static varispeed ratio is set before capture and persisted; changing rate during capture is deferred until rate events are supported. Loading a different track during a performance requires a new clip/source identity in the recording. Unsupported actions must be shown as unsupported for capture, not silently presented as fully replayable.
 
 Cue/headphone controls affect monitoring and stay outside the rendered master by default. Physical S4 Main/Booth/Headphone controls may affect hardware output outside the software mix. External microphone/line input requires an audio capture asset to be reproducible. See [controller findings](research/traktor-and-controller-integration.md).
 
@@ -79,7 +81,7 @@ Cue/headphone controls affect monitoring and stay outside the rendered master by
 | Record | Armed targets capture a new take in the selected interval | Creates an undoable edit |
 | Resume automation | Return to the current curve with defined smoothing | Ends override |
 
-The first POC uses explicit range recording with selected parameters. At punch-in, preserve the value that should apply immediately before the range. At punch-out, return to existing automation through a visible short return region included in the effective replacement interval. Use finite-duration gain/crossfader smoothing, reconstruct the baseline smoother state, and join the baseline by the end of that region without a discontinuity. Display the region before committing and test its boundary PCM. Retakes replace only armed targets inside this effective interval; preserve prior takes until committed, and make the operation one undo step. Refuse a successful take if capture overflow occurred.
+The POC target uses explicit range recording with selected parameters. At punch-in, preserve the value that should apply immediately before the range. At punch-out, return to existing automation through a visible short return region included in the effective replacement interval. Apply the versioned volume/HP/LP smoothing policy, reconstruct baseline smoothing and filter state, and test continuity at the return boundary. Display the region before committing and test its boundary PCM. Retakes replace only armed targets inside this effective interval; preserve prior takes until committed, and make the operation one undo step. Refuse a successful take if capture overflow occurred. Full boundary qualification remains open in [#15](https://github.com/coder13/Fader/issues/15).
 
 The outside-range guarantee concerns unchanged stored clips/automation. Do not generalize it to bit-identical audio for future stateful effects or stretch: their history can affect later sound. Those features need explicit tail/preroll behavior and an audition range before strict audio isolation can be promised.
 
@@ -89,7 +91,7 @@ Later touch mode follows contact/release where the device supplies it. Non-touch
 
 The [Audacity 4 UI direction](research/audacity-4-design-lessons.md) does not change capture semantics. Automation visibility is presentation state, separate from Read/Override/Record and armed targets. Workspace changes must not alter transport, recording, routing, undo history or project data.
 
-Clip-owned automation moves with a clip and trims non-destructively with it. Bus/master automation remains in the set timeline. The POC records mixer gain on two fixed buses, with that ownership visible. Later operations can explicitly include bus automation when moving a transition; avoid silently attaching every parameter to whichever clip happened to play at that instant.
+Clip-owned automation moves with a clip. The v0.2 POC records volume/HP/LP on the clip, superseding the earlier two-fixed-bus POC design. Future trimming must preserve hidden curve data for reversible extension; it must not be triggered by ordinary movement. Proposed bus/master automation remains in the set timeline. Later operations can explicitly include bus automation when moving a transition; avoid silently attaching every parameter to whichever clip happened to play at that instant.
 
 Deletion leaves a gap by default. Future ripple commands must declare their lane/set scope and apply one undoable transaction across affected clips, curves, tempo/markers and take boundaries; unsupported combinations remain unavailable with an explanation. Clip grouping is explicit and does not infer membership from overlap or automatically capture bus automation. These are later editing contracts, not new POC scope. Practice-loop bounds and export bounds remain distinct; using the loop for export requires an explicit choice.
 
