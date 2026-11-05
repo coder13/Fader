@@ -36,6 +36,9 @@ Scroll the viewport and cycle the selected automation parameter.
 Move a clip in an independent editor copy and restore its original position.
 This exercises the production painter without native input or display presentation.
 Report paint count and missed paint intervals separately.
+The hour pass flag requires all scheduled paints and zero starts more than one paint interval late.
+Report update-and-paint execution time and spacing between paint starts as exact distributions.
+This is offscreen cadence; it does not measure native window presentation.
 
 Scan a synthetic library of 1,000 files and decode a short analysis fixture every ten seconds.
 Request and cancel a separate prepared seek every 30 seconds.
@@ -56,6 +59,23 @@ Neither mode changes persistent system configuration or measures driver behavior
 Never reset the host origin after a late wake.
 Report wake lateness, callback duration and completion after the virtual deadline independently.
 Report the duration of the checksum and telemetry submission outside the production callback separately.
+
+Before calculating percentiles, join callback and host measurements by project frame.
+Reject duplicate, invalid or missing measurements rather than shifting later associations.
+Retain the first 256 blocks whose wake lateness or process-call duration reaches half the block interval,
+plus every virtual deadline miss within that bound.
+Each retained row contains the planned boundary, wake, process return, checksum completion, deadline and
+matching internal callback duration.
+Keep the global maximum wake, process call and deadline miss even if the row bound is reached.
+Report the number of omitted rows and trace completeness separately from musical capture integrity.
+An incomplete trace cannot pass the hour gate.
+These durations use the steady clock and include time when the thread was descheduled;
+they cannot establish DSP CPU cost or identify kernel behavior on their own.
+
+Allocate and touch the three callback-history arrays and painter-history arrays before the timed origin.
+The virtual callback publishes one fixed-size host measurement through a bounded queue per block.
+Only the consumer retains outlier rows or indexes history.
+The process peak memory measurement still includes this allocation and the entire run.
 
 The 128-frame interval is 2.666667 ms.
 Target zero virtual deadline misses, zero source starvation and zero capture loss for the entire hour.
