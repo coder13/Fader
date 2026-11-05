@@ -159,7 +159,7 @@ int main() {
 
     unsigned captured = 0;
     for (int batch = 0; batch < 200; ++batch) {
-        auto playback = std::make_unique<Playback>(project, 4800, 1);
+        auto playback = std::make_unique<Playback>(project, 4800, 1, Preparation{}, true);
         playback->arm(4800, 48000);
         playback->deviceStarted(projectRate);
         for (int block = 0; block < 100; ++block) {
@@ -174,6 +174,9 @@ int main() {
                 ++captured;
             CallbackMetric metric;
             while (playback->metric(metric)) {
+            }
+            ControlMetric control;
+            while (playback->controlMetric(control)) {
             }
             sum += std::abs(output[0][50]);
         }

@@ -41,6 +41,11 @@ The optional `fader_probe --audio-smoke` explicitly opens an output. It stores c
 
 References: [CMake preset schema supported by the minimum version](https://cmake.org/cmake/help/v3.22/manual/cmake-presets.7.html), [GitHub runner labels and image limitations](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
 
+The native `software_stress_smoke` test adds isolated fault retention and a two-second real-clock workload.
+It paints the production arrangement offscreen, scans synthetic files, and drains capture and telemetry on a separate thread.
+It requires source and capture integrity without enforcing sustained performance targets on CI hosts.
+The [software stress contract](stress-contract.md) defines the full hour and its measurement limits.
+
 ## Synthetic UI qualification
 
 `FADER_ENABLE_UI_FIXTURES` defaults to `OFF` and is recorded in build metadata. An explicitly enabled local build accepts `--incomplete-take-fixture <synthetic.faderset>`. It skips preferences/library scanning, processes a synthetic volume action, injects a stop notification, and runs the actual stop/retained-take UI without opening a system audio device. Use only redistributable synthetic media for shared evidence. The same opt-in build accepts `--source-gap-fixture <synthetic.faderset>`: it primes the actual streamed engine, cancels its reads, and processes a fake callback to exercise the visible READ GAP state without physical output. Normal builds ignore these test-only commands. Reuse the existing preview application name, bundle ID and path instead of registering a new app for every issue; preserve its unsaved set before replacing it. Stable naming avoids separate app identities, but does not promise that macOS will never recheck an ad-hoc signed binary after an update.

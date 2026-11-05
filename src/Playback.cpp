@@ -12,8 +12,10 @@ HostTime monotonicTime() noexcept {
                                      std::chrono::steady_clock::now().time_since_epoch())
                                      .count());
 }
-Playback::Playback(Project project, Frame start, std::uint64_t serial, Preparation preparation)
-    : engine(std::move(project), start, std::move(preparation)), projectOrigin(start), segmentId(serial) {
+Playback::Playback(Project project, Frame start, std::uint64_t serial, Preparation preparation,
+                   bool collectControlMetrics)
+    : engine(std::move(project), start, std::move(preparation)), projectOrigin(start), segmentId(serial),
+      controls(collectControlMetrics ? std::make_unique<Queue<ControlMetric, 4096>>() : nullptr) {
     if (serial == 0)
         throw std::runtime_error("A playback segment needs a nonzero identity");
 }
@@ -117,6 +119,11 @@ void Playback::process(float *const *output, int channels, int count, HostTime b
             if (!engine.command({projectFrame, input.param, input.value, input.clip})) {
                 dropped.fetch_add(1, std::memory_order_relaxed);
                 markIncomplete(schedulerOverflow);
+            } else if (controls &&
+                       !controls->push({segmentId, next.queued.sequence, next.source, input.receivedAt,
+                                        positionStart, projectOrigin + next.frame, projectFrame, blockTime,
+                                        input.param, input.value, input.clip})) {
+                controlMetricDropped.fetch_add(1, std::memory_order_relaxed);
             }
         }
         engine.process(output, channels, count);
@@ -139,6 +146,6 @@ void Playback::process(float *const *output, int channels, int count, HostTime b
 PlaybackStats Playback::stats() const noexcept {
     return {segmentId,          blocks.load(),          dropped.load(),          stale.load(),
             late.load(),        metricDropped.load(),   publishedElapsed.load(), engine.position(),
-            maximumLate.load(), maximumCallback.load(), failures.load()};
+            maximumLate.load(), maximumCallback.load(), failures.load(),         controlMetricDropped.load()};
 }
 } // namespace fader

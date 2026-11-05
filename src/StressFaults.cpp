@@ -1,0 +1,254 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+#include "StressQualification.h"
+#include <chrono>
+#include <cmath>
+#include <fader/PlaybackPreparation.h>
+#include <thread>
+namespace {
+using namespace fader;
+void require(bool pass, const char *message) {
+    if (!pass)
+        throw std::runtime_error(message);
+}
+std::vector<Event> captured(Playback &playback) {
+    std::vector<Event> events;
+    Event e;
+    while (playback.captured(e))
+        events.push_back(e);
+    return events;
+}
+void process(Playback &playback, Frame frame) {
+    std::array<std::array<float, 128>, 2> pcm{};
+    float *out[]{pcm[0].data(), pcm[1].data()};
+    playback.process(out, 2, 128, 1000000000 + HostTime(frame) * 1000000000 / projectRate);
+}
+void prefix(const Project &source, const std::vector<Event> &events, const juce::File &file) {
+    require(!events.empty(), "Fault lost the valid captured prefix");
+    auto saved = source;
+    commitTake(saved, events, 0, source.end());
+    saveProject(saved, file);
+    auto reopened = loadProject(file);
+    require(reopened.clips[0].automation[0].points == saved.clips[0].automation[0].points,
+            "Incomplete prefix did not survive save/reopen");
+}
+struct Gate {
+    std::atomic<bool> blocked{false}, entered{false};
+};
+struct GateDecoder final : SourceDecoder {
+    GateDecoder(std::unique_ptr<SourceDecoder> inner, std::shared_ptr<Gate> gate)
+        : inner(std::move(inner)), gate(std::move(gate)) {}
+    bool read(SourceFrame at, int count, float *const *out, const std::atomic<bool> &stop) override {
+        gate->entered.store(true);
+        while (gate->blocked.load() && !stop.load())
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        return !stop.load() && inner->read(at, count, out, stop);
+    }
+    std::unique_ptr<SourceDecoder> inner;
+    std::shared_ptr<Gate> gate;
+};
+struct GateSource final : StreamSource {
+    GateSource(std::shared_ptr<const StreamSource> inner, std::shared_ptr<Gate> gate)
+        : inner(std::move(inner)), gate(std::move(gate)) {}
+    SourceFrame frames() const noexcept override {
+        return inner->frames();
+    }
+    std::unique_ptr<SourceDecoder> open() const override {
+        return std::make_unique<GateDecoder>(inner->open(), gate);
+    }
+    std::shared_ptr<const StreamSource> inner;
+    std::shared_ptr<Gate> gate;
+};
+Project gated(Project project, std::shared_ptr<Gate> gate) {
+    auto data = std::make_shared<AudioData>(*project.clips[0].audio);
+    data->stream = std::make_shared<GateSource>(data->stream, std::move(gate));
+    project.clips[0].audio = data;
+    return project;
+}
+void writeWave(const juce::File &file, int seconds, int phase) {
+    std::unique_ptr<juce::OutputStream> stream = file.createOutputStream();
+    require(bool(stream), "Cannot create synthetic stress fixture");
+    const auto options =
+        juce::AudioFormatWriterOptions{}.withSampleRate(projectRate).withNumChannels(2).withBitsPerSample(16);
+    auto writer = juce::WavAudioFormat{}.createWriterFor(stream, options);
+    require(bool(writer), "Cannot create fixture WAV writer");
+    juce::AudioBuffer<float> pcm(2, 4096);
+    for (int at = 0; at < seconds * projectRate; at += pcm.getNumSamples()) {
+        const auto count = std::min(pcm.getNumSamples(), seconds * projectRate - at);
+        for (int ch = 0; ch < 2; ++ch)
+            for (int i = 0; i < count; ++i) {
+                const double t = double(at + i) / projectRate;
+                pcm.setSample(
+                    ch, i,
+                    float(.2 * std::sin(t * (1400 + phase * 100 + ch * 200)) + .08 * std::cos(t * 11000)));
+            }
+        require(writer->writeFromAudioSampleBuffer(pcm, 0, count), "Fixture write failed");
+    }
+}
+} // namespace
+
+juce::var qualifyStressFaults(const juce::File &folder) {
+    Project project;
+    project.perClip = true;
+    project.clips = {loadClip(folder.getChildFile("A.wav"))};
+    project.clips[0].length = std::min(Frame{4} * projectRate, project.clips[0].length);
+    require(project.end() >= 3 * projectRate, "Fault fixture needs at least three seconds");
+    auto root = folder.getChildFile("fault-results");
+    require(root.createDirectory().wasOk(), "Cannot create fault evidence folder");
+    auto *out = new juce::DynamicObject();
+    juce::var result(out);
+    {
+        auto playback = std::make_unique<Playback>(project, 0, 1, Preparation{}, true);
+        playback->arm(0, project.end());
+        playback->deviceStarted(projectRate);
+        for (int i = 0; i < 4096; ++i)
+            require(playback->submit(InputSource::ui, {1, 1000000000, Param::volume, .3f, 0}),
+                    "Input pressure overflowed before capacity");
+        require(!playback->submit(InputSource::ui, {1, 1000000000, Param::volume, .7f, 0}),
+                "Input pressure did not overflow");
+        process(*playback, 0);
+        auto take = captured(*playback);
+        require(take.size() == 4096 && (playback->stats().failures & inputOverflow),
+                "Input overflow discarded its prefix or hid failure");
+        prefix(project, take, root.getChildFile("input-overflow-incomplete-prefix.faderset"));
+        out->setProperty("inputOverflowRetained", int(take.size()));
+        // Telemetry loss does not invalidate otherwise valid musical capture.
+        require(playback->submit(InputSource::ui, {1, 1002666667, Param::volume, .4f, 0}),
+                "Cannot submit control after pressure");
+        process(*playback, 128);
+        require(playback->stats().controlMetricDrops == 1 && captured(*playback).size() == 1,
+                "Control metric pressure lost musical capture or hid metric loss");
+        out->setProperty("controlTelemetryDropReported", true);
+    }
+    {
+        auto playback = std::make_unique<Playback>(project, 0, 2);
+        playback->arm(0, project.end());
+        playback->deviceStarted(projectRate);
+        for (int batch = 0; batch < 5; ++batch) {
+            for (int i = 0; i < 4096; ++i)
+                require(playback->submit(InputSource::controller,
+                                         {2, 1000000000 + HostTime(batch * 128) * 1000000000 / projectRate,
+                                          Param::volume, .25f, 0}),
+                        "Input pressure obscured capture pressure");
+            process(*playback, batch * 128);
+        }
+        auto take = captured(*playback);
+        require(take.size() == 16384 && (playback->stats().failures & captureOverflow),
+                "Capture pressure discarded its prefix or hid failure");
+        prefix(project, take, root.getChildFile("capture-overflow-incomplete-prefix.faderset"));
+        out->setProperty("captureOverflowRetained", int(take.size()));
+    }
+    {
+        auto playback = std::make_unique<Playback>(project, 0, 3);
+        playback->arm(0, project.end());
+        playback->deviceStarted(projectRate);
+        require(playback->submit(InputSource::ui, {3, 1000000000, Param::volume, .31f, 0}),
+                "Cannot submit interruption prefix");
+        process(*playback, 0);
+        playback->deviceStopped();
+        playback->deviceStarted(projectRate);
+        process(*playback, 128);
+        auto take = captured(*playback);
+        require(playback->clockFailed() && playback->position() == 128 && take.size() == 1,
+                "Simulated device restart resumed invalid segment or lost prefix");
+        prefix(project, take, root.getChildFile("device-loss-incomplete-prefix.faderset"));
+        out->setProperty("virtualDeviceLossRetained", int(take.size()));
+    }
+    {
+        auto gate = std::make_shared<Gate>();
+        gate->blocked.store(true);
+        PlaybackPreparation preparation;
+        preparation.request(std::make_shared<const Project>(gated(project, gate)), 0, 4);
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+        while (!gate->entered.load() && std::chrono::steady_clock::now() < deadline)
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        const bool entered = gate->entered.load();
+        const auto before = monotonicTime();
+        preparation.cancel();
+        const auto cancelNs = monotonicTime() - before;
+        const auto generation = preparation.request(std::make_shared<const Project>(project), 0, 5);
+        std::optional<PlaybackPreparation::Result> ready;
+        while (!(ready = preparation.poll()) && std::chrono::steady_clock::now() < deadline)
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        require(entered && ready && ready->generation == generation && ready->playback &&
+                    ready->error.empty(),
+                "Cancelled blocked decode prevented the next prepared segment");
+        require(cancelNs < 1000000000, "Cancellation joined a blocked decoder on the control thread");
+        preparation.cancel();
+        preparation.close();
+        out->setProperty("blockedDecodeCancelMicroseconds", double(cancelNs) / 1000);
+        out->setProperty("latestPreparationRecovered", true);
+    }
+    {
+        auto gate = std::make_shared<Gate>();
+        auto playback = std::make_unique<Playback>(gated(project, gate), 0, 6);
+        gate->blocked.store(true);
+        playback->arm(0, project.end());
+        playback->deviceStarted(projectRate);
+        require(playback->submit(InputSource::ui, {6, 1000000000, Param::volume, .32f, 0}),
+                "Cannot submit source gap prefix");
+        for (Frame at = 0; at < 3 * projectRate; at += 128)
+            process(*playback, at);
+        auto take = captured(*playback);
+        playback->cancelSourceReads();
+        require(playback->starvationFrames() > 0 && take.size() == 1 && !playback->captureFailed(),
+                "Blocked source did not expose a gap independently of capture integrity");
+        prefix(project, take, root.getChildFile("source-gap-valid-prefix.faderset"));
+        out->setProperty("injectedStarvationFrames", juce::int64(playback->starvationFrames()));
+        out->setProperty("sourceGapPreservedCapture", true);
+    }
+    {
+        const auto media = root.getChildFile("missing-media.wav");
+        require(folder.getChildFile("analysis.wav").copyFileTo(media), "Cannot create missing-media fixture");
+        Project missing;
+        missing.perClip = true;
+        missing.clips = {loadClip(media)};
+        const auto file = root.getChildFile("missing-media-preserved.faderset");
+        saveProject(missing, file);
+        const auto before = juce::SHA256(file).toHexString();
+        const auto hidden = root.getChildFile("missing-media.hidden");
+        require(media.moveFileTo(hidden), "Cannot hide synthetic missing source");
+        bool rejected = false;
+        try {
+            loadProject(file);
+        } catch (const std::exception &) {
+            rejected = true;
+        }
+        const bool restored = hidden.moveFileTo(media);
+        require(rejected && restored && before == juce::SHA256(file).toHexString(),
+                "Missing-media load changed a saved project or accepted missing content");
+        out->setProperty("missingMediaReportedAndProjectRetained", true);
+    }
+    out->setProperty(
+        "scope",
+        "Isolated software faults with explicit incomplete-prefix files. No physical device or UI claim.");
+    return result;
+}
+juce::var stressSelfTest() {
+    const auto root = juce::File::getSpecialLocation(juce::File::tempDirectory)
+                          .getNonexistentChildFile("fader-stress-self-test", {}, false);
+    require(root.createDirectory().wasOk(), "Cannot create stress self-test folder");
+    struct Cleanup {
+        juce::File root;
+        ~Cleanup() {
+            root.deleteRecursively();
+        }
+    } cleanup{root};
+    writeWave(root.getChildFile("A.wav"), 4, 0);
+    writeWave(root.getChildFile("B.wav"), 4, 1);
+    writeWave(root.getChildFile("analysis.wav"), 1, 2);
+    const auto library = root.getChildFile("library");
+    require(library.createDirectory().wasOk(), "Cannot create self-test library");
+    for (int i = 0; i < 1000; ++i)
+        require(root.getChildFile("analysis.wav").copyFileTo(library.getChildFile(juce::String(i) + ".wav")),
+                "Cannot populate self-test library");
+    auto *result = new juce::DynamicObject();
+    juce::var json(result);
+    result->setProperty("faults", qualifyStressFaults(root));
+    auto timed = qualifySoftwareStress(root, 2, 128);
+    // Smoke checks integrity only. CI scheduling jitter cannot qualify or fail a
+    // one-hour performance target, and every timing measurement remains visible.
+    require(bool(timed["softwareIntegrityPassed"]),
+            "Software stress smoke lost capture, stream data or timing metrics");
+    result->setProperty("timedSmoke", timed);
+    return json;
+}

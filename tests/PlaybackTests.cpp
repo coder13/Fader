@@ -185,4 +185,29 @@ void testPlayback() {
         ++count;
     }
     check(count == 1024, "telemetry capacity changed");
+
+    auto controls = std::make_unique<Playback>(fixture(), 12000, 60, Preparation{}, true);
+    controls->arm(12000, 48000);
+    controls->deviceStarted(projectRate);
+    check(controls->submit(InputSource::controller, {60, timestamp(-123), Param::volume, .3f, 0}),
+          "control telemetry input failed");
+    process(*controls, 128, 0);
+    ControlMetric control;
+    auto applied = drain(*controls);
+    check(controls->controlMetric(control) && control.source == InputSource::controller &&
+              control.sequence == 0 && control.segment == 60 && control.callbackFrame == 12000 &&
+              control.callbackTime == timestamp(0) && control.receivedAt == timestamp(-123) &&
+              control.scheduledFrame == 11877 && control.commandFrame == 11877 && applied.size() == 1 &&
+              applied[0].frame == 12000,
+          "control telemetry confused receipt/scheduled/applied time");
+    for (int batch = 0; batch < 2; ++batch) {
+        for (int i = 0; i < 4096; ++i)
+            check(
+                controls->submit(InputSource::ui, {60, timestamp(128 + batch * 128), Param::volume, .2f, 0}),
+                "control telemetry pressure filled musical input");
+        process(*controls, 128, 128 + batch * 128);
+        check(drain(*controls).size() == 4096, "control telemetry pressure lost capture");
+    }
+    check(controls->stats().controlMetricDrops == 4096 && !controls->captureFailed(),
+          "control telemetry pressure invalidated capture or hid dropped metrics");
 }

@@ -29,18 +29,32 @@ struct CallbackMetric {
     HostTime executionNs{};
     std::size_t scheduled{};
 };
+// Optional qualification telemetry. The captured Event remains the authority
+// for the frame actually applied by Engine, including late clamping.
+struct ControlMetric {
+    std::uint64_t segment{}, sequence{};
+    InputSource source{};
+    HostTime receivedAt{};
+    Frame callbackFrame{}, scheduledFrame{}, commandFrame{};
+    HostTime callbackTime{};
+    Param param{};
+    float value{};
+    unsigned clip{};
+};
 struct PlaybackStats {
     std::uint64_t segment{}, blocks{}, inputDrops{}, staleInputs{}, lateInputs{}, metricDrops{};
     Frame engineFrame{}, projectFrame{}, maxLateFrames{};
     HostTime maxCallbackNs{};
     unsigned failures{};
+    std::uint64_t controlMetricDrops{};
 };
 
 // One producer per input lane; the controller lane does not visit the UI thread.
 // The owner stops producers and detaches the audio callback before destruction.
 class Playback {
   public:
-    Playback(Project, Frame projectStart, std::uint64_t segment, Preparation = {});
+    Playback(Project, Frame projectStart, std::uint64_t segment, Preparation = {},
+             bool collectControlMetrics = false);
     void arm(Frame in, Frame out, unsigned mask = 7, int clip = -1) noexcept;
     bool submit(InputSource, ControlInput) noexcept;
     // Device lifecycle callbacks are serialized with process by the native host.
@@ -54,6 +68,9 @@ class Playback {
     }
     bool metric(CallbackMetric &value) noexcept {
         return metrics.pop(value);
+    }
+    bool controlMetric(ControlMetric &value) noexcept {
+        return controls && controls->pop(value);
     }
     Frame position() const noexcept {
         return engine.position();
@@ -113,11 +130,13 @@ class Playback {
     std::size_t pendingCount = 0;
     unsigned nextSource = 0;
     Queue<CallbackMetric, 1024> metrics;
+    std::unique_ptr<Queue<ControlMetric, 4096>> controls;
     Frame elapsed = 0;
     bool started = false, running = false;
     std::atomic<unsigned> failures{0};
     std::atomic<std::uint64_t> blocks{0}, dropped{0}, stale{0}, late{0}, metricDropped{0};
     std::atomic<Frame> publishedElapsed{0}, maximumLate{0};
     std::atomic<HostTime> maximumCallback{0};
+    std::atomic<std::uint64_t> controlMetricDropped{0};
 };
 } // namespace fader

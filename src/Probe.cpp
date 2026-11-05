@@ -6,6 +6,7 @@
 #include "Media.h"
 #include "SeekBenchmark.h"
 #include "StreamQualification.h"
+#include "StressQualification.h"
 #include <algorithm>
 #include <chrono>
 #include <iostream>
@@ -127,6 +128,30 @@ void audioSmoke() {
 int main(int argc, char **argv) {
     try {
         juce::ScopedJuceInitialiser_GUI juce;
+        if (argc == 2 && std::string(argv[1]) == "--stress-self-test") {
+            std::cout << juce::JSON::toString(stressSelfTest(), true) << '\n';
+            return 0;
+        }
+        if (argc == 3 && std::string(argv[1]) == "--stress-faults") {
+            std::cout << juce::JSON::toString(
+                             qualifyStressFaults(
+                                 juce::File::getCurrentWorkingDirectory().getChildFile(argv[2])),
+                             true)
+                      << '\n';
+            return 0;
+        }
+        if ((argc == 5 || argc == 6) && std::string(argv[1]) == "--stress-software") {
+            if (argc == 6 && std::string(argv[5]) != "--realtime")
+                throw std::runtime_error("Expected --realtime");
+            const auto duration = std::stoi(argv[3]);
+            const auto block = std::stoi(argv[4]);
+            auto result = qualifySoftwareStress(
+                juce::File::getCurrentWorkingDirectory().getChildFile(argv[2]), duration, block, argc == 6);
+            std::cout << juce::JSON::toString(result, true) << '\n';
+            if (!bool(result["softwareIntegrityPassed"]))
+                return 1;
+            return duration == 3600 && !bool(result["hourTargetPassed"]) ? 3 : 0;
+        }
         if (argc == 5 && std::string(argv[1]) == "--export-soak") {
             const auto cwd = juce::File::getCurrentWorkingDirectory();
             std::cout << juce::JSON::toString(qualifyLongExport(cwd.getChildFile(argv[2]),
