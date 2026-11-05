@@ -364,6 +364,10 @@ void exportWav(const Project &project, const juce::File &file, bool floatingPoin
         const int count = static_cast<int>(std::min(Frame{1024}, project.end() - engine.position()));
         engine.prepareSources(count); // offline may wait/fail; the live callback never calls this
         engine.process(buffer.getArrayOfWritePointers(), 2, count);
+        // A concurrent prefetch failure can become visible after readiness but
+        // during this span, including the final span with no following prepare.
+        if (engine.starvationFrames() || engine.streamStats().failedSources)
+            fail("Audio source became unavailable during export");
         if (!floatingPoint && engine.peak() > 1.0f)
             fail("Mix exceeds 0 dBFS. Lower the deck gains before exporting PCM WAV.");
         if (!writer->writeFromFloatArrays(buffer.getArrayOfReadPointers(), 2, count))

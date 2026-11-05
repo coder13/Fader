@@ -203,7 +203,7 @@ int main() {
     streamingData->stream = std::make_shared<ConstantSource>();
     for (auto &clip : streamingProject.clips) {
         clip.audio = streamingData;
-        clip.length = 3000000;
+        clip.length = 20001 * 128;
     }
     auto streamed = std::make_unique<Engine>(streamingProject);
     for (int block = 0; block < 20000; ++block) {
@@ -217,10 +217,15 @@ int main() {
         std::cerr << "FAIL: prepared streaming fixture starved\n";
         return 1;
     }
-    streamed->cancelSourceReads();
+    streamed->prepareSources(128);
+    streamed->cancelSourceReads(); // availability can change after readiness, including the final span
     checking = true;
     streamed->process(pointers, 4, 128); // missing-source concealment also stays allocation-free
     checking = false;
+    if (streamed->starvationFrames() != 256 || streamed->position() != streamingProject.end()) {
+        std::cerr << "FAIL: source loss after final-span readiness was not reported\n";
+        return 1;
+    }
     if (heapCalls || sum == 0 || captured != 40000) {
         std::cerr << "FAIL: C++ heap use, missing capture or silent timing fixture\n";
         return 1;

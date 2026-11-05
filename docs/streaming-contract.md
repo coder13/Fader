@@ -22,7 +22,7 @@ When requested PCM is absent, the mixer fades its last available dry sample to z
 
 The transport shows **READ GAP**, **OVR GAP** or **REC GAP**, with a persistent status explanation. A valid automation capture can survive an audio gap; its saved curves may render differently when the source becomes available. Capture queue/lifecycle faults retain the separate **INCOMPLETE** behavior.
 
-Offline rendering calls `prepareSources` before each 1,024-frame processing span. Preparation waits for all required samples, including interpolation neighbors, with a 30-second timeout. Decode/open errors, cancellation and timeout fail explicitly before destination replacement. Prepared rendering must report zero missing frames. Live rendering never calls this readiness barrier.
+Offline rendering calls `prepareSources` before each 1,024-frame processing span. Preparation waits for all required samples, including interpolation neighbors, with a 30-second timeout. Decode/open errors, cancellation and timeout fail explicitly before destination replacement. Every rendered span, including the final one, is checked for gaps/failures that became visible after preparation; none may be exported as a successful fade. Prepared rendering must report zero missing frames. Live rendering never calls this readiness barrier.
 
 ## Decoder correctness and limits
 
