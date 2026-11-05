@@ -112,6 +112,36 @@ Reported resolution is unknown on Windows, as recorded by its explicit unsupport
 The current detailed CPU investigation therefore uses the macOS clock; Windows short-call CPU attribution remains unqualified.
 Do not derive a blocked-time estimate from those zero Windows deltas.
 
+## Independent observation reader
+
+The [Python reader](../../scripts/verify-stress-observations.py) checks serialized timing arithmetic without starting a playback host.
+It accepts a probe report, an aggregate object selected with `--key timed`, or the full native CTest log.
+Use the full log because successful-test output in JUnit can be truncated.
+
+The reader checks absolute frame targets, marker order, internal/call durations, matched metrics, tail selection and omitted-row accounting.
+It checks CPU deltas and query brackets, painter context, boundary populations and explicit exclusion from performance qualification.
+Global maxima can repeat tail rows and remain visible in the output.
+CPU deltas above an enclosing wall interval are counted, because coarse accounting cannot establish exact short-call CPU use.
+
+The reader checks retained rows and reported counts only.
+It cannot prove unseen rows, global-maximum selection, source/binary identity, clock precision or performance.
+A consistent incomplete trace passes arithmetic checks while its omitted count remains visible.
+Use the exact-source driver and original performance gates separately.
+
+```sh
+python3 scripts/verify-stress-observations.py /path/to/evidence/timed.json \
+  --output /path/to/evidence/trace-verification.json
+python3 scripts/verify-stress-observations.py /path/to/LastTest.log \
+  --ctest-log --key cpuDiagnosticSmoke
+python3 -m unittest discover -s scripts/tests -v
+```
+
+Eight reader tests cover corrupted frames, reordered brackets, altered CPU deltas, missing coverage, duplicate rows and false eligibility.
+They also cover coarse/zero CPU accounting, visible truncation, non-finite JSON and rejection under optimized Python.
+Local checks pass against the completed 128/256 reports and exact `806f425` native logs.
+CI now runs the reader tests and checks both native smoke objects after CTest.
+This tooling does not change the production engine or the active diagnostic build.
+
 ## Commands after the current fallback finishes
 
 Build and test the candidate in an isolated build after the current measurement ends.

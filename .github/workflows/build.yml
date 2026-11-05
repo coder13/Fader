@@ -30,6 +30,8 @@ jobs:
         run: |
           ctest --preset core --verbose --output-junit results.xml
           test -s build/core/results.xml
+      - name: Test independent observation reader
+        run: python3 -m unittest discover -s scripts/tests -v
       - name: Retain build metadata and test evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -92,6 +94,12 @@ jobs:
           ctest --preset native --verbose --output-junit results.xml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if (!(Test-Path build/native/results.xml)) { throw "JUnit results are missing" }
+      - name: Check serialized stress observations independently
+        run: |
+          python scripts/verify-stress-observations.py build/native/Testing/Temporary/LastTest.log --ctest-log --key timedSmoke --output build/native/stress-wall-observations.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/verify-stress-observations.py build/native/Testing/Temporary/LastTest.log --ctest-log --key cpuDiagnosticSmoke --output build/native/stress-cpu-observations.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Record built application
         run: |
           $app = "build/native/Fader_artefacts/Release/Fader.exe"
@@ -110,6 +118,7 @@ jobs:
             build/native/fader-build-info.json
             build/native/results.xml
             build/native/Testing/Temporary/LastTest.log
+            build/native/stress-*-observations.json
             build/native/Fader_artefacts/Release/Fader.exe
           retention-days: 14
           if-no-files-found: warn
@@ -130,6 +139,10 @@ jobs:
         run: |
           ctest --preset native --verbose --output-junit results.xml
           test -s build/native/results.xml
+      - name: Check serialized stress observations independently
+        run: |
+          python3 scripts/verify-stress-observations.py build/native/Testing/Temporary/LastTest.log --ctest-log --key timedSmoke --output build/native/stress-wall-observations.json
+          python3 scripts/verify-stress-observations.py build/native/Testing/Temporary/LastTest.log --ctest-log --key cpuDiagnosticSmoke --output build/native/stress-cpu-observations.json
       - name: Verify application bundle
         run: |
           codesign --force --deep --sign - build/native/Fader_artefacts/Release/Fader.app
@@ -143,5 +156,6 @@ jobs:
             build/native/fader-build-info.json
             build/native/results.xml
             build/native/Testing/Temporary/LastTest.log
+            build/native/stress-*-observations.json
           retention-days: 14
           if-no-files-found: warn
