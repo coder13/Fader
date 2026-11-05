@@ -1,0 +1,211 @@
+{
+  "sourceRevision": "7e089d03fa3241d151e76bee0db11b90d0ee12a8",
+  "workflow": "https://github.com/coder13/Fader/actions/runs/42058168225",
+  "linuxReaderUnitTestsPassed": 8,
+  "mac": {
+    "sourceRevision": "7e089d03fa3241d151e76bee0db11b90d0ee12a8",
+    "build": {
+      "project": "Fader",
+      "version": "0.2.0",
+      "sourceRevision": "7e089d03fa3241d151e76bee0db11b90d0ee12a8",
+      "cmakeVersion": "4.4.5",
+      "generator": "Unix Makefiles",
+      "system": "Darwin",
+      "systemVersion": "24.6.0",
+      "architecture": "arm64",
+      "compiler": "AppleClang",
+      "compilerVersion": "17.0.0.17000013",
+      "cxxStandard": "20",
+      "buildType": "Release",
+      "nativeApp": "ON",
+      "uiFixtures": "OFF",
+      "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+    },
+    "suites": 7,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "observations": {
+      "wall": {
+        "scope": "Serialized observations only. Maxima can repeat tails. Passing these checks does not qualify performance, CPU precision or source/binary identity.",
+        "hostRowsChecked": 259,
+        "paintRowsChecked": 56,
+        "cpuRowsChecked": 0,
+        "cpuDeltasAboveEnclosingWall": 0,
+        "zeroCpuDeltas": 0,
+        "largestRetainedQueryBracketNanoseconds": 0,
+        "populations": {
+          "blocksEndingAt4096FrameBoundary": {
+            "samples": 23,
+            "maximumInternalCallbackNanoseconds": 44375
+          },
+          "otherBlocks": {
+            "samples": 727,
+            "maximumInternalCallbackNanoseconds": 412167
+          }
+        },
+        "arithmeticChecksPassed": true,
+        "macProcessActivityRequested": true,
+        "performanceQualificationEligible": true,
+        "hourTargetPassed": false,
+        "softwareIntegrityPassed": true,
+        "capturedInputs": 247,
+        "virtualDeadlineMisses": 496,
+        "missedPaintIntervals": 54,
+        "omittedHostTails": 367
+      },
+      "cpu": {
+        "scope": "Serialized observations only. Maxima can repeat tails. Passing these checks does not qualify performance, CPU precision or source/binary identity.",
+        "hostRowsChecked": 260,
+        "paintRowsChecked": 56,
+        "cpuRowsChecked": 316,
+        "cpuDeltasAboveEnclosingWall": 0,
+        "zeroCpuDeltas": 0,
+        "largestRetainedQueryBracketNanoseconds": 166125,
+        "cpuClock": {
+          "name": "clock_gettime(CLOCK_THREAD_CPUTIME_ID); user+system thread CPU",
+          "unitNanoseconds": 1,
+          "reportedResolutionNanoseconds": 42,
+          "resolutionError": 0
+        },
+        "populations": {
+          "blocksEndingAt4096FrameBoundary": {
+            "samples": 23,
+            "maximumInternalCallbackNanoseconds": 46084
+          },
+          "otherBlocks": {
+            "samples": 727,
+            "maximumInternalCallbackNanoseconds": 112541
+          }
+        },
+        "arithmeticChecksPassed": true,
+        "macProcessActivityRequested": true,
+        "performanceQualificationEligible": false,
+        "hourTargetPassed": false,
+        "softwareIntegrityPassed": true,
+        "capturedInputs": 247,
+        "virtualDeadlineMisses": 507,
+        "missedPaintIntervals": 53,
+        "omittedHostTails": 377
+      }
+    }
+  },
+  "windowsAndLinux": [
+    {
+      "platform": "Linux",
+      "sourceRevision": "7e089d03fa3241d151e76bee0db11b90d0ee12a8",
+      "build": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "7e089d03fa3241d151e76bee0db11b90d0ee12a8",
+        "cmakeVersion": "3.31.6",
+        "generator": "Unix Makefiles",
+        "system": "Linux",
+        "systemVersion": "7.0.0-1017-azure",
+        "architecture": "x86_64",
+        "compiler": "GNU",
+        "compilerVersion": "13.3.0",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "OFF",
+        "uiFixtures": "OFF",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "suites": 5,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    {
+      "platform": "Windows",
+      "sourceRevision": "7e089d03fa3241d151e76bee0db11b90d0ee12a8",
+      "build": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "7e089d03fa3241d151e76bee0db11b90d0ee12a8",
+        "cmakeVersion": "4.4.5",
+        "generator": "Ninja",
+        "system": "Windows",
+        "systemVersion": "10.0.26100",
+        "architecture": "AMD64",
+        "compiler": "MSVC",
+        "compilerVersion": "19.51.36260.0",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "ON",
+        "uiFixtures": "OFF",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "suites": 7,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "observations": {
+        "wall": {
+          "scope": "Serialized observations only. Maxima can repeat tails. Passing these checks does not qualify performance, CPU precision or source/binary identity.",
+          "hostRowsChecked": 259,
+          "paintRowsChecked": 3,
+          "cpuRowsChecked": 0,
+          "cpuDeltasAboveEnclosingWall": 0,
+          "zeroCpuDeltas": 0,
+          "largestRetainedQueryBracketNanoseconds": 0,
+          "populations": {
+            "blocksEndingAt4096FrameBoundary": {
+              "samples": 23,
+              "maximumInternalCallbackNanoseconds": 52000
+            },
+            "otherBlocks": {
+              "samples": 727,
+              "maximumInternalCallbackNanoseconds": 296100
+            }
+          },
+          "arithmeticChecksPassed": true,
+          "macProcessActivityRequested": false,
+          "performanceQualificationEligible": true,
+          "hourTargetPassed": false,
+          "softwareIntegrityPassed": true,
+          "capturedInputs": 247,
+          "virtualDeadlineMisses": 11,
+          "missedPaintIntervals": 0,
+          "omittedHostTails": 171
+        },
+        "cpu": {
+          "scope": "Serialized observations only. Maxima can repeat tails. Passing these checks does not qualify performance, CPU precision or source/binary identity.",
+          "hostRowsChecked": 260,
+          "paintRowsChecked": 3,
+          "cpuRowsChecked": 263,
+          "cpuDeltasAboveEnclosingWall": 1,
+          "zeroCpuDeltas": 262,
+          "largestRetainedQueryBracketNanoseconds": 2800,
+          "cpuClock": {
+            "name": "GetThreadTimes user+kernel; 100 ns units, precision not guaranteed",
+            "unitNanoseconds": 100,
+            "reportedResolutionNanoseconds": 0,
+            "resolutionError": 4294967295
+          },
+          "populations": {
+            "blocksEndingAt4096FrameBoundary": {
+              "samples": 23,
+              "maximumInternalCallbackNanoseconds": 24700
+            },
+            "otherBlocks": {
+              "samples": 727,
+              "maximumInternalCallbackNanoseconds": 174900
+            }
+          },
+          "arithmeticChecksPassed": true,
+          "macProcessActivityRequested": false,
+          "performanceQualificationEligible": false,
+          "hourTargetPassed": false,
+          "softwareIntegrityPassed": true,
+          "capturedInputs": 247,
+          "virtualDeadlineMisses": 1,
+          "missedPaintIntervals": 0,
+          "omittedHostTails": 115
+        }
+      },
+      "appSha256": "825a20c4a6e4230f4b8b92a6e6ea4f566026f84f6083ea0c791c4768e32129ff",
+      "appBytes": 7363584
+    }
+  ]
+}
