@@ -106,6 +106,37 @@ Global execution, wake and CPU maxima remain available after truncation.
 This is not a complete painter-tail history.
 The distributions retain all actual paint samples, independently of that row bound.
 
+## Separate logical cache boundaries from frame correlation
+
+A further read-only check separates the 4,096-frame pattern from the cache's 8,192-frame logical pages.
+The [derived counts and missed rows](data/2026-11-05-boundary-moduli.json) name and hash the published input aggregates.
+All host tails are present in these three inputs; none is omitted.
+The calculation uses `(projectFrame + blockFrames) % 8192` for each retained tail.
+
+| Completed run | Tails ending at logical page boundary | Tails ending halfway through a page | Other retained tails |
+| --- | --- | --- | --- |
+| Uninstrumented 128 frames | 11 | 23 | 5 |
+| Uninstrumented 256 frames | 1 | 2 | 25 |
+| CPU diagnostic, 128 frames | 3 | 10 | 4 |
+
+All three CPU diagnostic missed blocks end halfway through a logical source page.
+The uninstrumented 128-frame misses split into two halfway endings and one page-boundary ending.
+The 256-frame misses remain the separately reported startup scheduling observation.
+These tail counts are not per-population failure rates; the retained-tail selection is duration/wake based.
+
+The fixture's two sources start at project zero with source offset zero, rate one and 48 kHz source rate.
+The painter moves its separate editor copy, not the playback snapshot.
+Under these anchors, a rendered project frame has the same integer source index.
+In [StreamBank::sample](../../src/Streaming.cpp), the explicit following-page acquisition occurs at source index remainder 8,191.
+A block ending at remainder 4,096 does not execute that branch.
+That branch therefore cannot be a necessary explanation for all three CPU diagnostic misses.
+Ordinary page pinning still occurs at callback entry, and this observation does not rule out other memory or scheduling effects.
+
+No native PCM addresses, per-thread fault counts or kernel scheduling trace were captured.
+The 4,096-frame pattern alone cannot identify a native memory page boundary.
+Use the scoped activity experiment and, if needed, a trace that distinguishes execution, scheduling and faults before changing cache layout.
+This arithmetic check adds no playback run and changes no performance limit.
+
 ## Independent checks and next experiment
 
 The independent reader at [exact source `c9a68f5`](https://github.com/coder13/Fader/blob/c9a68f549c1f6637fac9f46f7bf1593a4b0c9acd/scripts/verify-stress-observations.py) checks 21 serialized host rows and 259 painter rows.

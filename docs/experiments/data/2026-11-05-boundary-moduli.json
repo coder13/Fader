@@ -1,0 +1,308 @@
+{
+  "scope": "Read-only arithmetic over complete published retained host tails; no new playback or performance run. These project-frame moduli are not native virtual addresses or fault observations.",
+  "logicalStreamPageFrames": 8192,
+  "formula": "(projectFrame + blockFrames) % 8192",
+  "inputRevision": "d38c548a42f0ddbe87c5c87dfe6d8ba0875652de",
+  "runs": [
+    {
+      "input": "2026-11-05-software-stress-followup-128.json",
+      "inputSha256": "0d4fec49fc1ea1df779a254da36f855d079276c3b1eab705a47551f55a758e0a",
+      "qualifiedSourceRevision": "e2e1a47b1c80f7d67c0acc6ece6e69f9b5cd7e83",
+      "blockFrames": 128,
+      "cpuDiagnostics": false,
+      "tailCount": 39,
+      "omittedTails": 0,
+      "tailEndModulo8192": {
+        "0": 11,
+        "2048": 1,
+        "2688": 2,
+        "4096": 23,
+        "4352": 1,
+        "6400": 1
+      },
+      "virtualDeadlineMisses": 3,
+      "missedBlocks": [
+        {
+          "projectFrame": 54890368,
+          "endModulo8192": 4096,
+          "internalCallbackNanoseconds": 2809791,
+          "wakeLatenessNanoseconds": 0,
+          "completionLatenessNanoseconds": 143583
+        },
+        {
+          "projectFrame": 127287168,
+          "endModulo8192": 0,
+          "internalCallbackNanoseconds": 2676791,
+          "wakeLatenessNanoseconds": 41,
+          "completionLatenessNanoseconds": 10749
+        },
+        {
+          "projectFrame": 150507392,
+          "endModulo8192": 4096,
+          "internalCallbackNanoseconds": 2735500,
+          "wakeLatenessNanoseconds": 83,
+          "completionLatenessNanoseconds": 69708
+        }
+      ]
+    },
+    {
+      "input": "2026-11-05-software-stress-followup-256.json",
+      "inputSha256": "c9dc527de2429ff1e24664006329f33fd2d50c098b62054b45a45c3c85e21e38",
+      "qualifiedSourceRevision": "e2e1a47b1c80f7d67c0acc6ece6e69f9b5cd7e83",
+      "blockFrames": 256,
+      "cpuDiagnostics": false,
+      "tailCount": 28,
+      "omittedTails": 0,
+      "tailEndModulo8192": {
+        "0": 1,
+        "256": 1,
+        "512": 1,
+        "1280": 1,
+        "1536": 1,
+        "1792": 1,
+        "2560": 1,
+        "2816": 1,
+        "3072": 1,
+        "3840": 1,
+        "4096": 2,
+        "4352": 1,
+        "5632": 2,
+        "5888": 1,
+        "6144": 1,
+        "6400": 1,
+        "6656": 2,
+        "6912": 2,
+        "7168": 2,
+        "7424": 2,
+        "7680": 1,
+        "7936": 1
+      },
+      "virtualDeadlineMisses": 25,
+      "missedBlocks": [
+        {
+          "projectFrame": 5376,
+          "endModulo8192": 5632,
+          "internalCallbackNanoseconds": 76041,
+          "wakeLatenessNanoseconds": 69771542,
+          "completionLatenessNanoseconds": 64518751
+        },
+        {
+          "projectFrame": 5632,
+          "endModulo8192": 5888,
+          "internalCallbackNanoseconds": 56916,
+          "wakeLatenessNanoseconds": 64520209,
+          "completionLatenessNanoseconds": 59245167
+        },
+        {
+          "projectFrame": 5888,
+          "endModulo8192": 6144,
+          "internalCallbackNanoseconds": 56750,
+          "wakeLatenessNanoseconds": 59245208,
+          "completionLatenessNanoseconds": 53969834
+        },
+        {
+          "projectFrame": 6144,
+          "endModulo8192": 6400,
+          "internalCallbackNanoseconds": 57042,
+          "wakeLatenessNanoseconds": 53969917,
+          "completionLatenessNanoseconds": 48694834
+        },
+        {
+          "projectFrame": 6400,
+          "endModulo8192": 6656,
+          "internalCallbackNanoseconds": 56875,
+          "wakeLatenessNanoseconds": 48694876,
+          "completionLatenessNanoseconds": 43419667
+        },
+        {
+          "projectFrame": 6656,
+          "endModulo8192": 6912,
+          "internalCallbackNanoseconds": 64083,
+          "wakeLatenessNanoseconds": 43419750,
+          "completionLatenessNanoseconds": 38151709
+        },
+        {
+          "projectFrame": 6912,
+          "endModulo8192": 7168,
+          "internalCallbackNanoseconds": 57500,
+          "wakeLatenessNanoseconds": 38152125,
+          "completionLatenessNanoseconds": 32877459
+        },
+        {
+          "projectFrame": 7168,
+          "endModulo8192": 7424,
+          "internalCallbackNanoseconds": 56792,
+          "wakeLatenessNanoseconds": 32877542,
+          "completionLatenessNanoseconds": 27602417
+        },
+        {
+          "projectFrame": 7424,
+          "endModulo8192": 7680,
+          "internalCallbackNanoseconds": 57125,
+          "wakeLatenessNanoseconds": 27602458,
+          "completionLatenessNanoseconds": 22327500
+        },
+        {
+          "projectFrame": 7680,
+          "endModulo8192": 7936,
+          "internalCallbackNanoseconds": 57000,
+          "wakeLatenessNanoseconds": 22327792,
+          "completionLatenessNanoseconds": 17052626
+        },
+        {
+          "projectFrame": 7936,
+          "endModulo8192": 0,
+          "internalCallbackNanoseconds": 64833,
+          "wakeLatenessNanoseconds": 17052709,
+          "completionLatenessNanoseconds": 11785375
+        },
+        {
+          "projectFrame": 8192,
+          "endModulo8192": 256,
+          "internalCallbackNanoseconds": 57125,
+          "wakeLatenessNanoseconds": 11785458,
+          "completionLatenessNanoseconds": 6510417
+        },
+        {
+          "projectFrame": 8448,
+          "endModulo8192": 512,
+          "internalCallbackNanoseconds": 57042,
+          "wakeLatenessNanoseconds": 6510792,
+          "completionLatenessNanoseconds": 1235709
+        },
+        {
+          "projectFrame": 10496,
+          "endModulo8192": 2560,
+          "internalCallbackNanoseconds": 34292,
+          "wakeLatenessNanoseconds": 13291875,
+          "completionLatenessNanoseconds": 7994000
+        },
+        {
+          "projectFrame": 10752,
+          "endModulo8192": 2816,
+          "internalCallbackNanoseconds": 31792,
+          "wakeLatenessNanoseconds": 7994084,
+          "completionLatenessNanoseconds": 2693709
+        },
+        {
+          "projectFrame": 11776,
+          "endModulo8192": 3840,
+          "internalCallbackNanoseconds": 35958,
+          "wakeLatenessNanoseconds": 17944542,
+          "completionLatenessNanoseconds": 12648500
+        },
+        {
+          "projectFrame": 12032,
+          "endModulo8192": 4096,
+          "internalCallbackNanoseconds": 42750,
+          "wakeLatenessNanoseconds": 12648667,
+          "completionLatenessNanoseconds": 7359209
+        },
+        {
+          "projectFrame": 12288,
+          "endModulo8192": 4352,
+          "internalCallbackNanoseconds": 35625,
+          "wakeLatenessNanoseconds": 7359250,
+          "completionLatenessNanoseconds": 2062667
+        },
+        {
+          "projectFrame": 14592,
+          "endModulo8192": 6656,
+          "internalCallbackNanoseconds": 91500,
+          "wakeLatenessNanoseconds": 21170375,
+          "completionLatenessNanoseconds": 15930167
+        },
+        {
+          "projectFrame": 14848,
+          "endModulo8192": 6912,
+          "internalCallbackNanoseconds": 45208,
+          "wakeLatenessNanoseconds": 15930459,
+          "completionLatenessNanoseconds": 10643792
+        },
+        {
+          "projectFrame": 15104,
+          "endModulo8192": 7168,
+          "internalCallbackNanoseconds": 44750,
+          "wakeLatenessNanoseconds": 10643875,
+          "completionLatenessNanoseconds": 5356750
+        },
+        {
+          "projectFrame": 15360,
+          "endModulo8192": 7424,
+          "internalCallbackNanoseconds": 44959,
+          "wakeLatenessNanoseconds": 5356834,
+          "completionLatenessNanoseconds": 69917
+        },
+        {
+          "projectFrame": 17408,
+          "endModulo8192": 1280,
+          "internalCallbackNanoseconds": 98583,
+          "wakeLatenessNanoseconds": 17991833,
+          "completionLatenessNanoseconds": 12759209
+        },
+        {
+          "projectFrame": 17664,
+          "endModulo8192": 1536,
+          "internalCallbackNanoseconds": 46083,
+          "wakeLatenessNanoseconds": 12759292,
+          "completionLatenessNanoseconds": 7473501
+        },
+        {
+          "projectFrame": 17920,
+          "endModulo8192": 1792,
+          "internalCallbackNanoseconds": 44958,
+          "wakeLatenessNanoseconds": 7473584,
+          "completionLatenessNanoseconds": 2186625
+        }
+      ]
+    },
+    {
+      "input": "2026-11-05-boundary-hour.json",
+      "inputSha256": "2792b941036c34e4109c64f8deaf8ccf1c265103fe8950781ffe240e26600505",
+      "qualifiedSourceRevision": "a00dca80d3659f310ff6aea45b731ac5aa60c21b",
+      "blockFrames": 128,
+      "cpuDiagnostics": true,
+      "tailCount": 17,
+      "omittedTails": 0,
+      "tailEndModulo8192": {
+        "0": 3,
+        "2688": 1,
+        "3584": 1,
+        "4096": 10,
+        "4224": 1,
+        "5120": 1
+      },
+      "virtualDeadlineMisses": 3,
+      "missedBlocks": [
+        {
+          "projectFrame": 15470464,
+          "endModulo8192": 4096,
+          "internalCallbackNanoseconds": 4769375,
+          "wakeLatenessNanoseconds": 42,
+          "completionLatenessNanoseconds": 2104166
+        },
+        {
+          "projectFrame": 36040576,
+          "endModulo8192": 4096,
+          "internalCallbackNanoseconds": 3317875,
+          "wakeLatenessNanoseconds": 42,
+          "completionLatenessNanoseconds": 652625
+        },
+        {
+          "projectFrame": 106704768,
+          "endModulo8192": 4096,
+          "internalCallbackNanoseconds": 2828459,
+          "wakeLatenessNanoseconds": 41,
+          "completionLatenessNanoseconds": 163458
+        }
+      ]
+    }
+  ],
+  "sourceReview": {
+    "fixtureAnchors": "Both source clips start at project 0, source offset 0, rate 1 and 48000 Hz, matching the project rate. The painter moves its separate editor copy only.",
+    "runtimeSourceIndex": "With these fixture anchors, each rendered project frame is the same integer source frame.",
+    "nextLogicalPageAcquisition": "StreamBank::sample acquires the following logical page only at source index % 8192 == 8191 (except source end).",
+    "cpuMissInference": "All three CPU diagnostic missed blocks end at project frame % 8192 == 4096, halfway through a logical source page. They do not include the following-page acquisition branch. This rules out that specific branch as a necessary explanation for these three misses; it does not rule out faults, ordinary pinning, cache coherence, scheduler pauses or other memory effects.",
+    "nativePageLimit": "No native PCM address, thread fault count or kernel scheduling trace was captured. A 4096-frame pattern alone does not locate a native page boundary."
+  }
+}
