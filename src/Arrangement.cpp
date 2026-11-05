@@ -29,6 +29,27 @@ std::span<const Point> detail::visiblePointHandles(const Curve &curve, float cli
                                       [](Frame f, const Point &p) { return f < p.frame; });
     return {begin, end};
 }
+void detail::paintPointHandles(juce::Graphics &g, std::span<const Point> points, float clipX, double scale,
+                               float bottom, float height) {
+    // Selected handles share one opaque colour. Bound path storage and native
+    // raster calls independently of the project's total automation history.
+    constexpr int batchSize = 64;
+    juce::Path handles;
+    handles.setUsingNonZeroWinding(true);
+    handles.preallocateSpace(batchSize * 32);
+    int count = 0;
+    for (const auto &point : points) {
+        const float px = clipX + float(double(point.frame) / projectRate * scale);
+        handles.addEllipse(px - 4, bottom - point.value * height - 4, 8, 8);
+        if (++count == batchSize) {
+            g.fillPath(handles);
+            handles.clear();
+            count = 0;
+        }
+    }
+    if (count != 0)
+        g.fillPath(handles);
+}
 Arrangement::Arrangement() : canvas(*this) {
     addAndMakeVisible(viewport);
     viewport.setViewedComponent(&canvas, false);
@@ -185,13 +206,11 @@ void Arrangement::Canvas::paint(juce::Graphics &g) {
             g.setColour(curveColour(owner.parameter).withAlpha(selected ? 1.0f : 0.65f));
             g.strokePath(path, juce::PathStrokeType(selected ? 2.2f : 1.4f));
             if (selected)
-                for (const auto &point :
-                     detail::visiblePointHandles(curve, b.getX(), owner.pixelsPerSecond, c.length,
-                                                 visible.getX(), visible.getRight())) {
-                    const float px =
-                        b.getX() + float(double(point.frame) / projectRate * owner.pixelsPerSecond);
-                    g.fillEllipse(px - 4, y1 - point.value * (y1 - y0) - 4, 8, 8);
-                }
+                detail::paintPointHandles(g,
+                                          detail::visiblePointHandles(curve, b.getX(), owner.pixelsPerSecond,
+                                                                      c.length, visible.getX(),
+                                                                      visible.getRight()),
+                                          b.getX(), owner.pixelsPerSecond, y1, y1 - y0);
         }
     }
     g.restoreState();

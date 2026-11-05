@@ -9,6 +9,10 @@ namespace detail {
 // rounding at the far end of the supported timeline. Curves stay intact.
 std::span<const Point> visiblePointHandles(const Curve &, float clipX, double pixelsPerSecond,
                                            Frame clipLength, int left, int right) noexcept;
+// Draw every supplied handle at its clip-local position. The caller supplies
+// the selected curve's opaque colour. Overlapping circles use a filled union.
+void paintPointHandles(juce::Graphics &, std::span<const Point>, float clipX, double pixelsPerSecond,
+                       float bottom, float height);
 } // namespace detail
 class Arrangement final : public juce::Component {
   public:

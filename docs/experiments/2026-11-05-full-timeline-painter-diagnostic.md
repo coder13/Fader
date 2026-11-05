@@ -73,3 +73,73 @@ CI now retains independent checks of `fullTimelineDiagnosticSmoke` on Mac and Wi
 Inspect exact metadata, full logs, JUnit and artifacts before treating cross-platform collection as checked.
 Then run the full-size short diagnostic to distinguish drawing CPU from elapsed wall pauses and choose an actual repair.
 The original full-hour painter failure remains open; any repair still needs the full original uninstrumented hour.
+
+## Completed full-size observations
+
+Source `af66884f3096160b654595302ea07535378d9967` passed seven native suites on Mac and Windows, five Linux core suites, and 19 Python tests per runner.
+[CI run 42126466639](https://github.com/coder13/Fader/actions/runs/42126466639) retained exact source metadata, JUnit, complete logs, and three independently read smoke objects on each native platform.
+All builds used Release configuration and disabled UI fixtures.
+Native builds used JUCE `d60b7a78030661574a615b586d9325ba7a7fa7dd`.
+The downloaded executable, six fault files, original capture and rebased capture matched their recorded hashes.
+The original runners checked physical source identity during capture rebasing.
+Those runner-local sources are absent here, so artifact inspection does not reestablish that identity locally.
+Windows CPU accounting retained its coarse precision and zero-delta limitations.
+
+Two local diagnostics used the same clean source and executable SHA-256 `70e35d8c069f2c2d912dd62e333f93928842b78f2adc0f5bef14e2dea89ef266`.
+Both used 128-frame virtual callbacks, full 3,600-second project geometry, 172,800,000 project frames and 86,406 original stored points.
+The host was the Apple M3 Mac with 16 GiB RAM, macOS 26.6.2 and AppleClang 21.
+The production offscreen painter still rendered every visible waveform column, curve and selected point handle.
+The original media, exact executable, raw fault prefixes and both captures remain in local evidence folders.
+The driver copied the executable before execution and the original capture before production rebasing.
+Independent readers accepted timing arithmetic, bounded tail accounting and five policy-query brackets for both runs.
+These CPU-instrumented diagnostics cannot qualify an hour, physical audio or native-window responsiveness.
+
+| Observation | 300-second CPU diagnostic | 180-second sampled diagnostic |
+| --- | ---: | ---: |
+| Callbacks / captured controls | 112,500 / 8,999 | 67,500 / 5,399 |
+| Completed paints | 15,000 | 9,000 |
+| Paint starts more than 20 ms late | 1,113 | 120 |
+| Paint wall p99.9 / maximum | 126.484 / 282.846 ms | 54.841 / 294.595 ms |
+| Paint CPU p99.9 / maximum | 13.203 / 15.238 ms | 12.769 / 16.825 ms |
+| Maximum paint start lateness | 1,278.681 ms | 445.417 ms |
+| Virtual deadline misses | 0 | 9 |
+| Source gaps | 0 | 0 |
+| Retained paint tails / omitted | 256 / 1,181 | 218 / 0 |
+| Peak resident bytes | 67,534,848 | 63,553,536 |
+| Whole archive finished UTC | 23:12:34.850203 | 23:24:57.565656 |
+
+The longest 300-second paint used 6.846 ms of enclosing thread CPU across 282.846 ms of wall time.
+This discrepancy supports investigating waits and native drawing allocation.
+It does not identify the cause of every pause.
+The sampled run disturbed all threads, so its nine virtual misses do not establish an audio capacity regression.
+Both runs preserved every captured control and passed software integrity checks.
+The rebased captures preserved every non-path field, JSON value type and floating-point bit pattern.
+The 300-second capture compared 91,725 floating-point values across two physical source identities.
+The 180-second capture compared 89,605 floating-point values across two physical source identities.
+
+[300-second aggregate](data/2026-11-05-full-timeline-cpu-300s.json) and [180-second aggregate](data/2026-11-05-full-timeline-stack-180s.json) retain the observations and archive hashes.
+No raw media, private paths or raw process stacks appear in these aggregates.
+
+## Sampled drawing paths and next repair
+
+The read-only sampler attached to the exact retained synthetic process, after the driver reported 90 seconds.
+It requested 55 seconds at 10 ms intervals, starting at 23:23:01.354039 UTC.
+The command finished at 23:24:02.331552 UTC, including symbol processing.
+No local build, second native host, hardware access or measured-source change overlapped either diagnostic.
+Read-only GitHub artifact download and inspection overlapped the sampled diagnostic.
+
+The main-thread tree contained 5,019 observations.
+The frame-pacing branch contained 3,327 observations, mostly expected sleep calls.
+The paint branch contained 1,528 observations, including 1,500 in the arrangement canvas.
+Of those canvas observations, 589 reached individual handle ellipses and 575 reached curve path drawing.
+Another 91 reached waveform vertical lines.
+CoreGraphics raster allocation and deallocation reached `madvise` beneath both handle and curve paths.
+These tree counts overlap by ancestry and are not CPU percentages or exact blocked durations.
+
+Our inference is that repeated native raster operations contribute to the observed stalls.
+The first proposed repair batches visible, opaque point handles into bounded compound paths.
+Every supplied point keeps its position and four-pixel radius.
+Overlapping handles form the same filled geometry, with small antialiasing differences at their edges.
+Render comparisons must cover dense overlaps, fractional positions, viewport boundaries and each batch boundary.
+The curve path remains a second measured target if handle batching does not resolve the pauses.
+A full original uninstrumented hour still decides issue #40 after an actual repair.

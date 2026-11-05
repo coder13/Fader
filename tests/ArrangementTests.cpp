@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "Arrangement.h"
+#include "Theme.h"
 #include <cmath>
 #include <stdexcept>
 using namespace fader;
@@ -30,6 +31,64 @@ juce::MouseEvent event(juce::Component *canvas, juce::Point<float> point, juce::
 }
 } // namespace
 void testArrangement() {
+    // Compare the actual production helper with the original individual-circle
+    // drawing. Every solid interior pixel must survive; neither renderer may
+    // put colour beyond a one-pixel antialiasing fringe of the other. This
+    // includes dense overlaps, fractional positions and both sides of each
+    // 64-handle boundary, rather than an assertion about a batching counter.
+    const juce::SoftwareImageType software;
+    const juce::NativeImageType native;
+    for (const juce::ImageType *imageType :
+         {static_cast<const juce::ImageType *>(&software), static_cast<const juce::ImageType *>(&native)}) {
+        for (double scale : {2.0, 10.0, 100.0})
+            for (float clipX : {-6.25f, .125f, 37.75f}) {
+                Curve curve;
+                curve.points.clear();
+                for (int i = 0; i < 133; ++i)
+                    curve.points.push_back({Frame(i) * projectRate / 4, i % 3 == 0 ? .7f : .3f});
+                const auto original = curve.points;
+                juce::Image expected(juce::Image::ARGB, 1700, 100, true, *imageType);
+                juce::Image actual(juce::Image::ARGB, 1700, 100, true, *imageType);
+                {
+                    juce::Graphics g(expected);
+                    g.setColour(ui::accent);
+                    for (const auto &point : curve.points) {
+                        const float px = clipX + float(double(point.frame) / projectRate * scale);
+                        g.fillEllipse(px - 4, 90 - point.value * 70 - 4, 8, 8);
+                    }
+                }
+                {
+                    juce::Graphics g(actual);
+                    g.setColour(ui::accent);
+                    detail::paintPointHandles(g, curve.points, clipX, scale, 90, 70);
+                }
+                require(curve.points == original, "painting changed stored automation");
+                const juce::Image::BitmapData actualPixels(actual, juce::Image::BitmapData::readOnly);
+                const juce::Image::BitmapData expectedPixels(expected, juce::Image::BitmapData::readOnly);
+                for (int y = 1; y < 99; ++y)
+                    for (int x = 1; x < 1699; ++x) {
+                        const auto a = actualPixels.getPixelColour(x, y).getAlpha();
+                        const auto e = expectedPixels.getPixelColour(x, y).getAlpha();
+                        if (e == 255) {
+                            require(a >= 250, "batch drawing lost a solid handle interior");
+                            require(actualPixels.getPixelColour(x, y).getRed() >= 220,
+                                    "batch drawing changed the handle colour");
+                        }
+                        if (a != 0 || e != 0) {
+                            bool nearActual = false, nearExpected = false;
+                            for (int dy = -1; dy <= 1; ++dy)
+                                for (int dx = -1; dx <= 1; ++dx) {
+                                    nearActual |= actualPixels.getPixelColour(x + dx, y + dy).getAlpha() != 0;
+                                    nearExpected |=
+                                        expectedPixels.getPixelColour(x + dx, y + dy).getAlpha() != 0;
+                                }
+                            require(a == 0 || nearExpected,
+                                    "batch handle extended beyond its original geometry");
+                            require(e == 0 || nearActual, "batch drawing omitted a visible handle");
+                        }
+                    }
+            }
+    }
     // Geometric reference: every circle that can touch the viewport must be in
     // the returned slice, including edges and far-timeline float rounding. The
     // slice size must depend on visible time, rather than total point count.
