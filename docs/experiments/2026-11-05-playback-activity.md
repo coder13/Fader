@@ -1,6 +1,7 @@
 # Scoped playback activity candidate
 
-Status: implementation candidate, not a timing repair or a completed qualification.
+Status: implementation candidate with local and clean CI functional checks complete.
+Sustained timing qualification remains pending; this is not an established repair.
 The [completed CPU hour](2026-11-05-boundary-hour.md) shows long wall intervals with much smaller enclosing CPU deltas.
 This motivates a process-policy experiment before changing DSP, drawing or cache layout.
 It does not establish App Nap, memory faults or a particular scheduler cause.
@@ -39,3 +40,25 @@ Preserve the failed baselines and diagnostic, including their exact executables 
 Record all outcomes, including a failed or inconclusive candidate.
 A successful observation cannot by itself identify App Nap as the cause or establish a long-term failure rate.
 Native presentation and physical audio/MIDI remain separate gates.
+
+## Functional checks completed
+
+Exact candidate `7e089d03fa3241d151e76bee0db11b90d0ee12a8` builds the app, probe and tests locally.
+All seven local suites pass in 12.47 seconds, including the existing callback allocation checks.
+Both local smoke objects report the macOS activity request and pass independent observation arithmetic checks.
+
+[Clean CI 42058168225](https://github.com/coder13/Fader/actions/runs/42058168225) passes macOS/Windows native 7/7 and Linux core 5/5.
+The Linux job also passes all eight reader tests.
+Downloaded metadata, JUnit and full logs match the exact source, pinned JUCE, Release build and UI fixtures OFF.
+There are zero failed, erroneous or skipped suites.
+The [checked aggregate](data/2026-11-05-playback-activity-ci.json) retains the platform scopes, clock limits and ordinary-priority timing failures.
+
+Both native archived reader outputs match fresh checks of their full logs exactly.
+macOS reports the request as true, while Windows reports false for its declared no-op implementation.
+The shared macOS wall/CPU smokes still report 496/507 virtual misses and 54/53 late painter starts.
+Windows reports 11/1 virtual misses with coarse CPU accounting.
+These are functional collection checks and do not qualify sustained performance or physical playback.
+
+The original uninstrumented hour remains required at its original workload and limits.
+The completed CPU diagnostic and all failed baselines remain preserved.
+No production DSP, drawing algorithm, source cache layout or persistent OS configuration changes in this candidate.
