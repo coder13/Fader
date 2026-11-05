@@ -45,7 +45,7 @@ void testStreamMedia() {
                   vbrResult["diskCacheBytes"].toString().getLargeIntValue() > 0,
               "VBR MP3 disk cache was silently bypassed");
         const auto fallback = qualifyStream(juce::File(FADER_TEST_VBR_PATH), false);
-        check(bool(fallback["sequentialSeek"]) &&
+        check(bool(fallback["sequentialSeek"]) == (fallback["format"].toString() == "MP3 file") &&
                   fallback["diskCacheBytes"].toString().getLargeIntValue() == 0 &&
                   double(fallback["seekMaxError"]) <= 1e-6,
               "Uncached MP3 fallback lost exact seek support");

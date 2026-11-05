@@ -107,8 +107,11 @@ Clip loadClip(const juce::File &file, bool cacheCompressed) {
     audio->peaks.resize((length + audio->peakStride - 1) / audio->peakStride);
     juce::AudioBuffer<float> scratch(2, 8192);
     const bool sequentialReplay = reader->getFormatName() == "MP3 file";
+    // CoreAudio precedes JUCE's MP3 reader when the native codec is available.
+    // Preserve that reader's exact PCM domain too; decoder priming/padding can differ.
+    const bool cacheCandidate = sequentialReplay || reader->getFormatName() == "CoreAudio supported file";
     auto decoded =
-        sequentialReplay && cacheCompressed ? DecodedCache::create(reader->lengthInSamples) : nullptr;
+        cacheCandidate && cacheCompressed ? DecodedCache::create(reader->lengthInSamples) : nullptr;
     for (std::size_t offset = 0; offset < length; offset += 8192) {
         const int count = static_cast<int>(std::min(std::size_t{8192}, length - offset));
         if (!reader->read(scratch.getArrayOfWritePointers(), 2, static_cast<juce::int64>(offset), count))
