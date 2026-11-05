@@ -29,7 +29,10 @@ void Arrangement::refresh() {
             rows = std::max(rows, c.row + 5);
     }
     canvas.setSize(std::max(viewport.getWidth() - 14,
-                            left + static_cast<int>(std::min(7200.0, seconds) * pixelsPerSecond) + 60),
+                            left +
+                                static_cast<int>(std::min(double(maxProjectFrames) / projectRate, seconds) *
+                                                 pixelsPerSecond) +
+                                60),
                    std::max(viewport.getHeight() - 14, top + rows * rowHeight));
     canvas.repaint();
 }
@@ -51,7 +54,7 @@ juce::Rectangle<float> Arrangement::Canvas::bounds(const Clip &c) const {
 }
 Frame Arrangement::Canvas::frame(float x) const {
     return std::clamp(static_cast<Frame>((x - left) / owner.pixelsPerSecond * projectRate), Frame{0},
-                      Frame{2 * 3600 * projectRate});
+                      Frame{maxProjectFrames});
 }
 int Arrangement::Canvas::hit(juce::Point<float> position) const {
     if (!owner.project)
@@ -125,9 +128,10 @@ void Arrangement::Canvas::paint(juce::Graphics &g) {
                 const auto source = double(c.sourceOffset) +
                                     (px - b.getX()) / owner.pixelsPerSecond * c.rate * c.audio->sampleRate;
                 const auto nextSource = source + c.rate * c.audio->sampleRate / owner.pixelsPerSecond;
-                const auto a = static_cast<std::size_t>(std::max(0.0, source / 512)),
+                const auto a = static_cast<std::size_t>(std::max(0.0, source / double(c.audio->peakStride))),
                            z = std::min(c.audio->peaks.size(),
-                                        static_cast<std::size_t>(std::max(0.0, nextSource / 512) + 1));
+                                        static_cast<std::size_t>(
+                                            std::max(0.0, nextSource / double(c.audio->peakStride)) + 1));
                 float peak = 0;
                 for (auto n = a; n < z; ++n)
                     peak = std::max(peak, c.audio->peaks[n]);
@@ -311,7 +315,7 @@ void Arrangement::Canvas::mouseDrag(const juce::MouseEvent &e) {
         if (owner.snapSeconds > 0)
             start = static_cast<Frame>(std::round(double(start) / projectRate / owner.snapSeconds) *
                                        owner.snapSeconds * projectRate);
-        c.start = std::clamp(start, Frame{0}, Frame{2 * 3600 * projectRate} - c.length);
+        c.start = std::clamp(start, Frame{0}, Frame{maxProjectFrames} - c.length);
         c.row = std::clamp(originalRow + int(std::round((e.position.y - anchor.y) / rowHeight)), 0, 4095);
         owner.refresh();
         auto position = owner.viewport.getLocalPoint(this, e.position.toInt());

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "Library.h"
 #include "Media.h"
+#include "ReadFixture.h"
 #include <cmath>
 #include <filesystem>
 #include <iostream>
@@ -10,6 +11,7 @@ void testArrangement();
 void testAudioSetup();
 void testAudioPlayback();
 void testSourceRates();
+void testStreamMedia();
 void check(bool pass, const char *message) {
     if (!pass)
         throw std::runtime_error(message);
@@ -24,6 +26,7 @@ int main() {
     dir.createDirectory();
     try {
         testSourceRates();
+        testStreamMedia();
         auto data = std::make_shared<AudioData>();
         for (auto &c : data->samples) {
             c.resize(48000);
@@ -55,12 +58,13 @@ int main() {
         const auto output = dir.getChildFile("output.wav");
         exportWav(reopened, output, true);
         auto rendered = loadClip(output);
+        const auto renderedSamples = readImportedSamples(rendered);
         Engine e(p);
         juce::AudioBuffer<float> expected(2, 48000);
-        e.process(expected.getArrayOfWritePointers(), 2, 48000);
+        renderPrepared(e, expected);
         for (int i = 0; i < 48000; ++i)
-            check(std::abs(expected.getSample(0, i) -
-                           rendered.audio->samples[0][static_cast<std::size_t>(i)]) < 1e-6f,
+            check(std::abs(expected.getSample(0, i) - renderedSamples[0][static_cast<std::size_t>(i)]) <
+                      1e-6f,
                   "offline/playback mismatch");
         const auto preserved = dir.getChildFile("preserved.wav");
         preserved.replaceWithText("keep me");
@@ -147,11 +151,11 @@ int main() {
         const auto modernWave = dir.getChildFile("modern.wav");
         exportWav(modernReopened, modernWave, true);
         auto modernAudio = loadClip(modernWave);
+        const auto modernSamples = readImportedSamples(modernAudio);
         Engine modernEngine(modern);
-        modernEngine.process(expected.getArrayOfWritePointers(), 2, 48000);
+        renderPrepared(modernEngine, expected);
         for (int i = 0; i < 48000; ++i)
-            check(std::abs(expected.getSample(0, i) -
-                           modernAudio.audio->samples[0][static_cast<std::size_t>(i)]) < 1e-6f,
+            check(std::abs(expected.getSample(0, i) - modernSamples[0][static_cast<std::size_t>(i)]) < 1e-6f,
                   "clip/filter export differs from live core");
         juce::XmlElement nml("NML");
         nml.setAttribute("VERSION", 20);
@@ -217,7 +221,8 @@ int main() {
         check(rejected, "future schema accepted");
         dir.deleteRecursively();
         std::cout << "PASS: mono/stereo source rates, cue-free export, overload policy, "
-                     "content probing, full decode, project round-trip, source identity, export "
+                     "content probing, streamed WAV/MP3 sequential/seek parity, changed/missing sources, "
+                     "project round-trip, source identity, export "
                      "parity, atomic cancellation, schema validation\n";
         return 0;
     } catch (const std::exception &e) {

@@ -11,6 +11,7 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 | [Active work order](docs/work-order.md) | Dependency-based POC and product priorities, including the new issues |
 | [Build and CI](docs/build-and-ci.md) | Clean-checkout presets, pinned dependencies and test evidence |
 | [Playback timing and capture integrity](docs/playback-clock.md) | Clock segments, controller/UI queues, interruption handling and callback audit |
+| [Source streaming](docs/streaming-contract.md) | Bounded PCM, source ownership, live gaps and offline readiness |
 | [Mixer contract](docs/mixer-contract.md) | Source-rate, gain, filter, clipping and master/cue behavior |
 | [Roadmap completeness review](docs/research/roadmap-completeness-review.md) | Feature coverage, proposed backlog gaps and evidence needed for a polished release |
 | [Competitive workflow audit](docs/research/competitive-workflow-audit.md) | Deeper comparison, source evidence, adoption/reuse decision gate |

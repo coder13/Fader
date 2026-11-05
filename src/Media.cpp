@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "Media.h"
+#include "FileSource.h"
 #include <algorithm>
 #include <charconv>
 #include <cmath>
@@ -78,6 +79,8 @@ Clip loadClip(const juce::File &file) {
         fail("Audio file is missing");
     if (file.hasFileExtension("crdownload;part;download"))
         fail("This download is incomplete");
+    const auto sourceBytes = file.getSize();
+    const auto sourceModified = file.getLastModificationTime().toMilliseconds();
     const auto sourceHash = juce::SHA256(file).toHexString();
     juce::AudioFormatManager formats;
     formats.registerBasicFormats();
@@ -87,38 +90,44 @@ Clip loadClip(const juce::File &file) {
         fail("Unsupported or unreadable audio file");
     if (reader->numChannels < 1 || reader->numChannels > 2)
         fail("This POC supports mono or stereo source files");
-    if (reader->lengthInSamples <= 0 || reader->lengthInSamples > 33554432)
-        fail("Source exceeds the POC's 256 MiB decoded-audio limit per deck");
+    if (reader->lengthInSamples <= 0 || reader->lengthInSamples > maxSourceFrames)
+        fail("Invalid or unsupported source length");
     if (!std::isfinite(reader->sampleRate) || reader->sampleRate < 8000 || reader->sampleRate > 384000)
         fail("Unsupported source sample rate");
     auto audio = std::make_shared<AudioData>();
     audio->sampleRate = reader->sampleRate;
     const auto length = static_cast<std::size_t>(reader->lengthInSamples);
-    for (auto &channel : audio->samples)
-        channel.resize(length);
+    const auto projectLength =
+        static_cast<Frame>(std::floor(double(length) * projectRate / audio->sampleRate));
+    if (projectLength > maxProjectFrames)
+        fail("Source exceeds the prototype's 24-hour timeline limit");
+    constexpr std::size_t maxPeaks = 131072;
+    audio->peakStride = std::max(std::size_t{512}, ((length + maxPeaks - 1) / maxPeaks + 511) / 512 * 512);
+    audio->peaks.resize((length + audio->peakStride - 1) / audio->peakStride);
+    juce::AudioBuffer<float> scratch(2, 8192);
     for (std::size_t offset = 0; offset < length; offset += 8192) {
         const int count = static_cast<int>(std::min(std::size_t{8192}, length - offset));
-        float *destinations[]{audio->samples[0].data() + offset, audio->samples[1].data() + offset};
-        if (!reader->read(destinations, 2, static_cast<juce::int64>(offset), count))
+        if (!reader->read(scratch.getArrayOfWritePointers(), 2, static_cast<juce::int64>(offset), count))
             fail("Audio decoding failed with " + reader->getFormatName() + " at source frame " +
                  juce::String(static_cast<juce::int64>(offset)));
-        if (reader->numChannels == 1)
-            std::copy_n(destinations[0], count, destinations[1]);
-        for (int c = 0; c < 2; ++c)
+        for (int channel = 0; channel < 2; ++channel)
             for (int i = 0; i < count; ++i)
-                if (!std::isfinite(destinations[c][i]))
+                if (!std::isfinite(scratch.getSample(channel, i)))
                     fail("Audio contains non-finite samples");
+        for (int i = 0; i < count; ++i) {
+            auto &peak = audio->peaks[(offset + static_cast<std::size_t>(i)) / audio->peakStride];
+            peak = std::max(peak, std::abs(scratch.getSample(0, i)));
+        }
     }
-    constexpr std::size_t peakWidth = 512;
-    audio->peaks.resize((length + peakWidth - 1) / peakWidth);
-    for (std::size_t i = 0; i < length; ++i)
-        audio->peaks[i / peakWidth] = std::max(audio->peaks[i / peakWidth], std::abs(audio->samples[0][i]));
+    audio->stream = makeFileSource(file, reader->lengthInSamples, reader->sampleRate, reader->numChannels,
+                                   sourceBytes, sourceModified);
     Clip clip;
     clip.audio = audio;
     clip.path = file.getFullPathName().toStdString();
     clip.name = file.getFileNameWithoutExtension().toStdString();
     clip.hash = juce::SHA256(file).toHexString().toStdString();
-    if (clip.hash != sourceHash.toStdString())
+    if (clip.hash != sourceHash.toStdString() || file.getSize() != sourceBytes ||
+        file.getLastModificationTime().toMilliseconds() != sourceModified)
         fail("Audio file changed during decoding; try again after the file is stable");
     clip.length =
         static_cast<Frame>(std::floor(static_cast<double>(length) * projectRate / audio->sampleRate));
@@ -294,7 +303,7 @@ Project loadProject(const juce::File &file) {
     }
     p.validate();
     std::unordered_map<std::string, Clip> media;
-    std::size_t decodedBytes = 0;
+    std::size_t peakBytes = 0;
     for (auto &clip : p.clips) {
         if (clip.path.empty()) {
             if (clip.length > 0)
@@ -308,9 +317,9 @@ Project loadProject(const juce::File &file) {
         const auto path = source.getFullPathName().toStdString();
         if (!media.contains(path)) {
             auto loaded = loadClip(source);
-            decodedBytes += loaded.audio->frames() * 8;
-            if (decodedBytes > 1024ULL * 1024 * 1024)
-                fail("Set exceeds the prototype's 1 GiB decoded-media budget");
+            peakBytes += loaded.audio->peaks.size() * sizeof(float);
+            if (peakBytes > 32ULL * 1024 * 1024)
+                fail("Set exceeds the prototype's 32 MiB waveform-cache budget");
             media.emplace(path, std::move(loaded));
         }
         const auto &loaded = media.at(path);
@@ -353,6 +362,7 @@ void exportWav(const Project &project, const juce::File &file, bool floatingPoin
     juce::AudioBuffer<float> buffer(2, 1024);
     while (engine.position() < project.end()) {
         const int count = static_cast<int>(std::min(Frame{1024}, project.end() - engine.position()));
+        engine.prepareSources(count); // offline may wait/fail; the live callback never calls this
         engine.process(buffer.getArrayOfWritePointers(), 2, count);
         if (!floatingPoint && engine.peak() > 1.0f)
             fail("Mix exceeds 0 dBFS. Lower the deck gains before exporting PCM WAV.");

@@ -6,3 +6,4 @@
 *.wav
 *.mp3
 !tests/fixtures/
+!tests/fixtures/synthetic-vbr.mp3

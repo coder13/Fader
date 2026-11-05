@@ -145,7 +145,7 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
             checkpoint();
             auto &c = project.clips[static_cast<std::size_t>(arrangement.selected)];
             c.start = std::clamp(static_cast<Frame>(clipStart.getText().getDoubleValue() * projectRate),
-                                 Frame{0}, Frame{2 * 3600 * projectRate} - c.length);
+                                 Frame{0}, maxProjectFrames - c.length);
             dirty = true;
             sync();
         };
@@ -270,17 +270,17 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
     void requestQuit() {
         confirmDiscard([] { juce::JUCEApplication::getInstance()->quit(); });
     }
-    void openFile(const juce::File &f, bool interruptedFixture = false) {
+    void openFile(const juce::File &f, int fixtureCase = 0) {
         if (busy)
             return;
         stop();
         busy = true;
         setStatus("Opening set and checking its media...");
         auto safe = juce::Component::SafePointer<Workspace>(this);
-        workers.addJob([safe, f, interruptedFixture] {
+        workers.addJob([safe, f, fixtureCase] {
             try {
                 auto p = loadProject(f);
-                juce::MessageManager::callAsync([safe, p = std::move(p), f, interruptedFixture]() mutable {
+                juce::MessageManager::callAsync([safe, p = std::move(p), f, fixtureCase]() mutable {
                     if (!safe)
                         return;
                     safe->project = std::move(p);
@@ -296,10 +296,12 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                                         : "Version 1 set: original playback and export preserved. Choose New "
                                           "set to use clip automation.");
 #if FADER_ENABLE_UI_FIXTURES
-                    if (interruptedFixture)
+                    if (fixtureCase == 1)
                         safe->simulateInterruptedCapture();
+                    else if (fixtureCase == 2)
+                        safe->simulateSourceGap();
 #else
-                    juce::ignoreUnused(interruptedFixture);
+                    juce::ignoreUnused(fixtureCase);
 #endif
                 });
             } catch (const std::exception &e) {
@@ -310,6 +312,20 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
 #if FADER_ENABLE_UI_FIXTURES
     // Developer fixture: exercise the real stop/recovery UI without opening hardware.
     // Only compiled with the explicit opt-in CMake flag; requires synthetic source media.
+    void simulateSourceGap() {
+        if (project.clips.empty() || project.end() < 1024)
+            return;
+        engine = std::make_shared<Playback>(project, 0, ++nextSegment);
+        engine->deviceStarted(projectRate);
+        audioPlayback = std::make_unique<AudioPlayback>(*engine);
+        std::array<float, 512> left{}, right{};
+        float *out[]{left.data(), right.data()};
+        engine->process(out, 2, 128, monotonicTime());
+        engine->cancelSourceReads(); // deterministic missing PCM; no physical device involved
+        engine->process(out, 2, 512, monotonicTime());
+        play.setButtonText("Stop");
+        sync();
+    }
     void simulateInterruptedCapture() {
         if (project.clips.empty() || project.end() < 512)
             return;
@@ -727,7 +743,7 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                     }
                 if (!reused)
                     c = loadClip(file);
-                c.start = std::clamp(start, Frame{0}, Frame{2 * 3600 * projectRate} - c.length);
+                c.start = std::clamp(start, Frame{0}, maxProjectFrames - c.length);
                 c.row = std::clamp(row, 0, 4095);
                 if (info.title.isNotEmpty())
                     c.name = info.title.toStdString();
@@ -741,9 +757,9 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                 std::size_t bytes = 0;
                 for (const auto &clip : base.clips)
                     if (clip.audio && seen.insert(clip.audio.get()).second)
-                        bytes += clip.audio->frames() * 8;
-                if (bytes > 1024ULL * 1024 * 1024)
-                    throw std::runtime_error("This prototype has a 1 GiB decoded-media budget per set.");
+                        bytes += clip.audio->peaks.size() * sizeof(float);
+                if (bytes > 32ULL * 1024 * 1024)
+                    throw std::runtime_error("This prototype has a 32 MiB waveform-cache budget per set.");
                 base.validate();
                 juce::MessageManager::callAsync([safe, base = std::move(base)]() mutable {
                     if (!safe)
@@ -984,6 +1000,7 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                     safe->recording = capture;
                     safe->recordingClip = selected;
                     safe->overriding = false;
+                    safe->sourceGapSeen = false;
                     safe->takeIn = in;
                     safe->takeOut = out;
                     safe->busy = false;
@@ -1020,6 +1037,7 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
         audioPlayback->detach();
         audioPlayback.reset();
         cursor = engine->position();
+        const bool hadMediaGaps = engine->starvationFrames() > 0 || engine->streamStats().failedSources > 0;
         drain();
         if (recording) {
             if (captureLost && !engine->captureFailed())
@@ -1034,7 +1052,10 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                     checkpoint();
                     commitTake(project, take, takeIn, std::min(cursor, takeOut));
                     dirty = true;
-                    setStatus("Take saved on the clip. Undo restores its previous envelopes.");
+                    setStatus(hadMediaGaps
+                                  ? "Actions saved, but playback had audio gaps. Replay from the sources may "
+                                    "sound different. Undo restores previous envelopes."
+                                  : "Take saved on the clip. Undo restores its previous envelopes.");
                 } catch (const std::exception &e) {
                     setStatus(e.what());
                 }
@@ -1042,6 +1063,8 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
         } else
             setStatus(engine->clockFailed() ? "Playback stopped because the audio device clock changed. "
                                               "Press Play to start a new playback segment."
+                      : hadMediaGaps        ? "Playback stopped after source gaps. Check the source files "
+                                              "and storage before playing again."
                                             : "Playback stopped.");
         engine.reset();
         recording = false;
@@ -1082,6 +1105,12 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
     void timerCallback() override {
         if (engine) {
             cursor = engine->position();
+            if (!sourceGapSeen &&
+                (engine->starvationFrames() > 0 || engine->streamStats().failedSources > 0)) {
+                sourceGapSeen = true;
+                setStatus("Audio source gap: missing audio fades out and back in. Check source files and "
+                          "storage. Automation capture is reported separately.");
+            }
             drain();
             CallbackMetric metric;
             for (unsigned budget = 1024; budget > 0 && engine->metric(metric); --budget)
@@ -1100,13 +1129,14 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                              (engine && engine->peak() > 1 ? "  CLIPPING" : ""),
                          juce::dontSendNotification);
         mode.setText(busy             ? "Preparing"
-                     : recording      ? "RECORD"
-                     : overriding     ? "OVERRIDE"
-                     : engine         ? "READ"
+                     : recording      ? (sourceGapSeen ? "REC GAP" : "RECORD")
+                     : overriding     ? (sourceGapSeen ? "OVR GAP" : "OVERRIDE")
+                     : engine         ? (sourceGapSeen ? "READ GAP" : "READ")
                      : incompleteTake ? "INCOMPLETE"
                                       : "EDIT",
                      juce::dontSendNotification);
-        mode.setColour(juce::Label::textColourId, recording || incompleteTake ? ui::danger : accent);
+        mode.setColour(juce::Label::textColourId,
+                       recording || incompleteTake || (engine && sourceGapSeen) ? ui::danger : accent);
         record.setColour(juce::TextButton::textColourOffId, recording ? ui::danger : ui::text);
         resume.setVisible(engine && overriding);
         if (!recording)
@@ -1152,8 +1182,8 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
     std::deque<PendingImport> queuedImports;
     int recordingClip = -1;
     bool busy = false, dirty = false, recording = false, overriding = false, captureLost = false,
-         sliderGesture = false, scanning = false, rescanPending = false, importing = false,
-         audioConfigured = false;
+         sourceGapSeen = false, sliderGesture = false, scanning = false, rescanPending = false,
+         importing = false, audioConfigured = false;
 };
 class App final : public juce::JUCEApplication {
   public:
@@ -1164,10 +1194,12 @@ class App final : public juce::JUCEApplication {
         return "0.2.0";
     }
     void initialise(const juce::String &args) override {
-        bool fixture = false;
+        int fixture = 0;
         auto path = args.trim();
 #if FADER_ENABLE_UI_FIXTURES
-        fixture = path.startsWith("--incomplete-take-fixture ");
+        fixture = path.startsWith("--incomplete-take-fixture ") ? 1
+                  : path.startsWith("--source-gap-fixture ")    ? 2
+                                                                : 0;
         if (fixture)
             path = path.fromFirstOccurrenceOf(" ", false, false).trim();
 #endif

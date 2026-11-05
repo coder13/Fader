@@ -58,6 +58,15 @@ class Playback {
     Frame position() const noexcept {
         return engine.position();
     }
+    std::uint64_t starvationFrames() const noexcept {
+        return engine.starvationFrames();
+    }
+    StreamStats streamStats() const noexcept {
+        return engine.streamStats();
+    }
+    void cancelSourceReads() noexcept {
+        engine.cancelSourceReads();
+    }
     float peak() const noexcept {
         return engine.peak();
     }

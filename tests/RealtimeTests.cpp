@@ -77,6 +77,29 @@ void operator delete[](void *p, std::size_t, std::align_val_t alignment) noexcep
     ::operator delete(p, alignment);
 }
 
+namespace {
+class ConstantDecoder final : public fader::SourceDecoder {
+  public:
+    bool read(fader::SourceFrame, int frames, float *const *stereo,
+              const std::atomic<bool> &cancelled) override {
+        if (cancelled.load())
+            return false;
+        for (int channel = 0; channel < 2; ++channel)
+            std::fill_n(stereo[channel], frames, 0.1f);
+        return true;
+    }
+};
+class ConstantSource final : public fader::StreamSource {
+  public:
+    fader::SourceFrame frames() const noexcept override {
+        return 3000000;
+    }
+    std::unique_ptr<fader::SourceDecoder> open() const override {
+        return std::make_unique<ConstantDecoder>();
+    }
+};
+} // namespace
+
 int main() {
     using namespace fader;
     checking = true;
@@ -175,12 +198,36 @@ int main() {
     pressure->deviceStopped();
     pressure->process(pointers, 4, 128, 1000000000);
     checking = false;
+    auto streamingProject = project;
+    auto streamingData = std::make_shared<AudioData>();
+    streamingData->stream = std::make_shared<ConstantSource>();
+    for (auto &clip : streamingProject.clips) {
+        clip.audio = streamingData;
+        clip.length = 3000000;
+    }
+    auto streamed = std::make_unique<Engine>(streamingProject);
+    for (int block = 0; block < 20000; ++block) {
+        streamed->prepareSources(128); // control/offline side, deliberately outside the callback guard
+        checking = true;
+        streamed->process(pointers, 4, 128);
+        checking = false;
+        sum += std::abs(output[0][50]);
+    }
+    if (streamed->starvationFrames() != 0) {
+        std::cerr << "FAIL: prepared streaming fixture starved\n";
+        return 1;
+    }
+    streamed->cancelSourceReads();
+    checking = true;
+    streamed->process(pointers, 4, 128); // missing-source concealment also stays allocation-free
+    checking = false;
     if (heapCalls || sum == 0 || captured != 40000) {
         std::cerr << "FAIL: C++ heap use, missing capture or silent timing fixture\n";
         return 1;
     }
     std::sort(times.begin(), times.end());
-    std::cout << "PASS: 20000 Engine + 20000 Playback calls and queue pressure, no ordinary/aligned "
+    std::cout << "PASS: 20000 Engine + 20000 Playback + 20000 streaming calls, pressure and concealment, no "
+                 "ordinary/aligned "
                  "new/delete; two clips + volume/filters + cue\n"
               << "microseconds p50=" << times[10000] << " p95=" << times[19000] << " p99.9=" << times[19980]
               << " max=" << times.back() << '\n'

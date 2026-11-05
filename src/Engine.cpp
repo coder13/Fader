@@ -25,20 +25,24 @@ Frame Project::end() const noexcept {
     return result;
 }
 void Project::validate() const {
-    constexpr Frame maxTime = 2 * 3600 * projectRate;
+    constexpr Frame maxTime = maxProjectFrames;
     if (clips.size() > 64 || (!perClip && clips.size() != 2))
         throw std::runtime_error("This prototype supports up to 64 clips");
     for (const auto &clip : clips) {
         if (clip.start < 0 || clip.length < 0 || clip.start > maxTime || clip.length > maxTime - clip.start ||
-            clip.sourceOffset < 0 || !std::isfinite(clip.rate) || clip.rate < 0.25 || clip.rate > 4.0 ||
-            !std::isfinite(clip.bpm) || (clip.bpm != 0 && clip.bpm < 20) || clip.bpm > 400 ||
-            !std::isfinite(clip.firstBeatSeconds) || clip.firstBeatSeconds < 0 || clip.row < 0 ||
-            clip.row > 4095)
+            clip.sourceOffset < 0 || clip.sourceOffset > maxSourceFrames || !std::isfinite(clip.rate) ||
+            clip.rate < 0.25 || clip.rate > 4.0 || !std::isfinite(clip.bpm) ||
+            (clip.bpm != 0 && clip.bpm < 20) || clip.bpm > 400 || !std::isfinite(clip.firstBeatSeconds) ||
+            clip.firstBeatSeconds < 0 || clip.row < 0 || clip.row > 4095)
             throw std::runtime_error("Invalid clip timing or playback rate");
         if (clip.audio && (clip.audio->samples[0].size() != clip.audio->samples[1].size() ||
                            !std::isfinite(clip.audio->sampleRate) || clip.audio->sampleRate < 8000 ||
                            clip.audio->sampleRate > 384000))
             throw std::runtime_error("Invalid source audio");
+        if (clip.audio && clip.audio->stream &&
+            (!clip.audio->samples[0].empty() || !clip.audio->samples[1].empty() ||
+             clip.audio->stream->frames() <= 0 || clip.audio->stream->frames() > maxSourceFrames))
+            throw std::runtime_error("Invalid streaming source metadata");
         if (perClip)
             for (const auto &curve : clip.automation) {
                 if (!std::isfinite(curve.initial) || curve.initial < 0 || curve.initial > 1 ||
@@ -84,6 +88,16 @@ Engine::Engine(Project p, Frame start) : project(std::move(p)) {
     project.validate();
     if (start < 0 || start > project.end())
         throw std::runtime_error("Seek outside set");
+    sourceStates.resize(project.clips.size());
+    std::vector<std::shared_ptr<const StreamSource>> sources;
+    bool hasStreaming = false;
+    for (const auto &clip : project.clips) {
+        sourceStates[sources.size()].length = clip.audio ? clip.audio->frames() : 0;
+        sources.push_back(clip.audio ? clip.audio->stream : nullptr);
+        hasStreaming = hasStreaming || sources.back() != nullptr;
+    }
+    if (hasStreaming)
+        streams = std::make_unique<StreamBank>(std::move(sources));
     for (std::size_t i = 0; i < ramps.size(); ++i)
         ramps[i].current = ramps[i].target = project.curves[i].initial;
     if (project.perClip) {
@@ -94,15 +108,95 @@ Engine::Engine(Project p, Frame start) : project(std::move(p)) {
                     project.clips[c].automation[p].initial;
         // Filter history must be reconstructed as well as the control values.
         // The host prepares this engine on a worker, never the UI/audio thread.
-        while (cursor < start)
-            processClips(nullptr, 0, static_cast<int>(std::min(Frame{1024}, start - cursor)));
+        while (cursor < start) {
+            const auto count = static_cast<int>(std::min(Frame{1024}, start - cursor));
+            prepareSources(count);
+            process(nullptr, 0, count);
+        }
+        prepareSources(1024);
         publishedFrame.store(cursor);
         return;
     }
     // Exact automation history reconstruction, off the audio thread.
     for (; cursor < start; ++cursor)
         targets(cursor);
+    prepareSources(1024);
     publishedFrame.store(cursor);
+}
+void Engine::prepareSources(int count) {
+    if (!streams || count <= 0)
+        return;
+    for (unsigned i = 0; i < project.clips.size(); ++i) {
+        const auto &clip = project.clips[i];
+        if (!clip.audio || !clip.audio->stream || clip.length <= 0)
+            continue;
+        const auto total = static_cast<SourceFrame>(clip.audio->frames());
+        const auto firstProject = std::max(cursor, clip.start);
+        const auto lastProject = std::min(cursor + count, clip.start + clip.length) - 1;
+        if (lastProject < firstProject) {
+            if (cursor < clip.start && clip.sourceOffset < total)
+                streams->request(i, clip.sourceOffset); // prefetch future clip heads
+            continue;
+        }
+        const auto sourceAt = [&](Frame frame) {
+            return double(clip.sourceOffset) +
+                   double(frame - clip.start) * clip.rate * clip.audio->sampleRate / projectRate;
+        };
+        const auto first = static_cast<SourceFrame>(sourceAt(firstProject));
+        if (first >= total)
+            continue;
+        const auto last = std::min(total - 1, static_cast<SourceFrame>(sourceAt(lastProject)) + 1);
+        streams->prepare(i, first, last);
+    }
+}
+void Engine::cancelSourceReads() noexcept {
+    if (streams)
+        streams->cancel();
+}
+StreamStats Engine::streamStats() const noexcept {
+    return streams ? streams->stats() : StreamStats{};
+}
+bool Engine::sampleClip(unsigned clipIndex, double source, std::array<float, 2> &stereo) noexcept {
+    const auto &audio = *project.clips[clipIndex].audio;
+    auto &state = sourceStates[clipIndex];
+    if (source < 0 || source >= static_cast<double>(state.length))
+        return false;
+    const auto index = static_cast<std::size_t>(source);
+    const auto nextIndex = std::min(index + 1, state.length - 1);
+    const float fraction = static_cast<float>(source - static_cast<double>(index));
+    std::array<float, 2> current{}, next{};
+    bool available = true;
+    if (audio.stream)
+        available = streams->sample(clipIndex, static_cast<SourceFrame>(index), current, next);
+    else
+        for (unsigned channel = 0; channel < 2; ++channel) {
+            current[channel] = audio.samples[channel][index];
+            next[channel] = audio.samples[channel][nextIndex];
+        }
+    if (available) {
+        if (state.missing) {
+            state.missing = false;
+            state.held = state.last;
+            state.fade = rampFrames;
+        }
+        const float blend = state.fade > 0 ? float(--state.fade) / rampFrames : 0;
+        for (unsigned channel = 0; channel < 2; ++channel) {
+            const auto value = current[channel] + fraction * (next[channel] - current[channel]);
+            stereo[channel] = blend > 0 ? value + blend * (state.held[channel] - value) : value;
+        }
+    } else {
+        ++missingFrames;
+        if (!state.missing) {
+            state.missing = true;
+            state.held = state.last;
+            state.fade = rampFrames;
+        }
+        const float blend = state.fade > 0 ? float(--state.fade) / rampFrames : 0;
+        for (unsigned channel = 0; channel < 2; ++channel)
+            stereo[channel] = state.held[channel] * blend;
+    }
+    state.last = stereo;
+    return true;
 }
 void Engine::arm(Frame in, Frame out, unsigned mask, int clip) noexcept {
     punchIn = in;
@@ -117,6 +211,9 @@ void Engine::targets(Frame frame) noexcept {
 void Engine::process(float *const *output, int channels, int count) noexcept {
     if (project.perClip) {
         processClips(output, channels, count);
+        if (streams)
+            streams->release();
+        publishedStarvation.store(missingFrames, std::memory_order_relaxed);
         return;
     }
     float maxPeak = 0;
@@ -159,14 +256,11 @@ void Engine::process(float *const *output, int channels, int count) noexcept {
             const double source =
                 static_cast<double>(clip.sourceOffset) +
                 static_cast<double>(cursor - clip.start) * clip.rate * clip.audio->sampleRate / projectRate;
-            if (source < 0 || source >= static_cast<double>(clip.audio->frames()))
+            std::array<float, 2> stereo;
+            if (!sampleClip(static_cast<unsigned>(deck), source, stereo))
                 continue;
-            const auto index = static_cast<std::size_t>(source);
-            const auto next = std::min(index + 1, clip.audio->frames() - 1);
-            const float fraction = static_cast<float>(source - static_cast<double>(index));
             for (int c = 0; c < 2; ++c) {
-                const auto &audio = clip.audio->samples[static_cast<std::size_t>(c)];
-                const float sample = audio[index] + fraction * (audio[next] - audio[index]);
+                const float sample = stereo[static_cast<std::size_t>(c)];
                 if (c < channels && output[c])
                     output[c][s] += sample * ramps[deck].current * cross[deck];
                 if (clip.cue && c + 2 < channels && output[c + 2])
@@ -178,6 +272,9 @@ void Engine::process(float *const *output, int channels, int count) noexcept {
                 maxPeak = std::max(maxPeak, std::abs(output[c][s]));
         ++cursor;
     }
+    if (streams)
+        streams->release();
+    publishedStarvation.store(missingFrames, std::memory_order_relaxed);
     publishedFrame.store(cursor, std::memory_order_relaxed);
     publishedPeak.store(maxPeak, std::memory_order_relaxed);
 }
@@ -321,14 +418,11 @@ void Engine::processClips(float *const *output, int channels, int count) noexcep
             const double source =
                 static_cast<double>(clip.sourceOffset) +
                 static_cast<double>(local) * clip.rate * clip.audio->sampleRate / projectRate;
-            if (source < 0 || source >= static_cast<double>(clip.audio->frames()))
+            std::array<float, 2> stereo;
+            if (!sampleClip(static_cast<unsigned>(i), source, stereo))
                 continue;
-            const auto index = static_cast<std::size_t>(source),
-                       next = std::min(index + 1, clip.audio->frames() - 1);
-            const float fraction = static_cast<float>(source - static_cast<double>(index));
             for (int ch = 0; ch < 2; ++ch) {
-                const auto &pcm = clip.audio->samples[static_cast<std::size_t>(ch)];
-                const float dry = pcm[index] + fraction * (pcm[next] - pcm[index]);
+                const float dry = stereo[static_cast<std::size_t>(ch)];
                 auto &f = state.filters[static_cast<std::size_t>(ch)];
                 float high = dry;
                 for (unsigned stage = 0; stage < 2; ++stage) {

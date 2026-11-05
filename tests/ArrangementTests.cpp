@@ -92,4 +92,14 @@ void testArrangement() {
     arrangement.viewport.setViewPosition(0, 0);
     arrangement.zoom(80);
     require(arrangement.viewport.getViewPositionX() == 0, "zoom moved the timeline origin out of view");
+    clip.start = Frame{3} * 3600 * projectRate;
+    arrangement.playhead = clip.start;
+    arrangement.refresh();
+    arrangement.revealPlayhead();
+    const int longPosition = 80 + 3 * 3600 * 80;
+    require(arrangement.viewport.getViewPositionX() <= longPosition &&
+                arrangement.viewport.getViewPositionX() + arrangement.viewport.getViewWidth() >
+                    longPosition &&
+                clip.length == original.length,
+            "multi-hour source could not be revealed without changing its duration");
 }

@@ -29,7 +29,7 @@ Use flat rectangular surfaces, thin borders and restrained fills. Text, selected
 
 The labeled menu buttons make secondary actions discoverable without requiring right-click knowledge. Opening a clip menu selects the clip but does not create an undo entry, delete points or move the playhead. Point removal is an explicit, undoable action. Opening the ruler/empty-grid menu does not seek.
 
-Retake controls expand only when requested. Hiding them does not clear their values: a nonzero range keeps a visible “Retake range active” label and changes Record to “Record range.” **Clear retake range** resets both fields. **Resume automation** appears while an override is active. Playback/capture state still uses explicit EDIT, READ, OVERRIDE and RECORD labels.
+Retake controls expand only when requested. Hiding them does not clear their values: a nonzero range keeps a visible “Retake range active” label and changes Record to “Record range.” **Clear retake range** resets both fields. **Resume automation** appears while an override is active. Playback/capture state uses explicit EDIT, READ, OVERRIDE and RECORD labels. Source starvation changes the active label to READ GAP, OVR GAP or REC GAP in the danger color, with a status explanation; it is distinct from incomplete automation capture. The [streaming contract](streaming-contract.md) defines the audible fade and replay caveat.
 
 ## Keyboard access
 

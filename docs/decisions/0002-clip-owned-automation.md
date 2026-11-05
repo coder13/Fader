@@ -21,6 +21,6 @@ The [UI evidence atlas](../research/ui-evidence-atlas.md) and [competitive audit
 
 The design no longer assumes one arrangement row equals a physical deck. S4 mappings must resolve to a clip identity before recording. Index-based clip identity is sufficient for immutable POC playback snapshots; durable IDs are still needed for collaborative editing, takes, plugin references and future schema evolution.
 
-The prototype is bounded to 64 clips, 4,096 row positions, two hours, 256 MiB per unique source and 1 GiB decoded source PCM per set. Long-set streaming, cancellable seeks, project recovery and complete keyboard editing remain follow-up work. Filter history reconstruction is exact but can be slow. Baseline audio immediately outside a retake can change during smoothing, as documented in the earlier capture experiment.
+The original prototype was bounded to 64 clips, 4,096 row positions, two hours, 256 MiB per source and 1 GiB decoded PCM/set. The [streaming revision](../streaming-contract.md) retains the clip/row bounds, extends the timeline to 24 hours, and replaces full PCM with bounded pages/peaks. Cancellable seeks, project recovery and complete keyboard editing remain follow-up work. Filter history reconstruction is exact but can be slow. Baseline audio immediately outside a retake can change during smoothing, as documented in the earlier capture experiment.
 
 Validation and known gaps: [arrangement experiment](../experiments/2026-11-04-clip-arrangement.md). User workflow: [quickstart](../poc-quickstart.md).

@@ -3,10 +3,68 @@
 #include "AudioSetup.h"
 #include "Library.h"
 #include "Media.h"
+#include "StreamQualification.h"
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+#if defined(__APPLE__) || defined(__linux__)
+#include <sys/resource.h>
+#endif
 namespace {
+void streamingSoak(const juce::File &a, const juce::File &b) {
+    using namespace fader;
+    const auto begin = std::chrono::steady_clock::now();
+    Project project;
+    project.perClip = true;
+    project.clips = {loadClip(a), loadClip(b)};
+    project.clips[1].start = 30 * 60 * projectRate;
+    project.clips[1].row = 1;
+    std::uint64_t peaks = 0;
+    for (auto &clip : project.clips) {
+        clip.automation[0] = {0.25f, true, {{0, 0.25f}}};
+        peaks += clip.audio->peaks.size() * sizeof(float);
+    }
+    const auto imported = std::chrono::steady_clock::now();
+    auto engine = std::make_unique<Engine>(project);
+    std::array<std::array<float, 1024>, 2> output{};
+    float *pointers[]{output[0].data(), output[1].data()};
+    double checksum = 0;
+    while (engine->position() < project.end()) {
+        const int count = static_cast<int>(std::min(Frame{1024}, project.end() - engine->position()));
+        engine->prepareSources(count);
+        engine->process(pointers, 2, count);
+        for (int frame = 0; frame < count; ++frame)
+            checksum += std::abs(output[0][frame]) + std::abs(output[1][frame]);
+    }
+    const auto finish = std::chrono::steady_clock::now();
+    const auto stats = engine->streamStats();
+    if (engine->starvationFrames() || stats.failedSources || checksum <= 0)
+        throw std::runtime_error("Streaming soak had missing/failed/empty output");
+    auto *result = new juce::DynamicObject();
+    juce::var json(result);
+    result->setProperty("projectFrames", juce::String(project.end()));
+    result->setProperty("durationSeconds", double(project.end()) / projectRate);
+    result->setProperty("importSeconds", std::chrono::duration<double>(imported - begin).count());
+    result->setProperty("renderSeconds", std::chrono::duration<double>(finish - imported).count());
+    result->setProperty("pcmCacheBytes", juce::String(stats.pcmBytes));
+    result->setProperty("waveformBytes", juce::String(peaks));
+    result->setProperty("decodedFrames", juce::String(stats.decodedFrames));
+    result->setProperty("starvationFrames", juce::String(engine->starvationFrames()));
+    result->setProperty("absoluteSampleSum", checksum);
+#if defined(__APPLE__) || defined(__linux__)
+    rusage usage{};
+    if (getrusage(RUSAGE_SELF, &usage) == 0) {
+        auto bytes = static_cast<juce::int64>(usage.ru_maxrss);
+#if defined(__linux__)
+        bytes *= 1024;
+#endif
+        result->setProperty("peakResidentBytes", juce::String(bytes));
+    }
+#endif
+    result->setProperty("scope", "Entire arrangement, accelerated prepared reads; no device, wall-clock "
+                                 "deadline or acoustic qualification");
+    std::cout << juce::JSON::toString(json, true) << '\n';
+}
 fader::Project silentProject() {
     fader::Project project;
     project.perClip = true;
@@ -67,6 +125,18 @@ void audioSmoke() {
 int main(int argc, char **argv) {
     try {
         juce::ScopedJuceInitialiser_GUI juce;
+        if (argc == 3 && std::string(argv[1]) == "--qualify-stream") {
+            std::cout << juce::JSON::toString(
+                             qualifyStream(juce::File::getCurrentWorkingDirectory().getChildFile(argv[2])),
+                             true)
+                      << '\n';
+            return 0;
+        }
+        if (argc == 4 && std::string(argv[1]) == "--streaming-soak") {
+            const auto cwd = juce::File::getCurrentWorkingDirectory();
+            streamingSoak(cwd.getChildFile(argv[2]), cwd.getChildFile(argv[3]));
+            return 0;
+        }
         if (argc == 2 && std::string(argv[1]) == "--library") {
             const auto library = fader::scanLibrary(fader::Preferences::load());
             auto *o = new juce::DynamicObject();
@@ -116,7 +186,7 @@ int main(int argc, char **argv) {
         }
         std::cerr
             << "Usage: fader_probe --devices | --library | --audio-smoke | --inspect <audio> | --render "
-               "<set.faderset> <output.wav>\n";
+               "<set.faderset> <output.wav> | --qualify-stream <audio> | --streaming-soak <A> <B>\n";
         return 2;
     } catch (const std::exception &e) {
         std::cerr << e.what() << '\n';

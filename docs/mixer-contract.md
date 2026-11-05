@@ -26,7 +26,7 @@ The renderer linearly interpolates adjacent PCM frames and holds the last frame 
 
 Work scales with the supplied block length and validated project bounds: at most 64 clips, three curves per clip with at most 200,000 points each, and binary-search evaluation of each curve. At most 4,096 queued commands are consumed per process call, even when the producer keeps writing. The input/capture capacities are 4,096/16,384; capture overflow is an explicit failure. These finite limits establish bounded work, not a deadline guarantee for every permitted project. The existing 20,000-call realtime fixture checks ordinary `new`/`delete` during processing; it is not a comprehensive allocation interposer or an OS scheduling test.
 
-Sources are still fully decoded before playback, with the prototype's 256 MiB per-source and 1 GiB per-set admission limits. Waveform caches and transient allocations also consume memory. Bounded streaming and starvation behavior are tracked by [#38](https://github.com/coder13/Fader/issues/38); sustained-load qualification is [#40](https://github.com/coder13/Fader/issues/40). This issue does not replace those requirements.
+File sources now use the [bounded streaming contract](streaming-contract.md): per-clip PCM pages, capped waveform peaks, explicit live starvation and offline readiness. Import still scans the full source without retaining full PCM. [#38](https://github.com/coder13/Fader/issues/38) records its separate qualification; sustained-load qualification remains [#40](https://github.com/coder13/Fader/issues/40).
 
 ## Repeatable evidence
 

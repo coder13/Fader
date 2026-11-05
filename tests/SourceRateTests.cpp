@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "Media.h"
+#include "ReadFixture.h"
 #include <cmath>
 #include <stdexcept>
 
@@ -51,9 +52,12 @@ void testSourceRates() {
                   "decode changed source rate or frame count");
             check(clip.length == Frame(std::floor(double(frames) * projectRate / rate)),
                   "import duration has wrong project-frame rounding");
+            check(clip.audio->stream && clip.audio->samples[0].empty() && clip.audio->samples[1].empty(),
+                  "file import retained full decoded PCM");
+            const auto importedSamples = readImportedSamples(clip);
             for (std::size_t i = 0; i < clip.audio->frames(); ++i) {
-                check(clip.audio->samples[0][i] == 0.25f, "left source level changed");
-                check(clip.audio->samples[1][i] == (channels == 1 ? 0.25f : -0.125f),
+                check(importedSamples[0][i] == 0.25f, "left source level changed");
+                check(importedSamples[1][i] == (channels == 1 ? 0.25f : -0.125f),
                       "mono duplication or stereo decoding changed the right level");
             }
             Project project;
@@ -71,10 +75,11 @@ void testSourceRates() {
                   "export did not retain stereo master format and duration");
             reader.reset();
             const auto rendered = loadClip(output);
+            const auto renderedSamples = readImportedSamples(rendered);
             for (std::size_t i = 0; i < rendered.audio->frames(); ++i) {
-                check(std::abs(rendered.audio->samples[0][i] - 0.125f) < 1e-6f,
+                check(std::abs(renderedSamples[0][i] - 0.125f) < 1e-6f,
                       "import/resample/export changed left gain");
-                check(std::abs(rendered.audio->samples[1][i] - (channels == 1 ? 0.125f : -0.0625f)) < 1e-6f,
+                check(std::abs(renderedSamples[1][i] - (channels == 1 ? 0.125f : -0.0625f)) < 1e-6f,
                       "import/resample/export changed right gain");
             }
             project.clips[0].cue = false;
@@ -105,8 +110,9 @@ void testSourceRates() {
           "PCM overload was not rejected atomically");
     exportWav(overload, pcm, true);
     const auto floating = loadClip(pcm);
+    const auto floatingSamples = readImportedSamples(floating);
     for (std::size_t i = 0; i < floating.audio->frames(); ++i) {
-        check(floating.audio->samples[0][i] == 1.5f && floating.audio->samples[1][i] == -1.5f,
+        check(floatingSamples[0][i] == 1.5f && floatingSamples[1][i] == -1.5f,
               "float export silently clipped overloaded mix");
     }
 }

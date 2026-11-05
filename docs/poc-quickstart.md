@@ -29,7 +29,7 @@ See [reproducible builds and CI](build-and-ci.md) for shared `core` / `native` p
 
 The flat dark interface keeps transport, automation selection, Save and Undo visible. Right-click a clip for its actions, or use **Clip ...** / Shift+F10. Right-click empty timeline space for set actions. **Library ...** contains Refresh and Preferences; right-click a library song for **Add to arrangement**. Shortcuts: Cmd/Ctrl+N/O/S/Z for New/Open/Save/Undo, Cmd/Ctrl+Shift+E for export, and Space for Play/Stop outside text fields. See the [theme and menu rules](theme-and-interaction.md).
 
-For quiet synthetic material, run `python3 tools/make_demo.py` and open `build/demo/demo.faderset`. No user music is included. Media import clears older undo snapshots to bound retained PCM; other edits keep up to 24 undo states.
+For quiet synthetic material, run `python3 tools/make_demo.py` and open `build/demo/demo.faderset`. No user music is included. Media import clears older undo snapshots to bound retained source/peak snapshots; other edits keep up to 24 undo states.
 
 ## Probes
 
@@ -41,16 +41,17 @@ build/fader_probe_artefacts/Release/fader_probe --inspect /path/to/audio.mp3
 build/fader_probe_artefacts/Release/fader_probe --render build/demo/demo.faderset build/demo/mix.wav
 ```
 
-`--library` prints aggregate counts only. `--inspect` fully decodes one file within the memory limit. `--audio-smoke` runs two seconds of silent clip/filter rendering on the default device; driver xrun value -1 means unavailable. This does not measure acoustic latency or establish sustained reliability.
+`--library` prints aggregate counts only. `--inspect` scans/validates one file with bounded scratch PCM and waveform peaks. `--qualify-stream <audio>` compares sequential streaming and seeks against an independent sequential decoder. `--streaming-soak <A> <B>` processes two sources with a 30-minute offset and reports cache/RSS; use synthetic long WAVs from `scripts/make-streaming-fixtures.py`. `--audio-smoke` runs two seconds of silent clip/filter rendering on the default device; driver xrun value -1 means unavailable. This does not measure acoustic latency or establish sustained reliability.
 
 ## Deliberate limits
 
-- The grid expands as clips move, within 64 clips, 4,096 row positions and two hours. It is not mathematically infinite. Fixed zoom prevents moving the final song from rescaling every clip.
-- Each unique decoded source is capped at 256 MiB; each set at 1 GiB unique PCM. Decode/load can temporarily retain old and new buffers. Streaming long sets remains necessary.
+- The grid expands as clips move, within 64 clips, 4,096 row positions and 24 hours. It is not mathematically infinite. Fixed zoom prevents moving the final song from rescaling every clip.
+- Imported files stream through 512 KiB PCM caches per clip (32 MiB maximum), plus at most 512 KiB waveform peaks per source (32 MiB/set). Codec/runtime/UI memory is additional. Full-file scan/hash still makes import proportional to file length. See the [streaming contract](streaming-contract.md).
 - MP3 and WAV are the initial import targets. Other registered JUCE decoders may work, but broader formats and every file in the music library are not qualified. Mono duplicates to stereo; multichannel/incomplete sources are rejected.
 - Traktor import covers metadata, first nonnegative grid marker and cue count. Full cue/loop/playlist import, beat analysis and editing variable grids remain pending. No source files or Traktor data are modified.
 - Snap is Off, 1 second or a fixed 120-BPM bar. Imported BPM/grid is displayed, not automatically used for sync, warping or variable-tempo snap.
 - The prototype filters are two cascaded one-pole stages per side, 12 dB/octave, without resonance. Volume and filter targets smooth over 5 ms. Pitch-preserving stretching and production resampling remain future work.
+- MP3 reads preserve sequential decoder alignment by discarding/replaying on a worker for discontinuous requests; this can be slow. Live missing PCM produces a 5 ms dry-source fade and a **READ GAP** warning. Offline export waits for PCM or fails explicitly.
 - Exact seeking reconstructs filter history on a worker; long seeks can take time. Playback preparation is not yet cancellable. Timeline editing stops playback.
 - Recorded targets use held segments; drawn points use linear interpolation. Retakes restore the original target through smoothing. Saved later points are preserved, but baseline audio immediately outside punch-out may differ during that return.
 - Version 1 sets retain exact original global crossfader playback/export. Start a new set for version 2 clip editing; there is no approximate automatic migration.
