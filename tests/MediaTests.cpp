@@ -14,6 +14,7 @@ void testSourceRates();
 void testStreamMedia();
 void testDecodedCache();
 void testProjectModel();
+void testExportFailures();
 void check(bool pass, const char *message) {
     if (!pass)
         throw std::runtime_error(message);
@@ -31,6 +32,7 @@ int main() {
         testStreamMedia();
         testDecodedCache();
         testProjectModel();
+        testExportFailures();
         auto data = std::make_shared<AudioData>();
         for (auto &c : data->samples) {
             c.resize(48000);
@@ -228,7 +230,7 @@ int main() {
                      "content probing, streamed WAV/MP3 sequential/seek parity, changed/missing sources, "
                      "project round-trip, source identity, export "
                      "parity, atomic cancellation, schema validation, stable identities, legacy migration "
-                     "and decoder-domain checks\n";
+                     "and decoder-domain checks, export write/header/flush/replace failure retention\n";
         return 0;
     } catch (const std::exception &e) {
         dir.deleteRecursively();

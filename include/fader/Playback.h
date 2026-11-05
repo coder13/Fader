@@ -61,6 +61,10 @@ class Playback {
     Frame preparationFrames() const noexcept {
         return engine.preparationFrames();
     }
+    // Detached software-host qualification only; never call from a device callback.
+    void prepareSources(int frames) {
+        engine.prepareSources(frames);
+    }
     std::uint64_t starvationFrames() const noexcept {
         return engine.starvationFrames();
     }

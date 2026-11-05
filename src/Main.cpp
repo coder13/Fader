@@ -4,6 +4,7 @@
 #include "AudioSetup.h"
 #include "LibraryView.h"
 #include "Theme.h"
+#include "WavExport.h"
 #include <cmath>
 #include <deque>
 #include <fader/PlaybackPreparation.h>
@@ -114,7 +115,10 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
             arrangement.revealPlayhead();
         };
         play.onClick = [this] {
-            if (engine || preparing)
+            if (exportJob) {
+                exportJob->cancelled->store(true);
+                setStatus("Cancelling export...");
+            } else if (engine || preparing)
                 stop();
             else
                 start(false);
@@ -271,6 +275,8 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
     }
     ~Workspace() override {
         stopTimer();
+        if (exportJob)
+            exportJob->cancelled->store(true);
         stop();
         delete preferencesWindow.getComponent();
         workers.removeAllJobs(true, -1);
@@ -581,6 +587,10 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
         juce::MessageManager::callAsync([safe, error] {
             if (safe) {
                 safe->busy = false;
+                if (safe->exportJob) {
+                    safe->exportJob.reset();
+                    safe->play.setButtonText("Play");
+                }
                 safe->sync();
                 safe->setStatus(error);
             }
@@ -868,16 +878,30 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                 safe->busy = true;
                 safe->sync();
                 safe->setStatus(exporting ? "Rendering WAV..." : "Saving set...");
-                safe->workers.addJob([safe, snapshot = std::move(snapshot), file, exporting] {
+                auto job = exporting ? std::make_shared<ExportJob>() : nullptr;
+                safe->exportJob = job;
+                if (job)
+                    safe->play.setButtonText("Cancel export");
+                safe->workers.addJob([safe, snapshot = std::move(snapshot), file, exporting, job] {
                     try {
-                        if (exporting)
-                            exportWav(snapshot, file);
-                        else
+                        if (exporting) {
+                            WavExportOptions options;
+                            options.cancellation = job->cancelled;
+                            options.progress = [job](double fraction) {
+                                job->progress.store(float(fraction));
+                                return !job->cancelled->load();
+                            };
+                            exportWavFile(snapshot, file, std::move(options));
+                        } else
                             saveProject(snapshot, file);
                         juce::MessageManager::callAsync([safe, file, exporting] {
                             if (!safe)
                                 return;
                             safe->busy = false;
+                            if (exporting) {
+                                safe->exportJob.reset();
+                                safe->play.setButtonText("Play");
+                            }
                             if (!exporting) {
                                 safe->dirty = false;
                                 safe->currentFile = file;
@@ -1171,12 +1195,13 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                                  .paddedLeft('0', 5) +
                              (engine && engine->peak() > 1 ? "  CLIPPING" : ""),
                          juce::dontSendNotification);
-        mode.setText((busy || preparing) ? "Preparing"
-                     : recording         ? (sourceGapSeen ? "REC GAP" : "RECORD")
-                     : overriding        ? (sourceGapSeen ? "OVR GAP" : "OVERRIDE")
-                     : engine            ? (sourceGapSeen ? "READ GAP" : "READ")
-                     : incompleteTake    ? "INCOMPLETE"
-                                         : "EDIT",
+        mode.setText(exportJob ? "Export " + juce::String(int(exportJob->progress.load() * 100)) + "%"
+                     : (busy || preparing) ? "Preparing"
+                     : recording           ? (sourceGapSeen ? "REC GAP" : "RECORD")
+                     : overriding          ? (sourceGapSeen ? "OVR GAP" : "OVERRIDE")
+                     : engine              ? (sourceGapSeen ? "READ GAP" : "READ")
+                     : incompleteTake      ? "INCOMPLETE"
+                                           : "EDIT",
                      juce::dontSendNotification);
         mode.setColour(juce::Label::textColourId,
                        recording || incompleteTake || (engine && sourceGapSeen) ? ui::danger : accent);
@@ -1214,6 +1239,11 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
     int preparingClip = -1;
     bool preparing = false, preparingCapture = false;
     std::unique_ptr<AudioPlayback> audioPlayback;
+    struct ExportJob {
+        std::shared_ptr<std::atomic<bool>> cancelled = std::make_shared<std::atomic<bool>>(false);
+        std::atomic<float> progress{0};
+    };
+    std::shared_ptr<ExportJob> exportJob;
     std::shared_ptr<const IncompleteTake> incompleteTake;
     std::uint64_t nextSegment = 0;
     CallbackMetric lastCallback;

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "AudioPlayback.h"
 #include "AudioSetup.h"
+#include "ExportQualification.h"
 #include "Library.h"
 #include "Media.h"
 #include "SeekBenchmark.h"
@@ -126,6 +127,15 @@ void audioSmoke() {
 int main(int argc, char **argv) {
     try {
         juce::ScopedJuceInitialiser_GUI juce;
+        if (argc == 5 && std::string(argv[1]) == "--export-soak") {
+            const auto cwd = juce::File::getCurrentWorkingDirectory();
+            std::cout << juce::JSON::toString(qualifyLongExport(cwd.getChildFile(argv[2]),
+                                                                cwd.getChildFile(argv[3]),
+                                                                cwd.getChildFile(argv[4])),
+                                              true)
+                      << '\n';
+            return 0;
+        }
         if (argc == 4 && std::string(argv[1]) == "--resave-project") {
             const auto cwd = juce::File::getCurrentWorkingDirectory();
             fader::saveProject(fader::loadProject(cwd.getChildFile(argv[2])), cwd.getChildFile(argv[3]));

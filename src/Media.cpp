@@ -3,6 +3,7 @@
 #include "DecodedCache.h"
 #include "FileSource.h"
 #include "ProjectStorage.h"
+#include "WavExport.h"
 #include <algorithm>
 #include <bit>
 #include <charconv>
@@ -392,51 +393,9 @@ Project loadProject(const juce::File &file) {
 }
 void exportWav(const Project &project, const juce::File &file, bool floatingPoint,
                std::function<bool(double)> progress) {
-    project.validate();
-    if (project.end() <= 0)
-        fail("The set is empty");
-    for (const auto &clip : project.clips) {
-        if (!clip.path.empty() && juce::File(clip.path) == file)
-            fail("Export cannot replace a source audio file");
-        if (clip.length > 0 && !clip.audio)
-            fail("Missing source audio");
-    }
-    juce::TemporaryFile temporary(file);
-    std::unique_ptr<juce::OutputStream> stream = temporary.getFile().createOutputStream();
-    if (!stream)
-        fail("Could not create export file");
-    auto options =
-        juce::AudioFormatWriterOptions{}
-            .withSampleRate(projectRate)
-            .withNumChannels(2)
-            .withBitsPerSample(floatingPoint ? 32 : 24)
-            .withSampleFormat(floatingPoint ? juce::AudioFormatWriterOptions::SampleFormat::floatingPoint
-                                            : juce::AudioFormatWriterOptions::SampleFormat::integral);
-    auto writer = juce::WavAudioFormat{}.createWriterFor(stream, options);
-    if (!writer)
-        fail("Could not create WAV writer");
-    Engine engine(project);
-    juce::AudioBuffer<float> buffer(2, 1024);
-    while (engine.position() < project.end()) {
-        const int count = static_cast<int>(std::min(Frame{1024}, project.end() - engine.position()));
-        engine.prepareSources(count); // offline may wait/fail; the live callback never calls this
-        engine.process(buffer.getArrayOfWritePointers(), 2, count);
-        // A concurrent prefetch failure can become visible after readiness but
-        // during this span, including the final span with no following prepare.
-        if (engine.starvationFrames() || engine.streamStats().failedSources)
-            fail("Audio source became unavailable during export");
-        if (!floatingPoint && engine.peak() > 1.0f)
-            fail("Mix exceeds 0 dBFS. Lower the deck gains before exporting PCM WAV.");
-        if (!writer->writeFromFloatArrays(buffer.getArrayOfReadPointers(), 2, count))
-            fail("WAV export failed (check available disk space)");
-        if (progress &&
-            !progress(static_cast<double>(engine.position()) / static_cast<double>(project.end())))
-            fail("Export cancelled");
-    }
-    if (!writer->flush())
-        fail("Could not flush WAV export");
-    writer.reset();
-    if (!temporary.overwriteTargetFileWithTemporary())
-        fail("Could not finish WAV export");
+    WavExportOptions options;
+    options.floatingPoint = floatingPoint;
+    options.progress = std::move(progress);
+    exportWavFile(project, file, std::move(options));
 }
 } // namespace fader
