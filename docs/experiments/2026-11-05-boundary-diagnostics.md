@@ -144,6 +144,14 @@ Local checks pass against the completed 128/256 reports and exact `806f425` nati
 CI now runs the reader tests and checks both native smoke objects after CTest.
 This tooling does not change the production engine or the active diagnostic build.
 
+[Clean CI 42052044429](https://github.com/coder13/Fader/actions/runs/42052044429) now passes all seven macOS and Windows suites and five Linux core suites at exact reader source `c9a68f549c1f6637fac9f46f7bf1593a4b0c9acd`.
+The Linux job also passes all eight reader tests.
+Downloaded metadata, JUnit and full logs match the source, pinned JUCE, Release configuration and UI fixtures OFF, with no failed or skipped suites.
+Both native jobs archive their reader output, which matches fresh checks of the full logs exactly.
+The [checked aggregate](data/2026-11-05-observation-reader-ci.json) preserves all counts and failed shared-runner timing gates.
+Windows again exposes coarse CPU accounting, including retained CPU deltas above short enclosing wall windows.
+The reader counts these observations and makes no precision or performance claim.
+
 ## Commands after the current fallback finishes
 
 Build and test the candidate in an isolated build after the current measurement ends.
