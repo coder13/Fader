@@ -31,7 +31,7 @@ This is an ad-hoc development signature, not a signed/notarized product distribu
 
 ## Evidence retained per run
 
-`.github/workflows/build.yml` runs on branch pushes and pull requests. It checks out the commit into a fresh runner, configures with the presets, builds and executes CTest. Actions are pinned by commit. Jobs have bounded timeouts and read-only repository permissions. No user music, controller, audio output, secrets or test-tone playback is required by the tests.
+`.github/workflows/build.yml` runs on code/configuration pushes and pull requests; pushes changing only `docs/` or root Markdown files are skipped. It checks out the commit into a fresh runner, configures with the presets, builds and executes CTest. Actions are pinned by commit. Jobs have bounded timeouts and read-only repository permissions. No user music, controller, audio output, secrets or test-tone playback is required by the tests.
 
 Each build produces `fader-build-info.json` with source commit (or source-archive marker), project version, compiler/version, CMake/generator, OS/architecture, build type and the JUCE pin. It intentionally omits personal filesystem paths. CI retains that metadata, JUnit results and CTest logs for 14 days; the run identifies the runner image and exact build commit. Runner images and installed compilers receive updates, so this is repeatable source/dependency/configuration evidence, not a byte-identical binary guarantee.
 
