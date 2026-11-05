@@ -1,0 +1,145 @@
+{
+  "sourceRevision": "0fc6ddeafb02306e607329ac098acc692afaf878",
+  "ciRun": "https://github.com/coder13/Fader/actions/runs/42022680469",
+  "verification": "Downloaded exact-source metadata, JUnit and full logs; no errors/failures/skips; native smoke JSON checked for per-frame timestamp arithmetic",
+  "hosts": [
+    {
+      "artifact": "linux-core-evidence",
+      "build": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "0fc6ddeafb02306e607329ac098acc692afaf878",
+        "cmakeVersion": "3.31.6",
+        "generator": "Unix Makefiles",
+        "system": "Linux",
+        "systemVersion": "7.0.0-1017-azure",
+        "architecture": "x86_64",
+        "compiler": "GNU",
+        "compilerVersion": "13.3.0",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "OFF",
+        "uiFixtures": "OFF",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "testSuites": 5,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    {
+      "artifact": "mac-native-evidence",
+      "build": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "0fc6ddeafb02306e607329ac098acc692afaf878",
+        "cmakeVersion": "4.4.4",
+        "generator": "Unix Makefiles",
+        "system": "Darwin",
+        "systemVersion": "24.6.0",
+        "architecture": "arm64",
+        "compiler": "AppleClang",
+        "compilerVersion": "17.0.0.17000013",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "ON",
+        "uiFixtures": "OFF",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "testSuites": 7,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "denseStorage": {
+        "originalControlCount": 107999,
+        "compiledPoints": 149169,
+        "manifestBytes": 7394820
+      },
+      "timingModelPassed": true,
+      "twoSecondSmoke": {
+        "callbacks": 750,
+        "capturedInputs": 247,
+        "softwareIntegrityPassed": true,
+        "sourceStarvationFrames": 0,
+        "capturePersistencePassed": true,
+        "virtualDeadlineMisses": 510,
+        "arrangementPaints": 100,
+        "targetArrangementPaints": 100,
+        "missedPaintIntervals": 53,
+        "arrangementPaintTargetPassed": false,
+        "predictedSoftwareLatencyTargetPassed": false,
+        "scope": "Functional shared-runner smoke; not sustained performance qualification"
+      },
+      "traceChecks": {
+        "callbackSamples": 750,
+        "hostSamples": 750,
+        "allSamplesPresent": true,
+        "tailLimit": 256,
+        "tailCount": 627,
+        "omittedTails": 371,
+        "traceComplete": false,
+        "invalidOrDuplicateCallbackMetrics": 0,
+        "invalidOrDuplicateHostMetrics": 0,
+        "serializedRowsWithValidFrameAndTimestampArithmetic": 259
+      }
+    },
+    {
+      "artifact": "windows-native-evidence",
+      "build": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "0fc6ddeafb02306e607329ac098acc692afaf878",
+        "cmakeVersion": "4.4.5",
+        "generator": "Ninja",
+        "system": "Windows",
+        "systemVersion": "10.0.26100",
+        "architecture": "AMD64",
+        "compiler": "MSVC",
+        "compilerVersion": "19.51.36260.0",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "ON",
+        "uiFixtures": "OFF",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "testSuites": 7,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "denseStorage": {
+        "originalControlCount": 107999,
+        "compiledPoints": 149169,
+        "manifestBytes": 7383039
+      },
+      "timingModelPassed": true,
+      "twoSecondSmoke": {
+        "callbacks": 750,
+        "capturedInputs": 247,
+        "softwareIntegrityPassed": true,
+        "sourceStarvationFrames": 0,
+        "capturePersistencePassed": true,
+        "virtualDeadlineMisses": 3,
+        "arrangementPaints": 100,
+        "targetArrangementPaints": 100,
+        "missedPaintIntervals": 0,
+        "arrangementPaintTargetPassed": true,
+        "predictedSoftwareLatencyTargetPassed": true,
+        "scope": "Functional shared-runner smoke; not sustained performance qualification"
+      },
+      "traceChecks": {
+        "callbackSamples": 750,
+        "hostSamples": 750,
+        "allSamplesPresent": true,
+        "tailLimit": 256,
+        "tailCount": 316,
+        "omittedTails": 60,
+        "traceComplete": false,
+        "invalidOrDuplicateCallbackMetrics": 0,
+        "invalidOrDuplicateHostMetrics": 0,
+        "serializedRowsWithValidFrameAndTimestampArithmetic": 259
+      },
+      "appBytes": 7363072,
+      "appSha256": "023880c745fd83fd5455486232bb77fc3e733c0bea469a74a07f5c7c7f532ca3"
+    }
+  ]
+}

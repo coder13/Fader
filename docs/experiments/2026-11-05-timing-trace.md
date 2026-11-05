@@ -4,7 +4,8 @@ Candidate `0fc6ddeafb02306e607329ac098acc692afaf878` adds bounded diagnostic row
 [storage and viewport repair](2026-11-05-dense-save-and-paint.md).
 It keeps the original workload, block deadline, input rates, automation density and memory/storage limits.
 The first failed hour remains the authoritative sustained result until another hour completes.
-Clean candidate [CI](https://github.com/coder13/Fader/actions/runs/42022680469) is in progress.
+Clean candidate [CI](https://github.com/coder13/Fader/actions/runs/42022680469) passes on all three hosts.
+The dedicated candidate hour is still running at publication; no new hour result is claimed here.
 
 ## Measurement changes
 
@@ -59,6 +60,35 @@ Its paired host wake is only 83 ns late and its full process call is 2.436833 ms
 Thus the trace locates the long wall duration inside that call, without establishing CPU cost.
 The short run saves its captured project and stays within the memory budget.
 Its short media, short curves and duration do not qualify the dense one-hour workload.
+
+## Clean CI functional checks
+
+Downloaded artifacts match exact source `0fc6ddeafb02306e607329ac098acc692afaf878`, the pinned JUCE revision and UI fixtures OFF.
+JUnit records five Linux suites and seven suites on each native host, with no failures, errors or skips.
+The [verified aggregate](data/2026-11-05-timing-trace-ci.json) records the toolchains and results.
+The integration checkout has no source, test or CMake changes relative to this tested code.
+
+Both native logs report the injected timing-model tests as passed.
+Each native smoke retains all 750 callback and host samples and all 247 controls, with zero source gaps or invalid/duplicate timing records.
+All 259 serialized rows on each host pass frame/boundary and timestamp-arithmetic checks.
+That count includes the maximum rows, which may repeat frames from the first 256 outliers.
+
+The shared runners also demonstrate explicit trace truncation and performance failures:
+
+| Two-second ordinary-priority smoke | macOS | Windows |
+| --- | ---: | ---: |
+| Virtual deadline misses | 510 | 3 |
+| Scheduled paints completed | 100 / 100 | 100 / 100 |
+| Paint starts more than one interval late | 53 | 0 |
+| Qualifying outlier blocks | 627 | 316 |
+| Outlier rows omitted after the bound | 371 | 60 |
+| Trace complete | No | No |
+| Predicted-latency target passed | No | Yes |
+
+The smoke acceptance checks functional integrity, not sustained performance on shared CI machines.
+The bounded row list does not hide omission or discard the global maxima.
+Neither smoke qualifies the hour targets, and successful CI must not be described as doing so.
+The dedicated real-time run retains its original timing, memory, storage and painting limits.
 
 ## Remaining work
 
