@@ -1,12 +1,12 @@
 # Roadmap and published GitHub issues
 
-Published 2026-11-04 at the user's request: **10 milestones and 43 open issues** in [coder13/Fader](https://github.com/coder13/Fader/issues). This document records the publication baseline; GitHub holds current status. Planning IDs `DJ-001`–`DJ-043` remain stable, with actual issue links below. Milestones use exit criteria rather than speculative dates.
+Initially published 2026-11-04 with 43 issues, then expanded at the user's request to **64 issues and 10 milestones** in [coder13/Fader](https://github.com/coder13/Fader/issues). Fourteen new product issues join existing milestones; seven optional decision issues remain unscheduled. GitHub holds current status. Planning IDs `DJ-001`–`DJ-064` are stable: the original 43 are indexed below and [DJ-044–DJ-064 have a complete supplementary index](product-completion-backlog.md). Milestones use exit criteria rather than speculative dates.
 
-The [completeness review](research/roadmap-completeness-review.md) assesses this backlog against the user-confirmed target of a DJ performance editor with selected DAW tools. It proposes clearer editing/DJ/library contracts, a native v1 release gate and stronger usability/visual validation. Those proposals are not additional published issues or accepted release scope; the existing issue count and milestones remain unchanged.
+The [completeness review](research/roadmap-completeness-review.md) now maps to [21 published follow-up issues](product-completion-backlog.md), covering editing/DJ/library contracts, native v1 release acceptance and usability/visual validation. [DJ-044](https://github.com/coder13/Fader/issues/44) records the selected release subset; issue publication does not make every optional feature a v1 requirement. [DJ-057](https://github.com/coder13/Fader/issues/57) gates the complete selected workflow on Mac and Windows.
 
 ## Current evidence and immediate work
 
-The [v0.2 native prototype](https://github.com/coder13/Fader/blob/3a3b58456065f6cfed4c9f23f1a0252047d80a89/README.md) already has clip-owned volume/high-pass/low-pass envelopes, fixed-duration clip movement, waveform editing, capture/retakes, versioned save/reopen, MP3/WAV import, WAV export, a metadata browser, Preferences, read-only Traktor metadata and a flat dark theme. [Measured evidence](https://github.com/coder13/Fader/blob/3a3b58456065f6cfed4c9f23f1a0252047d80a89/docs/experiments/2026-11-04-clip-arrangement.md) and [theme verification](https://github.com/coder13/Fader/blob/3a3b58456065f6cfed4c9f23f1a0252047d80a89/docs/theme-and-interaction.md) describe the tested slice. This is **partial POC evidence**, not a qualified production stack. Source remains on its implementation branch; publishing this roadmap does not merge it into main.
+The [v0.2 native prototype](https://github.com/coder13/Fader/blob/3a3b58456065f6cfed4c9f23f1a0252047d80a89/README.md) already has clip-owned volume/high-pass/low-pass envelopes, fixed-duration clip movement, waveform editing, capture/retakes, versioned save/reopen, MP3/WAV import, WAV export, a metadata browser, Preferences, read-only Traktor metadata and a flat dark theme. [Measured evidence](https://github.com/coder13/Fader/blob/3a3b58456065f6cfed4c9f23f1a0252047d80a89/docs/experiments/2026-11-04-clip-arrangement.md) and [theme verification](https://github.com/coder13/Fader/blob/3a3b58456065f6cfed4c9f23f1a0252047d80a89/docs/theme-and-interaction.md) describe the tested slice. This is **partial POC evidence**, not a qualified production stack. The prototype source is now on main; the linked reports identify their tested builds. Source integration does not close unmeasured hardware or long-run gates.
 
 The user authorized continuing without the controller. C++20/JUCE remains the provisional implementation route. Bounded reuse/web experiments inform the production decision; they do not require discarding the working prototype or restarting research before every software improvement. The exact product license remains deferred; the current experimental source has its declared license.
 
@@ -33,13 +33,15 @@ M3–M5 turn the validated core into a usable Mac/Windows product. Later issues 
 | [M0 · POC: architecture and feasibility](https://github.com/coder13/Fader/milestone/1) | 6 | Validate the provisional C++20/JUCE direction with bounded reuse, native/web UI and Windows build experiments. Record evidence and tradeoffs; no framework rewrite or license decision is assumed. Browser research can proceed separately from the native POC. Exit: explicit architecture recommendation with remaining risks and dependencies. |
 | [M1 · POC: streaming audio and S4 harness](https://github.com/coder13/Fader/milestone/2) | 8 | Prove bounded streaming, cancellable correct seeking, event scheduling, S4 MK3 HID controls/LEDs, Core Audio master/cue and independent MIDI output. Software tasks proceed without hardware. Exit: repeatable subsystem evidence; hardware support requires the physical device. |
 | [M2 · POC: editable sets and qualification](https://github.com/coder13/Fader/milestone/3) | 10 | Complete arrange → perform → edit → retake → save/reopen → export with independent clip volume/HP/LP. Add capture/recovery gaps and qualify representative MP3/WAV, 60-minute playback/export and real S4 behavior. Exit: A01–A16 results plus architecture go/no-go and owner workflow evidence. This is the gate into product development. |
-| [M3 · Product alpha: musical mixing](https://github.com/coder13/Fader/milestone/4) | 5 | Editable detected/imported beat grids, pitch-preserving stretch, tempo maps, EQ and reproducible cues/loops/jog actions, then MIDI clock. Exit: defined musical timing, capture/seek/export semantics and measured sound quality. Begins after the POC decision. |
-| [M4 · Product alpha: reliable Mac workflow](https://github.com/coder13/Fader/milestone/5) | 6 | Persistent library/indexing and preview, broad audio import with whole-library qualification, complete Traktor import, portable projects, export presets, recovery and a packaged accessible Mac alpha. Exit: finish and reopen a realistic set with explicit supported formats and no unexplained library omissions. |
-| [M5 · Product v1: Windows and more controllers](https://github.com/coder13/Fader/milestone/6) | 2 | Qualify Windows audio/device/build/install paths and generic MIDI mappings on another controller. Exit: critical prepared-set workflow, audio/cue/latency and failure cases pass on named Windows/device configurations. Early Windows compile smoke is in M0. |
+| [M3 · Product alpha: musical mixing](https://github.com/coder13/Fader/milestone/4) | 11 | Editable detected/imported beat grids, pitch-preserving stretch, tempo maps, EQ and reproducible cues/loops/jog actions, then MIDI clock. Exit: defined musical timing, capture/seek/export semantics and measured sound quality. Begins after the POC decision. |
+| [M4 · Product alpha: reliable Mac workflow](https://github.com/coder13/Fader/milestone/5) | 13 | Persistent library/indexing and preview, broad audio import with whole-library qualification, complete Traktor import, portable projects, export presets, recovery and a packaged accessible Mac alpha. Exit: finish and reopen a realistic set with explicit supported formats and no unexplained library omissions. |
+| [M5 · Product v1: Windows and more controllers](https://github.com/coder13/Fader/milestone/6) | 3 | Qualify Windows audio/device/build/install paths and generic MIDI mappings on another controller. Exit: critical prepared-set workflow, audio/cue/latency and failure cases pass on named Windows/device configurations. Early Windows compile smoke is in M0. |
 | [M6 · Product: web or hybrid delivery](https://github.com/coder13/Fader/milestone/7) | 2 | Choose browser preparation companion, browser audio host or native-engine/web-UI host from the feasibility evidence; implement only the selected scope. Exit: shared project semantics, long render/storage recovery and an honest browser/hardware capability matrix. Does not block native v1. |
 | [M7 · Later: advanced performance and Linux](https://github.com/coder13/Fader/milestone/8) | 2 | Separately qualify four-deck control layers, deeper S4 features and Linux. Screens and motors are independent opt-in gates. Exit per feature/platform; optional Linux and advanced hardware do not block the Mac/Windows prepared-set product. |
 | [M8 · Product v2: VST3 effects](https://github.com/coder13/Fader/milestone/9) | 1 | Host VST3 effects on clips/lanes/master with parameter automation, saved state, isolated scanning, latency/tail handling and processed export. Exit: named Mac/Windows plugin workflows pass including missing-plugin recovery. Excluded from the POC; does not depend on Linux or web delivery. |
 | [M9 · Product v3: plugin resilience and portability](https://github.com/coder13/Fader/milestone/10) | 1 | Harden the qualified VST3 host with freeze/unfreeze, render fallbacks and a measured runtime-isolation decision; optional routing/formats need separate designs. Exit: preserved editable state, usable missing-plugin fallback and documented failure/latency behavior. |
+
+Seven optional decision issues ([DJ-058–DJ-064](product-completion-backlog.md#optional-future-decisions--no-release-milestone)) have no milestone. The milestone counts above include the new product work; M3 adds scope/sync/cue/harmonic/controller/metering contracts, M4 adds editing/library/delivery/design qualification, and M5 adds the integrated native v1 gate.
 
 ## Tracking rules
 
@@ -215,6 +217,8 @@ GitHub: [#7](https://github.com/coder13/Fader/issues/7). Labels: `phase:poc`, `t
 
 **Dependencies:** [DJ-006](https://github.com/coder13/Fader/issues/6)
 
+**Product coverage follow-up:** These product follow-ups preserve this issue's existing POC scope. They do not become new blockers for the POC merely by being linked here. [DJ-052](https://github.com/coder13/Fader/issues/52).
+
 <a id="dj-008-implement-engine-clock-event-scheduling-and-telemetry"></a>
 
 ### DJ-008 Validate engine-clock scheduling, queue behavior and telemetry
@@ -251,6 +255,8 @@ GitHub: [#9](https://github.com/coder13/Fader/issues/9). Labels: `phase:poc`, `t
 - [ ] If the physical crossfader is mapped, define how it emits clip-volume events; it must not replace independent saved envelopes.
 
 **Dependencies:** [DJ-002](https://github.com/coder13/Fader/issues/2), [DJ-007](https://github.com/coder13/Fader/issues/7), [DJ-008](https://github.com/coder13/Fader/issues/8)
+
+**Product coverage follow-up:** These product follow-ups preserve this issue's existing POC scope. They do not become new blockers for the POC merely by being linked here. [DJ-050](https://github.com/coder13/Fader/issues/50).
 
 ### DJ-010 Prove independent MIDI output
 
@@ -377,6 +383,8 @@ GitHub: [#14](https://github.com/coder13/Fader/issues/14). Labels: `phase:poc`, 
 
 **Dependencies:** [DJ-011](https://github.com/coder13/Fader/issues/11)
 
+**Product coverage follow-up:** These product follow-ups preserve this issue's existing POC scope. They do not become new blockers for the POC merely by being linked here. [DJ-045](https://github.com/coder13/Fader/issues/45), [DJ-046](https://github.com/coder13/Fader/issues/46), [DJ-055](https://github.com/coder13/Fader/issues/55), [DJ-056](https://github.com/coder13/Fader/issues/56).
+
 <a id="dj-015-edit-recorded-automation-and-replace-a-range"></a>
 
 ### DJ-015 Qualify selective retakes, override and return boundaries
@@ -395,6 +403,8 @@ GitHub: [#15](https://github.com/coder13/Fader/issues/15). Labels: `phase:poc`, 
 - [ ] Verify no silent capture loss and connect the physical pickup behavior from [DJ-009](https://github.com/coder13/Fader/issues/9) before closing the complete hardware POC.
 
 **Dependencies:** [DJ-012](https://github.com/coder13/Fader/issues/12), [DJ-014](https://github.com/coder13/Fader/issues/14)
+
+**Product coverage follow-up:** These product follow-ups preserve this issue's existing POC scope. They do not become new blockers for the POC merely by being linked here. [DJ-046](https://github.com/coder13/Fader/issues/46).
 
 <a id="dj-016-save-reopen-relink-and-recover-the-poc-set"></a>
 
@@ -490,6 +500,8 @@ GitHub: [#42](https://github.com/coder13/Fader/issues/42). Labels: `phase:poc`, 
 
 **Dependencies:** [DJ-014](https://github.com/coder13/Fader/issues/14), [DJ-015](https://github.com/coder13/Fader/issues/15), [DJ-016](https://github.com/coder13/Fader/issues/16), [DJ-035](https://github.com/coder13/Fader/issues/35)
 
+**Product coverage follow-up:** These product follow-ups preserve this issue's existing POC scope. They do not become new blockers for the POC merely by being linked here. [DJ-054](https://github.com/coder13/Fader/issues/54), [DJ-055](https://github.com/coder13/Fader/issues/55), [DJ-056](https://github.com/coder13/Fader/issues/56).
+
 ## M3 · Product alpha: musical mixing
 
 ### DJ-018 Add beat analysis and editable grids
@@ -506,6 +518,8 @@ GitHub: [#18](https://github.com/coder13/Fader/issues/18). Labels: `phase:produc
 
 **Dependencies:** [DJ-017](https://github.com/coder13/Fader/issues/17)
 
+**Product coverage follow-up:** These issues make the related product contracts and qualification evidence explicit. Reuse shared implementation and fixtures rather than duplicating engines or workflows. [DJ-047](https://github.com/coder13/Fader/issues/47), [DJ-049](https://github.com/coder13/Fader/issues/49).
+
 ### DJ-019 Select and integrate pitch-preserving time stretch
 
 GitHub: [#19](https://github.com/coder13/Fader/issues/19). Labels: `phase:product`, `type:spike`, `area:audio`.
@@ -519,6 +533,8 @@ GitHub: [#19](https://github.com/coder13/Fader/issues/19). Labels: `phase:produc
 - [ ] measured quality/latency/CPU decision; both decks meet selected callback budget; key-lock is distinct from varispeed; seeks/preroll and offline parity characterized; licensing/version recorded.
 
 **Dependencies:** [DJ-017](https://github.com/coder13/Fader/issues/17)
+
+**Product coverage follow-up:** These issues make the related product contracts and qualification evidence explicit. Reuse shared implementation and fixtures rather than duplicating engines or workflows. [DJ-047](https://github.com/coder13/Fader/issues/47), [DJ-049](https://github.com/coder13/Fader/issues/49).
 
 ### DJ-020 Add project tempo maps and musical anchors
 
@@ -534,6 +550,8 @@ GitHub: [#20](https://github.com/coder13/Fader/issues/20). Labels: `phase:produc
 
 **Dependencies:** [DJ-018](https://github.com/coder13/Fader/issues/18), [DJ-019](https://github.com/coder13/Fader/issues/19)
 
+**Product coverage follow-up:** These issues make the related product contracts and qualification evidence explicit. Reuse shared implementation and fixtures rather than duplicating engines or workflows. [DJ-047](https://github.com/coder13/Fader/issues/47), [DJ-048](https://github.com/coder13/Fader/issues/48).
+
 ### DJ-021 Capture EQ, filters, loops, cues, and jog trajectories
 
 GitHub: [#21](https://github.com/coder13/Fader/issues/21). Labels: `phase:product`, `type:epic`, `area:automation`.
@@ -547,6 +565,8 @@ GitHub: [#21](https://github.com/coder13/Fader/issues/21). Labels: `phase:produc
 - [ ] each new parameter/action has versioned units/interpolation, capture and seek reconstruction fixtures; source trajectory survives loops/reverse; latency and audible continuity measured; unsupported modes cannot masquerade as reproducible capture.
 
 **Dependencies:** [DJ-017](https://github.com/coder13/Fader/issues/17)
+
+**Product coverage follow-up:** This epic remains the owner of new parameter/action capture and touch/latch semantics. The linked issues specify sync and per-mode cue/loop/jog behavior; their selected contracts and fixtures must be satisfied as part of this epic's completion. [DJ-047](https://github.com/coder13/Fader/issues/47), [DJ-048](https://github.com/coder13/Fader/issues/48).
 
 ### DJ-022 Schedule external MIDI clock and transport
 
@@ -578,6 +598,8 @@ GitHub: [#23](https://github.com/coder13/Fader/issues/23). Labels: `phase:produc
 
 **Dependencies:** [DJ-017](https://github.com/coder13/Fader/issues/17), [DJ-038](https://github.com/coder13/Fader/issues/38)
 
+**Product coverage follow-up:** These issues make the related product contracts and qualification evidence explicit. Reuse shared implementation and fixtures rather than duplicating engines or workflows. [DJ-051](https://github.com/coder13/Fader/issues/51).
+
 ### DJ-024 Add MP3 and FLAC export presets
 
 GitHub: [#24](https://github.com/coder13/Fader/issues/24). Labels: `phase:product`, `type:epic`, `area:audio`.
@@ -591,6 +613,8 @@ GitHub: [#24](https://github.com/coder13/Fader/issues/24). Labels: `phase:produc
 - [ ] sample-rate/duration/channel/tag fixtures, clipping policy, long output and cancel/disk-full tests; lossy export compared after alignment using explicit tolerance; encoder license/build settings documented. WAV remains the reference render.
 
 **Dependencies:** [DJ-013](https://github.com/coder13/Fader/issues/13), [DJ-017](https://github.com/coder13/Fader/issues/17)
+
+**Product coverage follow-up:** These issues make the related product contracts and qualification evidence explicit. Reuse shared implementation and fixtures rather than duplicating engines or workflows. [DJ-052](https://github.com/coder13/Fader/issues/52), [DJ-053](https://github.com/coder13/Fader/issues/53).
 
 ### DJ-025 Package portable sets and robust recovery
 
@@ -618,7 +642,12 @@ GitHub: [#26](https://github.com/coder13/Fader/issues/26). Labels: `phase:produc
 
 - [ ] install/open/save/export/update path tested on declared supported machines; no broad support claims without evidence; S4 firmware/settings and limitations published; source/build/license notices available for the chosen distribution.
 
+- [ ] Use the selected product contract in #44: demonstrate the selected editing, organization, monitoring and delivery workflows on the Mac alpha build, with linked implementation evidence.
+- [ ] Attach current usability repair/retest evidence (#54), owner visual approval (#55), and the Mac size/keyboard/screen-reader matrix (#56); no unresolved finding may lose work, conceal capture failure or prevent a core advertised task.
+
 **Dependencies:** [DJ-018](https://github.com/coder13/Fader/issues/18), [DJ-019](https://github.com/coder13/Fader/issues/19), [DJ-020](https://github.com/coder13/Fader/issues/20), [DJ-021](https://github.com/coder13/Fader/issues/21), [DJ-023](https://github.com/coder13/Fader/issues/23), [DJ-024](https://github.com/coder13/Fader/issues/24), [DJ-025](https://github.com/coder13/Fader/issues/25), [DJ-036](https://github.com/coder13/Fader/issues/36), [DJ-043](https://github.com/coder13/Fader/issues/43), [DJ-001](https://github.com/coder13/Fader/issues/1)
+
+**Product coverage follow-up:** These issues make the related product contracts and qualification evidence explicit. Reuse shared implementation and fixtures rather than duplicating engines or workflows. [DJ-044](https://github.com/coder13/Fader/issues/44), [DJ-045](https://github.com/coder13/Fader/issues/45), [DJ-046](https://github.com/coder13/Fader/issues/46), [DJ-051](https://github.com/coder13/Fader/issues/51), [DJ-052](https://github.com/coder13/Fader/issues/52), [DJ-053](https://github.com/coder13/Fader/issues/53), [DJ-054](https://github.com/coder13/Fader/issues/54), [DJ-055](https://github.com/coder13/Fader/issues/55), [DJ-056](https://github.com/coder13/Fader/issues/56), [DJ-057](https://github.com/coder13/Fader/issues/57).
 
 ### DJ-036 Qualify broad audio import against the existing collection
 
@@ -651,6 +680,8 @@ GitHub: [#43](https://github.com/coder13/Fader/issues/43). Labels: `phase:produc
 
 **Dependencies:** [DJ-018](https://github.com/coder13/Fader/issues/18), [DJ-023](https://github.com/coder13/Fader/issues/23)
 
+**Product coverage follow-up:** These issues make the related product contracts and qualification evidence explicit. Reuse shared implementation and fixtures rather than duplicating engines or workflows. [DJ-051](https://github.com/coder13/Fader/issues/51).
+
 ## M5 · Product v1: Windows and more controllers
 
 ### DJ-027 Qualify Windows audio and S4 integration
@@ -665,7 +696,11 @@ GitHub: [#27](https://github.com/coder13/Fader/issues/27). Labels: `phase:produc
 
 - [ ] critical M2 workflow rerun on documented Windows/device/driver versions; master/cue, latency, device loss and stress measured; current driver-block reports rechecked; no reliance on weakening OS protections.
 
+- [ ] Qualify the selected M3/M4 product workflows and critical broad-format fixtures on Windows using the #44 matrix, not only the M2 POC scenario; record project/render parity, accessibility and install/update/recovery results for the final #57 release gate.
+
 **Dependencies:** [DJ-017](https://github.com/coder13/Fader/issues/17), [DJ-041](https://github.com/coder13/Fader/issues/41)
+
+**Product coverage follow-up:** These issues make the related product contracts and qualification evidence explicit. Reuse shared implementation and fixtures rather than duplicating engines or workflows. [DJ-044](https://github.com/coder13/Fader/issues/44), [DJ-057](https://github.com/coder13/Fader/issues/57).
 
 ### DJ-028 Add generic MIDI mapping and a second controller
 
@@ -727,19 +762,22 @@ GitHub: [#31](https://github.com/coder13/Fader/issues/31). Labels: `phase:produc
 
 **Dependencies:** [DJ-020](https://github.com/coder13/Fader/issues/20), [DJ-021](https://github.com/coder13/Fader/issues/21), [DJ-026](https://github.com/coder13/Fader/issues/26)
 
-### DJ-032 Qualify Linux and track advanced integrations
+### DJ-032 Qualify Linux builds, audio and controller support
 
 GitHub: [#32](https://github.com/coder13/Fader/issues/32). Labels: `phase:product`, `type:epic`, `area:platform`.
 
 **Current evidence:** Planned after the POC; not implemented or qualified by the current prototype.
 
-**Scope:** Qualify Linux builds, audio backends, device permissions, S4/generic MIDI and packaging on a declared test environment. Stems, DVS, streaming and collaboration are optional future proposals requiring separate scope decisions; VST3 is tracked in M8/M9.
+**Scope:** Qualify Linux builds, audio backends, device permissions, S4/generic MIDI and packaging on a declared test environment. This issue is Linux qualification only; optional advanced integrations now have independent decision issues below. VST3 remains in #33/#34.
 
 **Acceptance:**
 
-- [ ] Linux build and core workflow report on declared backend/hardware; each advanced integration gets its own design and acceptance criteria before implementation. These optional proposals do not block the Mac/Windows prepared-set product.
+- [ ] Publish Linux build/install and core prepared-set workflow results on declared distribution, audio backend and hardware versions; measure routing, device lifecycle, timing and recovery for the advertised configuration.
+- [ ] Qualify supported S4/generic MIDI behavior separately; document unsupported controls and packaging/permission limits. Linux remains optional and does not block the Mac/Windows prepared-set product.
 
 **Dependencies:** [DJ-017](https://github.com/coder13/Fader/issues/17)
+
+**Product coverage follow-up:** Optional product directions are tracked independently below. Their decisions and implementations do not block Linux qualification or native v1. [DJ-058](https://github.com/coder13/Fader/issues/58), [DJ-059](https://github.com/coder13/Fader/issues/59), [DJ-060](https://github.com/coder13/Fader/issues/60), [DJ-061](https://github.com/coder13/Fader/issues/61), [DJ-062](https://github.com/coder13/Fader/issues/62), [DJ-063](https://github.com/coder13/Fader/issues/63), [DJ-064](https://github.com/coder13/Fader/issues/64).
 
 ## M8 · Product v2: VST3 effects
 
@@ -757,6 +795,8 @@ GitHub: [#33](https://github.com/coder13/Fader/issues/33). Labels: `phase:produc
 
 **Dependencies:** [DJ-020](https://github.com/coder13/Fader/issues/20), [DJ-021](https://github.com/coder13/Fader/issues/21), [DJ-027](https://github.com/coder13/Fader/issues/27)
 
+**Product coverage follow-up:** These issues make the related product contracts and qualification evidence explicit. Reuse shared implementation and fixtures rather than duplicating engines or workflows. [DJ-064](https://github.com/coder13/Fader/issues/64).
+
 ## M9 · Product v3: plugin resilience and portability
 
 ### DJ-034 Harden plugin hosting and portable effect renders
@@ -772,3 +812,5 @@ GitHub: [#34](https://github.com/coder13/Fader/issues/34). Labels: `phase:produc
 - [ ] failure recovery and buffering behavior documented for supported process modes; frozen audio carries provenance and original editable chain state; project reopening without a plugin offers an explicit usable fallback; browser-only editing preserves native plugin state and can preview frozen audio; offline/render-mode differences and non-deterministic effects are characterized rather than advertised as bit-identical.
 
 **Dependencies:** [DJ-033](https://github.com/coder13/Fader/issues/33)
+
+**Product coverage follow-up:** These issues make the related product contracts and qualification evidence explicit. Reuse shared implementation and fixtures rather than duplicating engines or workflows. [DJ-064](https://github.com/coder13/Fader/issues/64).
