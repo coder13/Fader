@@ -185,15 +185,15 @@ GitHub: [#2](https://github.com/coder13/Fader/issues/2). Labels: `phase:poc`, `t
 
 GitHub: [#6](https://github.com/coder13/Fader/issues/6). Labels: `phase:poc`, `type:feature`, `area:platform`.
 
-**Current evidence:** A CMake/C++20/JUCE Mac app and core/media/realtime test targets exist; local Release tests pass. This issue closes reproducibility gaps rather than rebuilding the scaffold.
+**Completed:** Clean-checkout Linux core and Mac native CI passed at `fb2428fc2fad53a1faa614d958c3ac998744691c`, including retained metadata/JUnit/CTest evidence and simulated device setup failures. See [qualification report](experiments/2026-11-04-reproducible-builds.md). This does not qualify hardware or sustained playback.
 
 **Scope:** Provide clean checkout builds, pinned dependencies, CI headless fixtures and off-thread diagnostics. Preserve the UI-independent core and documented supported build environment.
 
 **Acceptance:**
 
-- [ ] Build the app and headless tests from a clean checkout with documented tools and no personal machine paths.
-- [ ] Run existing tests in CI; record compiler, dependency revisions and architecture.
-- [ ] Verify audio initialization/error reporting and collect callback metrics off-thread; do not equate successful compilation with hardware support.
+- [x] Build the app and headless tests from a clean checkout with documented tools and no personal machine paths.
+- [x] Run existing tests in CI; record compiler, dependency revisions and architecture.
+- [x] Verify audio initialization/error reporting and collect callback metrics off-thread; do not equate successful compilation with hardware support.
 
 **Dependencies:** No blocking issue dependencies; use the current prototype and recorded evidence.
 

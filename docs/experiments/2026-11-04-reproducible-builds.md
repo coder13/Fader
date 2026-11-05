@@ -19,15 +19,15 @@ Playback, Preferences and the optional device probe now share output setup and e
 - Native preset with the pinned local JUCE checkout: app/probe/tests built; CTest **3/3 passed**.
 - The simulated device tests run in the media suite alongside existing media, project, Traktor and editor fixtures. A CoreMIDI service diagnostic was printed in the sandbox; it did not cause a test failure and is not a MIDI qualification result.
 - The realtime fixture passed 20,000 process calls without ordinary `new`/`delete` during processing. Local timings: p50 7.584 µs, p95 8.917 µs, p99.9 31.666 µs, maximum 56.875 µs. These are synthetic offline timings, not physical output latency or a sustained deadline guarantee.
-- The test-disabled configuration omitted test targets. New C++ files passed the repository formatter; changed local documentation links and `git diff --check` passed.
+- The test-disabled configuration omitted test targets; an intentionally wrong dependency checkout was rejected with the required JUCE revision. New C++ files passed the repository formatter; changed local documentation links and `git diff --check` passed.
 
 ## Clean-checkout CI evidence
 
 [Run 41965474848](https://github.com/coder13/Fader/actions/runs/41965474848) checks the exact implementation revision above.
 
-The first run passed: Linux **2/2 tests**, Mac **3/3 tests**, app/probe build and ad-hoc bundle-signature verification. Linux used GCC 13.3.0, CMake 3.31.6 and x86_64; Mac used AppleClang 17.0.0.17000013 and arm64. Both retained source/compiler/dependency metadata and CTest logs.
+The first run passed: Linux **2/2 tests**, Mac **3/3 tests**, app/probe build and ad-hoc bundle-signature verification. Linux used GCC 13.3.0, CMake 3.31.6 and x86_64; Mac used AppleClang 17.0.0.17000013, CMake 4.4.4, Darwin 24.6.0 and arm64. Both retained source/compiler/dependency metadata and CTest logs.
 
-Artifact inspection found that the first workflow supplied a JUnit path relative to the source directory, but CTest resolved it within the preset's build directory. The test log and exit code were valid; the promised JUnit file was missing. The follow-up workflow uses `results.xml` and explicitly checks that the report exists before upload. Final verification of the corrected CI artifacts is pending; this report does not close the issue yet.
+Artifact inspection found that the first workflow supplied a JUnit path relative to the source directory, but CTest resolved it within the preset's build directory. The test log and exit code were valid; the promised JUnit file was missing. The follow-up workflow uses `results.xml` and explicitly checks that the report exists before upload. The corrected [main-branch run 41966443612](https://github.com/coder13/Fader/actions/runs/41966443612), at `fb2428fc2fad53a1faa614d958c3ac998744691c`, passed both jobs. Both downloaded artifacts contain matching source/JUCE revisions, zero-failure/zero-skip JUnit reports (Linux 2 tests, Mac 3 tests), and CTest logs. Native CI again built the app and probe and passed the bundle-signature check. The source, test and CMake target files are identical to the first tested implementation; intervening changes integrate documentation and correct CI reporting.
 
 ## Callback and hardware boundaries
 
