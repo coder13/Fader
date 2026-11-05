@@ -4,7 +4,7 @@ Issue: [DJ-008](https://github.com/coder13/Fader/issues/8). Scope: software A08 
 
 ## Configuration and reproduction
 
-Local: Apple Silicon arm64, Darwin 25.6.0/macOS 26.6.2, AppleClang 21.0.0.21000334, CMake 4.4.4, Release, C++20, JUCE 9.0.5 at `d60b7a78030661574a615b586d9325ba7a7fa7dd`. Native and core presets are described in [build instructions](../build-and-ci.md). The source commit and clean CI results will be appended after verification; local results alone are not the closure evidence.
+Local: Apple Silicon arm64, Darwin 25.6.0/macOS 26.6.2, AppleClang 21.0.0.21000334, CMake 4.4.4, Release, C++20, JUCE 9.0.5 at `d60b7a78030661574a615b586d9325ba7a7fa7dd`. Native and core presets are described in [build instructions](../build-and-ci.md). Source under qualification: `9acd69b45a42b405b2fac01fe7a721318aafd3b2`. [Clean CI run](https://github.com/coder13/Fader/actions/runs/41971504468) passed on the exact commit. Its downloaded build metadata, JUnit XML and CTest logs were checked against that SHA and the JUCE pin; no tests failed or were skipped.
 
 Run `cmake --preset native`, `cmake --build --preset native`, `ctest --preset native --output-junit results.xml`. Core-only Linux uses the `core` presets. All automated fixtures synthesize PCM or a fake JUCE backend; they do not open the machine's audio devices. The separate `--audio-smoke` probe was updated to use the shared callback path but was **not run** for this issue.
 
@@ -30,3 +30,19 @@ Native UI inspection used the real application with the opt-in synthetic fixture
 ## Decision and limits
 
 The software contract distinguishes engine/project/host clock domains and preserves accepted data on the tested failures. It does not establish physical input latency, callback deadlines under saturation, full-session recording durability, transport/rate action capture, or a finished recovery workflow. Telemetry measures scheduling/mixing before publication, not framework dispatch or audible output. The C++ allocator fixture does not interpose direct C allocation or OS internals. JUCE still locks its callback dispatcher. Full decode and linear-time seek preparation remain unchanged; [#38](https://github.com/coder13/Fader/issues/38) and [#39](https://github.com/coder13/Fader/issues/39) are next.
+
+## Additional concurrency check
+
+A focused driver calling `testPlayback()` passed under Apple ThreadSanitizer with no race report. It compiled `src/Engine.cpp`, `src/Playback.cpp`, `tests/PlaybackTests.cpp` and a driver containing `int main() { testPlayback(); }`, using `clang++ -std=c++20 -g -fsanitize=thread -fno-omit-frame-pointer -I include`. This exercises both real producer threads, scheduler/capture/telemetry pressure and synthetic lifecycle cases; it does not instrument JUCE or the UI.
+
+An initial attempt to run the entire older `CoreTests.cpp` in Debug/TSan hit the macOS stack guard on entry: the fixture keeps many large `Engine` queue objects on its stack. The focused playback fixtures are heap-owned. Whole-suite sanitizer qualification is therefore not claimed; heap-owning/splitting the longstanding fixtures remains a [Windows/Debug build follow-up](https://github.com/coder13/Fader/issues/41). Release CTest and callback allocation checks are separate from this additional targeted race check.
+
+## Verified closure evidence
+
+| Build | Configuration | Result |
+| --- | --- | --- |
+| Local native | Release; AppleClang 21; native preset; UI fixture flag ON | 3/3 CTest suites passed; native UI/archive check passed separately. |
+| Clean Linux CI | ubuntu-24.04 x86_64; GNU 13.3.0; CMake 3.31.6; Release core preset; UI fixtures OFF | 2/2 suites passed; scheduling/concurrency and ordinary/aligned callback allocation evidence present in logs. |
+| Clean macOS CI | macos-15 arm64; AppleClang 17.0.0.17000013; CMake 4.4.4; Release native preset; UI fixtures OFF | App/probe/media tools compiled; 3/3 suites passed; application bundle signature verification passed. |
+
+The `linux-core-evidence` and `mac-native-evidence` artifacts from run **41971504468** identify source **9acd69b45a42b405b2fac01fe7a721318aafd3b2** and JUCE **d60b7a78030661574a615b586d9325ba7a7fa7dd**. The subsequent completion commit changes documentation only. The project-end fixture additionally verifies engine frame 256 while the project cursor remains clamped at 100. DJ-008's stated software acceptance is met; the limitations above remain explicit and are not treated as passed hardware or production gates.

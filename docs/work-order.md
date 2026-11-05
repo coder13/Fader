@@ -4,12 +4,12 @@ Updated 2026-11-04 after reviewing all 64 GitHub issues and the user's request t
 
 ## Immediate POC critical path
 
-**#6 and #7 are completed.** Next: **#8 → #38 → #39 → #11 → #13 → #40**.
+**#6, #7 and #8 are completed.** Next: **#38 → #39 → #11 → #13 → #40**.
 
 | Order | Issue | Why it comes here |
 | --- | --- | --- |
-| 1 · active | [#8](https://github.com/coder13/Fader/issues/8), event timing and capture failure | Needed for seek/capture integrity. Current audit found a device-interruption/stop race and discarded partial-take data. |
-| 2 | [#38](https://github.com/coder13/Fader/issues/38), bounded source streaming | Removes full-file memory/load limits before testing realistic long sets. |
+| Completed | [#8](https://github.com/coder13/Fader/issues/8), event timing and capture failure | [Qualified clock/capture integrity](experiments/2026-11-04-playback-clock.md), including the interruption/stop race and retention of partial-take data. |
+| 1 · next | [#38](https://github.com/coder13/Fader/issues/38), bounded source streaming | Removes full-file memory/load limits before testing realistic long sets. |
 | 3 | [#39](https://github.com/coder13/Fader/issues/39), cancellable state-correct seeking | Depends on #8 and #38; removes long blocking seek preparation. |
 | 4 | [#11](https://github.com/coder13/Fader/issues/11), stable project model | Supplies the persistence/identity contract required by export, complete capture and editing. |
 | 5 | [#13](https://github.com/coder13/Fader/issues/13), live/offline render parity | Qualifies the streamed renderer before long-run evidence is accepted. |
