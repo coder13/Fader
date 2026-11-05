@@ -1,10 +1,10 @@
 # Bounded streaming qualification
 
-Issue: [DJ-038](https://github.com/coder13/Fader/issues/38). Status: local software qualification in progress; clean CI and native visual verification are recorded before closure. No physical audio device or controller is opened by these fixtures.
+Issue: [DJ-038](https://github.com/coder13/Fader/issues/38). Status: software implementation, local qualification and clean CI pass. Native visual verification remains pending before issue closure. No physical audio device or controller is opened by these fixtures.
 
 ## Configuration
 
-Local Apple Silicon arm64, Darwin 25.6.0/macOS 26.6.2; AppleClang 21.0.0.21000334, CMake 4.4.4, Release/C++20. JUCE 9.0.5 is pinned at `d60b7a78030661574a615b586d9325ba7a7fa7dd`. Use the [native/core presets](../build-and-ci.md). Source SHA and clean-CI results will be attached to the tested commit before closure.
+Local Apple Silicon arm64, Darwin 25.6.0/macOS 26.6.2; AppleClang 21.0.0.21000334, CMake 4.4.4, Release/C++20. JUCE 9.0.5 is pinned at `d60b7a78030661574a615b586d9325ba7a7fa7dd`. Use the [native/core presets](../build-and-ci.md). The long-file and six extended codec probes used source `d1b4c2cacf208933ee933b0865b42921a8e3f4af`, also verified by [clean Linux/macOS CI](https://github.com/coder13/Fader/actions/runs/41977483690). Final source `aa23cc0df03b7e5fa691218ef21454d1555a286b` adds only a post-process export check for final-span source failure, its regression assertion, and contract text. The source cache, decoder, mixer and probe are unchanged. Local native CTest passed 4/4 again; [final clean CI](https://github.com/coder13/Fader/actions/runs/41978599974) passed on that exact source.
 
 ## Reproduction and fixtures
 
@@ -59,9 +59,24 @@ The first implementation exposed JUCE VBR random-seek failures at the final page
 - A delayed read completing after a seek is discarded. Cancelled/replaced banks cannot serve stale PCM; a new generation reads its own samples; decoder destruction follows worker shutdown. Injected read/non-finite failures are explicit.
 - Real file mutation and deletion fail preparation. Offline source failure preserves an existing destination. Existing project/hash, atomic export/cancel, automation/filter, source-rate and master/cue fixtures still pass.
 - A 44.1 kHz source at rate 1.25, nonzero offset/start and seek, with HP/LP automation, matches in-memory rendering exactly at 64/127/1,024-frame blocks.
-- The C++ allocation fixture adds 20,000 prepared streaming callbacks and cancelled-source processing under ordinary/aligned new/delete interception. Preparation and worker allocations stay outside the guarded render thread.
+- The C++ allocation fixture adds 20,000 prepared streaming callbacks and cancelled-source processing under ordinary/aligned new/delete interception. It also prepares the final span, cancels availability, and verifies that all 256 missing clip-frames across two sources remain reported at project end; export checks those counters after every rendered span. Preparation and worker allocations stay outside the guarded render thread.
 - A standalone Apple ThreadSanitizer build of `Engine.cpp`, `Streaming.cpp` and `StreamingTests.cpp` passes without a race report, including actual decode workers and delayed seek/cancellation. This is targeted coverage, not a whole-application sanitizer claim.
 
 ## Scope and next work
 
 This proves bounded PCM storage, tested ownership/failure behavior and source-frame parity for these fixtures. Accelerated rendering is not a wall-clock callback deadline, multi-hour device-playback or acoustic test. Import still scans/hashes full sources; seek reconstruction and MP3 replay can be slow; control-side destruction may wait for an OS read. Maximum 64-clip load, all-library/codecs, removable/network storage and Windows parity remain open. #39 addresses responsive seeking; #13/#40 qualify broader parity and sustained load.
+
+
+## Verified clean-build evidence
+
+| Build | Configuration | Result |
+| --- | --- | --- |
+| Local native | Release, AppleClang 21, arm64, UI fixtures ON | 4/4 suites passed after the final export guard. |
+| Clean Linux | ubuntu-24.04 x86_64, GNU 13.3.0, CMake 3.31.6, Release core preset, UI fixtures OFF | 3/3 suites passed. |
+| Clean macOS | macos-15 arm64, AppleClang 17.0.0.17000013, CMake 4.4.4, Release native preset, UI fixtures OFF | App/probe compiled; 4/4 suites passed; bundle signature verification passed. |
+
+Downloaded `linux-core-evidence` and `mac-native-evidence` from run **41978599974** were checked against source **aa23cc0df03b7e5fa691218ef21454d1555a286b** and the JUCE pin. JUnit had no failure, error or skipped case; logs contained the streaming allocation/concealment, cache ownership and native media parity results. A local source comparison verified that the staged build inputs matched the committed source. Subsequent evidence updates change documentation only.
+
+## Native visual check still pending
+
+The local build enables `FADER_ENABLE_UI_FIXTURES=ON`; normal and CI builds leave it off. `--source-gap-fixture <synthetic.faderset>` exercises the actual streamed playback and timer status after cancelled source reads, with no device attachment. Use the fixture from `scripts/make-ui-fixture.py`, inspect the READ GAP label/status and Stop behavior, then reopen the owner's saved recovery set in the same preview bundle. This has not yet been visually verified because the Mac is locked. The running preview was not replaced or closed. The local recovery copy was verified unchanged. No screenshot or UI-pass claim is inferred from compiled strings.
