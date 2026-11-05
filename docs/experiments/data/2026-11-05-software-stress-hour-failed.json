@@ -1,0 +1,262 @@
+{
+  "metadata": {
+    "qualifiedSourceRevision": "566b0ca981f86d33c873a9b63a5b0919068ae7c2",
+    "sourceTreeSha256": "16c034aed3b99f41f9e570b861fa6ee4350a3dd4f6da714b1020d226c7eae4d6",
+    "sourceVerification": "Every tracked file byte-compared between the clean checkout and build source before execution",
+    "probeSha256": "a44613187ccb7640d3d51a068e7e4ae4b25da2fa95ae7303b2572aecc7a4bc5c",
+    "buildInfo": {
+      "project": "Fader",
+      "version": "0.2.0",
+      "sourceRevision": "source-archive",
+      "cmakeVersion": "4.4.4",
+      "generator": "Unix Makefiles",
+      "system": "Darwin",
+      "systemVersion": "25.6.0",
+      "architecture": "arm64",
+      "compiler": "AppleClang",
+      "compilerVersion": "21.0.0.21000334",
+      "cxxStandard": "20",
+      "buildType": "Release",
+      "nativeApp": "ON",
+      "uiFixtures": "ON",
+      "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+    },
+    "os": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "python": "3.15.0",
+    "startedUtc": "2026-11-05T09:35:30.535656+00:00",
+    "fixtures": {
+      "sampleRate": 48000,
+      "sourceSeconds": 3604,
+      "sources": [
+        {
+          "file": "A.wav",
+          "sha256": "7ff057d8b71480425405710000e4ea496ccdc1a8fbbb5fdeeee9a9957300fb2e",
+          "fileBytes": 691968044
+        },
+        {
+          "file": "B.wav",
+          "sha256": "708e2132650790d20d10dbce7903a11263cca4c755fa64335d98f16f5dd70920",
+          "fileBytes": 691968044
+        }
+      ]
+    },
+    "seconds": 3600,
+    "blockFrames": 128,
+    "scheduler": "realtime",
+    "scope": "Software sink and offscreen production painter. No audio/MIDI device or native UI interaction.",
+    "faultsStartedUtc": "2026-11-05T09:35:30.536474+00:00",
+    "faultsExitCode": 0,
+    "faultsFinishedUtc": "2026-11-05T09:37:16.802551+00:00",
+    "timedStartedUtc": "2026-11-05T09:37:16.803658+00:00",
+    "timedExitCode": 1,
+    "timedFinishedUtc": "2026-11-05T10:37:58.936541+00:00",
+    "timedPhaseFinishedUtc": "2026-11-05T10:37:58.937042+00:00"
+  },
+  "faults": {
+    "inputOverflowRetained": 4096,
+    "controlTelemetryDropReported": true,
+    "captureOverflowRetained": 16384,
+    "virtualDeviceLossRetained": 1,
+    "blockedDecodeCancelMicroseconds": 0.125,
+    "latestPreparationRecovered": true,
+    "injectedStarvationFrames": 78465,
+    "sourceGapPreservedCapture": true,
+    "missingMediaReportedAndProjectRetained": true,
+    "scope": "Isolated software faults with explicit incomplete-prefix files. No physical device or UI claim."
+  },
+  "timed": {
+    "scope": "Real-clock software sink, production arrangement painter without native input/display, synthetic library and virtual lifecycle. No audio/MIDI device or acoustic timing.",
+    "requestedSeconds": 3600,
+    "observedSeconds": 3600.022223459,
+    "importSeconds": 41.213375292,
+    "sampleRate": 48000,
+    "requestedScheduler": "JUCE real-time thread",
+    "realtimeThreadReported": true,
+    "requestedPeriodMs": 2.666666666666667,
+    "requestedProcessingMs": 0.266666666666667,
+    "requestedMaximumProcessingMs": 1.333333333333333,
+    "blockFrames": 128,
+    "callbacks": 1350000,
+    "callbackExecution": {
+      "samples": 1350000,
+      "p50Microseconds": 11.917,
+      "p95Microseconds": 13.375,
+      "p99Microseconds": 14.833,
+      "p999Microseconds": 27.458,
+      "maximumMicroseconds": 3173.5
+    },
+    "virtualHostWakeLateness": {
+      "samples": 1350000,
+      "p50Microseconds": 0.0,
+      "p95Microseconds": 0.001,
+      "p99Microseconds": 0.001,
+      "p999Microseconds": 0.125,
+      "maximumMicroseconds": 15124.583
+    },
+    "callbackAndSinkExecution": {
+      "samples": 1350000,
+      "p50Microseconds": 12.292,
+      "p95Microseconds": 13.833,
+      "p99Microseconds": 15.417,
+      "p999Microseconds": 28.0,
+      "maximumMicroseconds": 3173.875
+    },
+    "virtualDeadlineMisses": 12,
+    "headroomTargetPassed": false,
+    "softwareIntegrityPassed": false,
+    "hourTargetPassed": false,
+    "memoryMeasurementAvailable": true,
+    "sourceStarvationFrames": 0,
+    "sourceFailures": 0,
+    "pcmCacheBytes": 1048576,
+    "delayedReads": 42202,
+    "artificialReadDelayMs": 1,
+    "plannedInputs": 107999,
+    "attemptedInputs": 107999,
+    "acceptedInputs": 107999,
+    "capturedInputs": 107999,
+    "controlMetrics": 107999,
+    "correlationErrors": 0,
+    "inputDrops": 0,
+    "lateInputs": 107801,
+    "maximumLateFrames": 291,
+    "callbackMetricDrops": 0,
+    "controlMetricDrops": 0,
+    "hostMetricDrops": 0,
+    "retentionDrops": 0,
+    "failureFlags": 0,
+    "producerWakeToReceipt": {
+      "samples": 107999,
+      "p50Microseconds": 1935.167,
+      "p95Microseconds": 9856.584,
+      "p99Microseconds": 10008.417,
+      "p999Microseconds": 10012.709,
+      "maximumMicroseconds": 18367.793
+    },
+    "receiptToPredictedSoftwareOutput": {
+      "samples": 107999,
+      "p50Microseconds": 3879.959,
+      "p95Microseconds": 5136.792,
+      "p99Microseconds": 5283.209,
+      "p999Microseconds": 5327.459,
+      "maximumMicroseconds": 8737.334
+    },
+    "predictedSoftwareLatencyTargetPassed": true,
+    "virtualOutputBufferFrames": 128,
+    "timingExamples": [
+      {
+        "source": "controller",
+        "receiptMicrosecondsFromStart": 10018.792,
+        "scheduledFrame": 481,
+        "commandFrame": 481,
+        "appliedFrame": 512,
+        "predictedOutputMicrosecondsFromStart": 13333.376
+      },
+      {
+        "source": "controller",
+        "receiptMicrosecondsFromStart": 10019.334,
+        "scheduledFrame": 481,
+        "commandFrame": 481,
+        "appliedFrame": 512,
+        "predictedOutputMicrosecondsFromStart": 13333.376
+      },
+      {
+        "source": "ui",
+        "receiptMicrosecondsFromStart": 10038.709,
+        "scheduledFrame": 482,
+        "commandFrame": 482,
+        "appliedFrame": 512,
+        "predictedOutputMicrosecondsFromStart": 13333.376
+      },
+      {
+        "source": "controller",
+        "receiptMicrosecondsFromStart": 20009.75,
+        "scheduledFrame": 960,
+        "commandFrame": 960,
+        "appliedFrame": 1024,
+        "predictedOutputMicrosecondsFromStart": 24000.001
+      },
+      {
+        "source": "controller",
+        "receiptMicrosecondsFromStart": 27234.167,
+        "scheduledFrame": 1307,
+        "commandFrame": 1307,
+        "appliedFrame": 1408,
+        "predictedOutputMicrosecondsFromStart": 32000.001
+      },
+      {
+        "source": "controller",
+        "receiptMicrosecondsFromStart": 49793.75,
+        "scheduledFrame": 1791,
+        "commandFrame": 1791,
+        "appliedFrame": 1792,
+        "predictedOutputMicrosecondsFromStart": 52473.584
+      },
+      {
+        "source": "controller",
+        "receiptMicrosecondsFromStart": 49794.375,
+        "scheduledFrame": 1791,
+        "commandFrame": 1791,
+        "appliedFrame": 1792,
+        "predictedOutputMicrosecondsFromStart": 52473.584
+      },
+      {
+        "source": "controller",
+        "receiptMicrosecondsFromStart": 50112.584,
+        "scheduledFrame": 2405,
+        "commandFrame": 2405,
+        "appliedFrame": 2432,
+        "predictedOutputMicrosecondsFromStart": 53333.334
+      },
+      {
+        "source": "controller",
+        "receiptMicrosecondsFromStart": 61627.25,
+        "scheduledFrame": 2958,
+        "commandFrame": 2958,
+        "appliedFrame": 3072,
+        "predictedOutputMicrosecondsFromStart": 66666.667
+      },
+      {
+        "source": "controller",
+        "receiptMicrosecondsFromStart": 81730.667,
+        "scheduledFrame": 3200,
+        "commandFrame": 3200,
+        "appliedFrame": 3200,
+        "predictedOutputMicrosecondsFromStart": 84403.126
+      },
+      {
+        "source": "controller",
+        "receiptMicrosecondsFromStart": 81731.209,
+        "scheduledFrame": 3200,
+        "commandFrame": 3200,
+        "appliedFrame": 3200,
+        "predictedOutputMicrosecondsFromStart": 84403.126
+      },
+      {
+        "source": "controller",
+        "receiptMicrosecondsFromStart": 84138.25,
+        "scheduledFrame": 4039,
+        "commandFrame": 4039,
+        "appliedFrame": 4096,
+        "predictedOutputMicrosecondsFromStart": 88000.001
+      }
+    ],
+    "masterAbsoluteSampleSum": 10929096.94284157,
+    "cueAbsoluteSampleSum": 22705754.26025391,
+    "nonFiniteSamples": 0,
+    "quietBlocks": 0,
+    "arrangementPaints": 133593,
+    "missedPaintIntervals": 133592,
+    "libraryJobs": 360,
+    "analysisJobs": 360,
+    "seekCancellations": 120,
+    "backgroundError": "",
+    "peakResidentBytesBeforeCaptureCommit": 89964544,
+    "capturePersistenceError": "Project exceeds the 8 MiB manifest limit",
+    "capturePersistencePassed": false,
+    "capturePersistenceSeconds": 0.354929209,
+    "peakResidentBytes": 157777920,
+    "memoryBudgetPassed": false
+  }
+}

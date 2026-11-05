@@ -522,5 +522,270 @@
     "qualifiedSourceRevision": "6e25222c8e615e0e1b406d3075032758b1e6e4b6",
     "scope": "Standalone PlaybackTests with production Engine, Playback and Streaming. Not whole-app instrumentation.",
     "result": "PASS: scheduling/control telemetry, pressure, concurrent producers and interruption"
+  },
+  "correctedRealtime": {
+    "metadata": {
+      "qualifiedSourceRevision": "566b0ca981f86d33c873a9b63a5b0919068ae7c2",
+      "sourceTreeSha256": "16c034aed3b99f41f9e570b861fa6ee4350a3dd4f6da714b1020d226c7eae4d6",
+      "sourceVerification": "Every tracked file byte-compared between the clean checkout and build source before execution",
+      "probeSha256": "a44613187ccb7640d3d51a068e7e4ae4b25da2fa95ae7303b2572aecc7a4bc5c",
+      "buildInfo": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "source-archive",
+        "cmakeVersion": "4.4.4",
+        "generator": "Unix Makefiles",
+        "system": "Darwin",
+        "systemVersion": "25.6.0",
+        "architecture": "arm64",
+        "compiler": "AppleClang",
+        "compilerVersion": "21.0.0.21000334",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "ON",
+        "uiFixtures": "ON",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "os": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+      "machine": "arm64",
+      "python": "3.15.0",
+      "startedUtc": "2026-11-05T09:34:06.855636+00:00",
+      "fixtures": {
+        "sampleRate": 48000,
+        "sourceSeconds": 12,
+        "sources": [
+          {
+            "file": "A.wav",
+            "sha256": "387056ffae067b6cb29322c1975ade1c1825817db9af22303dc01221c5512e48",
+            "fileBytes": 2304044
+          },
+          {
+            "file": "B.wav",
+            "sha256": "c57811d43cd5feed9e3d6839f4e62a33bde63e148728bcf15a42515166b3cc51",
+            "fileBytes": 2304044
+          }
+        ]
+      },
+      "seconds": 10,
+      "blockFrames": 128,
+      "scheduler": "realtime",
+      "scope": "Software sink and offscreen production painter. No audio/MIDI device or native UI interaction.",
+      "faultsStartedUtc": "2026-11-05T09:34:06.856251+00:00",
+      "faultsExitCode": 0,
+      "faultsFinishedUtc": "2026-11-05T09:34:07.246848+00:00",
+      "timedStartedUtc": "2026-11-05T09:34:07.247018+00:00",
+      "timedExitCode": 0,
+      "timedFinishedUtc": "2026-11-05T09:34:17.643152+00:00",
+      "timedPhaseFinishedUtc": "2026-11-05T09:34:17.644231+00:00",
+      "capturedProjectSha256": "c76c37da09d816dea0ab9921121ee571fcf88228252ec0893fc426d47de4db8d",
+      "capturedProjectBytes": 53373,
+      "archiveProjectExitCode": 0,
+      "archivedProjectSha256": "cd58969ed509d4135154f3590accab31ce5680eb81efde622fd44f4a65e746d9"
+    },
+    "faults": {
+      "inputOverflowRetained": 4096,
+      "controlTelemetryDropReported": true,
+      "captureOverflowRetained": 16384,
+      "virtualDeviceLossRetained": 1,
+      "blockedDecodeCancelMicroseconds": 0.083,
+      "latestPreparationRecovered": true,
+      "injectedStarvationFrames": 78465,
+      "sourceGapPreservedCapture": true,
+      "missingMediaReportedAndProjectRetained": true,
+      "scope": "Isolated software faults with explicit incomplete-prefix files. No physical device or UI claim."
+    },
+    "timed": {
+      "scope": "Real-clock software sink, production arrangement painter without native input/display, synthetic library and virtual lifecycle. No audio/MIDI device or acoustic timing.",
+      "requestedSeconds": 10,
+      "observedSeconds": 10.002015083,
+      "importSeconds": 0.149709333,
+      "sampleRate": 48000,
+      "requestedScheduler": "JUCE real-time thread",
+      "realtimeThreadReported": true,
+      "requestedPeriodMs": 2.666666666666667,
+      "requestedProcessingMs": 0.266666666666667,
+      "requestedMaximumProcessingMs": 1.333333333333333,
+      "blockFrames": 128,
+      "callbacks": 3750,
+      "callbackExecution": {
+        "samples": 3750,
+        "p50Microseconds": 45.459,
+        "p95Microseconds": 53.208,
+        "p99Microseconds": 57.5,
+        "p999Microseconds": 68.292,
+        "maximumMicroseconds": 94.75
+      },
+      "virtualHostWakeLateness": {
+        "samples": 3750,
+        "p50Microseconds": 0.083,
+        "p95Microseconds": 0.166,
+        "p99Microseconds": 0.166,
+        "p999Microseconds": 3.749,
+        "maximumMicroseconds": 30.999
+      },
+      "callbackAndSinkExecution": {
+        "samples": 3750,
+        "p50Microseconds": 47.25,
+        "p95Microseconds": 55.0,
+        "p99Microseconds": 59.333,
+        "p999Microseconds": 70.0,
+        "maximumMicroseconds": 96.542
+      },
+      "virtualDeadlineMisses": 0,
+      "headroomTargetPassed": true,
+      "softwareIntegrityPassed": true,
+      "hourTargetPassed": false,
+      "memoryMeasurementAvailable": true,
+      "sourceStarvationFrames": 0,
+      "sourceFailures": 0,
+      "pcmCacheBytes": 1048576,
+      "delayedReads": 132,
+      "artificialReadDelayMs": 1,
+      "plannedInputs": 699,
+      "attemptedInputs": 699,
+      "acceptedInputs": 699,
+      "capturedInputs": 699,
+      "controlMetrics": 699,
+      "correlationErrors": 0,
+      "inputDrops": 0,
+      "lateInputs": 696,
+      "maximumLateFrames": 128,
+      "callbackMetricDrops": 0,
+      "controlMetricDrops": 0,
+      "hostMetricDrops": 0,
+      "retentionDrops": 0,
+      "failureFlags": 0,
+      "producerWakeToReceipt": {
+        "samples": 699,
+        "p50Microseconds": 2181.375,
+        "p95Microseconds": 8718.708,
+        "p99Microseconds": 9925.333,
+        "p999Microseconds": 10027.041,
+        "maximumMicroseconds": 10027.041
+      },
+      "receiptToPredictedSoftwareOutput": {
+        "samples": 699,
+        "p50Microseconds": 3883.125,
+        "p95Microseconds": 5206.917,
+        "p99Microseconds": 5305.0,
+        "p999Microseconds": 5331.834,
+        "maximumMicroseconds": 5331.834
+      },
+      "predictedSoftwareLatencyTargetPassed": true,
+      "virtualOutputBufferFrames": 128,
+      "timingExamples": [
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 9610.583,
+          "scheduledFrame": 461,
+          "commandFrame": 461,
+          "appliedFrame": 512,
+          "predictedOutputMicrosecondsFromStart": 13333.417
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 9611.5,
+          "scheduledFrame": 461,
+          "commandFrame": 461,
+          "appliedFrame": 512,
+          "predictedOutputMicrosecondsFromStart": 13333.417
+        },
+        {
+          "source": "ui",
+          "receiptMicrosecondsFromStart": 10016.458,
+          "scheduledFrame": 481,
+          "commandFrame": 481,
+          "appliedFrame": 512,
+          "predictedOutputMicrosecondsFromStart": 13333.417
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 17573.583,
+          "scheduledFrame": 844,
+          "commandFrame": 844,
+          "appliedFrame": 896,
+          "predictedOutputMicrosecondsFromStart": 21333.375
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 27519.083,
+          "scheduledFrame": 1321,
+          "commandFrame": 1321,
+          "appliedFrame": 1408,
+          "predictedOutputMicrosecondsFromStart": 32000.0
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 33367.333,
+          "scheduledFrame": 1602,
+          "commandFrame": 1602,
+          "appliedFrame": 1664,
+          "predictedOutputMicrosecondsFromStart": 37333.375
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 44073.0,
+          "scheduledFrame": 2116,
+          "commandFrame": 2116,
+          "appliedFrame": 2176,
+          "predictedOutputMicrosecondsFromStart": 48000.042
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 51517.583,
+          "scheduledFrame": 2473,
+          "commandFrame": 2473,
+          "appliedFrame": 2560,
+          "predictedOutputMicrosecondsFromStart": 56000.042
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 61192.583,
+          "scheduledFrame": 2937,
+          "commandFrame": 2937,
+          "appliedFrame": 2944,
+          "predictedOutputMicrosecondsFromStart": 64000.042
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 68588.708,
+          "scheduledFrame": 3292,
+          "commandFrame": 3292,
+          "appliedFrame": 3328,
+          "predictedOutputMicrosecondsFromStart": 72000.042
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 75992.083,
+          "scheduledFrame": 3648,
+          "commandFrame": 3648,
+          "appliedFrame": 3712,
+          "predictedOutputMicrosecondsFromStart": 80000.042
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 86115.458,
+          "scheduledFrame": 4134,
+          "commandFrame": 4134,
+          "appliedFrame": 4224,
+          "predictedOutputMicrosecondsFromStart": 90666.708
+        }
+      ],
+      "masterAbsoluteSampleSum": 30174.214331981224,
+      "cueAbsoluteSampleSum": 63071.539611816406,
+      "nonFiniteSamples": 0,
+      "quietBlocks": 0,
+      "arrangementPaints": 500,
+      "missedPaintIntervals": 0,
+      "libraryJobs": 1,
+      "analysisJobs": 1,
+      "seekCancellations": 1,
+      "backgroundError": "",
+      "peakResidentBytesBeforeCaptureCommit": 36421632,
+      "capturePersistencePassed": true,
+      "capturePersistenceSeconds": 0.007485333,
+      "peakResidentBytes": 36421632,
+      "memoryBudgetPassed": true
+    }
   }
 }
