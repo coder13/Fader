@@ -1,0 +1,16 @@
+{
+  "project": "Fader",
+  "version": "@PROJECT_VERSION@",
+  "sourceRevision": "@FADER_SOURCE_REVISION@",
+  "cmakeVersion": "@CMAKE_VERSION@",
+  "generator": "@CMAKE_GENERATOR@",
+  "system": "@CMAKE_SYSTEM_NAME@",
+  "systemVersion": "@CMAKE_SYSTEM_VERSION@",
+  "architecture": "@CMAKE_SYSTEM_PROCESSOR@",
+  "compiler": "@CMAKE_CXX_COMPILER_ID@",
+  "compilerVersion": "@CMAKE_CXX_COMPILER_VERSION@",
+  "cxxStandard": "@CMAKE_CXX_STANDARD@",
+  "buildType": "@CMAKE_BUILD_TYPE@",
+  "nativeApp": "@FADER_BUILD_APP@",
+  "juceRevision": "@FADER_JUCE_REVISION@"
+}

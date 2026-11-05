@@ -1,6 +1,7 @@
 /build*/
 /.deps/
 /.DS_Store
+/CMakeUserPresets.json
 *.faderset
 *.wav
 *.mp3

@@ -7,6 +7,7 @@
 #include <stdexcept>
 using namespace fader;
 void testArrangement();
+void testAudioSetup();
 void check(bool pass, const char *message) {
     if (!pass)
         throw std::runtime_error(message);
@@ -14,6 +15,7 @@ void check(bool pass, const char *message) {
 int main() {
     juce::ScopedJuceInitialiser_GUI juce;
     testArrangement();
+    testAudioSetup();
     const auto dir = juce::File::getSpecialLocation(juce::File::tempDirectory)
                          .getNonexistentChildFile("fader-test", {}, false);
     dir.createDirectory();

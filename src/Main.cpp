@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "Arrangement.h"
+#include "AudioSetup.h"
 #include "LibraryView.h"
 #include "Theme.h"
 #include <cmath>
@@ -814,25 +815,9 @@ class Workspace final : public juce::Component,
             });
     }
     bool ensureAudio() {
-        if (!audio.getCurrentAudioDevice()) {
-            auto error = audio.initialise(0, 4, nullptr, true);
-            if (error.isNotEmpty()) {
-                setStatus(error);
-                return false;
-            }
-        }
-        auto settings = audio.getAudioDeviceSetup();
-        settings.sampleRate = projectRate;
-        if (!audioConfigured)
-            settings.bufferSize = 128;
-        auto error = audio.setAudioDeviceSetup(settings, true);
+        const auto error = configureAudioOutput(audio, audioConfigured);
         if (error.isNotEmpty()) {
-            settings.bufferSize = 256;
-            error = audio.setAudioDeviceSetup(settings, true);
-        }
-        if (error.isNotEmpty() || !audio.getCurrentAudioDevice() ||
-            std::abs(audio.getCurrentAudioDevice()->getCurrentSampleRate() - projectRate) > 0.1) {
-            setStatus("Choose an output supporting 48 kHz in Preferences. " + error);
+            setStatus(error);
             return false;
         }
         audioConfigured = true;
@@ -956,8 +941,10 @@ class Workspace final : public juce::Component,
             preferencesWindow->toFront(true);
             return;
         }
-        audio.initialise(0, 4, nullptr, true);
-        audioConfigured = true;
+        const auto error = configureAudioOutput(audio, audioConfigured);
+        audioConfigured = error.isEmpty();
+        if (error.isNotEmpty())
+            setStatus(error);
         auto safe = juce::Component::SafePointer<Workspace>(this);
         juce::DialogWindow::LaunchOptions options;
         options.content.setOwned(new PreferencesPanel(audio, preferences, [safe](Preferences p) {

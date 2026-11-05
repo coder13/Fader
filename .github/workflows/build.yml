@@ -1,0 +1,70 @@
+name: Build and test
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    name: Headless core / Linux
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Configure without JUCE or audio device
+        run: cmake --preset core
+      - name: Build
+        run: cmake --build --preset core
+      - name: Test
+        run: ctest --preset core --verbose --output-junit build/core/results.xml
+      - name: Retain build metadata and test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: linux-core-evidence
+          path: |
+            build/core/fader-build-info.json
+            build/core/results.xml
+            build/core/Testing/Temporary/LastTest.log
+          retention-days: 14
+          if-no-files-found: warn
+
+  mac:
+    name: Native app and tests / macOS
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Configure with pinned JUCE
+        run: cmake --preset native
+      - name: Build app, probe and tests
+        run: cmake --build --preset native
+      - name: Test without audio hardware
+        run: ctest --preset native --verbose --output-junit build/native/results.xml
+      - name: Verify application bundle
+        run: |
+          codesign --force --deep --sign - build/native/Fader_artefacts/Release/Fader.app
+          codesign --verify --deep --strict build/native/Fader_artefacts/Release/Fader.app
+      - name: Retain build metadata and test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: mac-native-evidence
+          path: |
+            build/native/fader-build-info.json
+            build/native/results.xml
+            build/native/Testing/Temporary/LastTest.log
+          retention-days: 14
+          if-no-files-found: warn

@@ -1,0 +1,27 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {"major": 3, "minor": 22, "patch": 0},
+  "configurePresets": [
+    {
+      "name": "core",
+      "displayName": "Headless core and tests (no JUCE or device)",
+      "binaryDir": "${sourceDir}/build/core",
+      "cacheVariables": {"CMAKE_BUILD_TYPE": "Release", "BUILD_TESTING": "ON", "FADER_BUILD_APP": "OFF"}
+    },
+    {
+      "name": "native",
+      "displayName": "Native app, media tools and all tests",
+      "inherits": "core",
+      "binaryDir": "${sourceDir}/build/native",
+      "cacheVariables": {"FADER_BUILD_APP": "ON"}
+    }
+  ],
+  "buildPresets": [
+    {"name": "core", "configurePreset": "core", "configuration": "Release", "jobs": 3},
+    {"name": "native", "configurePreset": "native", "configuration": "Release", "jobs": 3}
+  ],
+  "testPresets": [
+    {"name": "core", "configurePreset": "core", "configuration": "Release", "output": {"outputOnFailure": true}, "execution": {"noTestsAction": "error"}},
+    {"name": "native", "configurePreset": "native", "configuration": "Release", "output": {"outputOnFailure": true}, "execution": {"noTestsAction": "error"}}
+  ]
+}

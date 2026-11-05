@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+#include "AudioSetup.h"
 #include "Library.h"
 #include "Media.h"
 #include <algorithm>
@@ -41,13 +42,7 @@ class SilentDeviceProbe final : public juce::AudioIODeviceCallback {
 };
 void audioSmoke() {
     juce::AudioDeviceManager manager;
-    auto error = manager.initialise(0, 2, nullptr, true);
-    if (error.isNotEmpty())
-        throw std::runtime_error(error.toStdString());
-    auto settings = manager.getAudioDeviceSetup();
-    settings.sampleRate = 48000;
-    settings.bufferSize = 128;
-    error = manager.setAudioDeviceSetup(settings, true);
+    const auto error = fader::configureAudioOutput(manager);
     if (error.isNotEmpty())
         throw std::runtime_error(error.toStdString());
     auto *device = manager.getCurrentAudioDevice();

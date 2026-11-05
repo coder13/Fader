@@ -14,7 +14,7 @@ codesign --force --deep --sign - build/Fader_artefacts/Release/Fader.app
 open build/Fader_artefacts/Release/Fader.app
 ```
 
-Host-architecture macOS build only; Intel, Windows and Linux remain unqualified. Pure core tests need no JUCE/network: configure a separate build with `-DFADER_BUILD_APP=OFF`.
+See [reproducible builds and CI](build-and-ci.md) for shared `core` / `native` presets, clean-checkout tests and retained build metadata. Hardware, Windows and Linux application support remain unqualified. Pure core tests need no JUCE/network: configure a separate build with `-DFADER_BUILD_APP=OFF`.
 
 ## Try the workflow
 
