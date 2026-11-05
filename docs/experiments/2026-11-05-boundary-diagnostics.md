@@ -1,10 +1,10 @@
 # Boundary and CPU diagnostic candidate
 
-Status: implementation candidate `806f4252b7c442e077a0ea9463b360b3814d97ad`; macOS native and Linux core CI pass, Windows remains pending.
+Status: implementation candidate `806f4252b7c442e077a0ea9463b360b3814d97ad`; macOS/Windows native and Linux core CI pass.
 This is instrumentation, not a repair or a successful hour qualification.
 The [completed 128-frame run](2026-11-05-software-stress-followup.md) remains failed.
-The separate 256-frame run continues with its original checkout and binary.
-No local build or additional host runs alongside it.
+The separate 256-frame run has finished with its original checkout and binary; its failed targets remain separate.
+No local build or additional host ran alongside it.
 
 ## Why these observations
 
@@ -74,7 +74,7 @@ The native stress smoke adds a separate two-second CPU-mode run and checks compl
 musical/wall integrity, painter context and the explicit performance exclusion.
 Default and instrumented results are kept as separate objects.
 Existing callback allocation tests remain enabled on the unchanged production core.
-The checked macOS results below supply partial functional evidence; Windows still needs its own result.
+The checked native results below supply functional collection evidence with explicit platform limits.
 
 ## macOS artifact check
 
@@ -92,7 +92,25 @@ Maximum rows may repeat frames already present in the bounded tail lists.
 The ordinary-priority shared-runner diagnostic has 477 virtual misses, 53 late paint starts and 364 omitted host tail rows.
 It explicitly marks performance qualification ineligible and the hour target false.
 This proves functional collection and visible limits, not performance, an owner-Mac cause, or a timing repair.
-The Windows build must complete and its own artifacts must be checked before integration.
+The separate Windows artifact check below completes the native functional check.
+
+## Windows and Linux artifact checks
+
+The same clean CI passes all seven Windows suites and five Linux core suites.
+Downloaded [Windows/Linux metadata and JUnit](data/2026-11-05-boundary-windows-linux-ci.json) match exact source `806f4252b7c442e077a0ea9463b360b3814d97ad`, pinned JUCE and UI fixtures OFF, with no failures, errors or skips.
+Linux covers the unchanged core; it does not compile this native diagnostic branch in that headless job.
+
+Windows retains all 750 callback and 100 painter CPU readings with zero read errors, all 247 controls, and correct serialized query brackets/context.
+All 260 host and three painter maximum rows pass independent arithmetic checks.
+The ordinary-priority shared runner reports three virtual misses and 74 omitted host tail rows; performance eligibility remains false.
+
+However, all 750 callback CPU deltas are zero, while painter deltas jump in 15.625 ms amounts.
+The `GetThreadTimes` accounting is too coarse here to diagnose the cost of one short callback.
+Zero does not mean the callback did no CPU work.
+`complete` means every requested native query returned an ordered reading, not that the accounting precision resolves the operation.
+Reported resolution is unknown on Windows, as recorded by its explicit unsupported-resolution status.
+The current detailed CPU investigation therefore uses the macOS clock; Windows short-call CPU attribution remains unqualified.
+Do not derive a blocked-time estimate from those zero Windows deltas.
 
 ## Commands after the current fallback finishes
 
