@@ -351,7 +351,7 @@ GitHub: [#12](https://github.com/coder13/Fader/issues/12). Labels: `phase:poc`, 
 
 GitHub: [#13](https://github.com/coder13/Fader/issues/13). Labels: `phase:poc`, `type:feature`, `area:audio`.
 
-**Current evidence:** [Independent offline host qualification](experiments/2026-11-05-offline-render.md) passes local applied-event/range parity, checked storage-error retention and a real 60-minute export with delayed reads, zero PCM error and ~13 MiB RSS. Clean CI and native Cancel export/progress inspection remain pending.
+**Current evidence:** [Independent offline host qualification](experiments/2026-11-05-offline-render.md) passes local applied-event/range parity, checked storage-error retention and a real 60-minute export with delayed reads, zero PCM error and ~12 MiB RSS. Clean Linux/macOS CI passes; native Cancel export/progress inspection remains pending.
 
 **Scope:** Use the same render core in an independent offline host. Define range, tail, clipping, alignment and render-version policy; wait for decoded source readiness outside the callback.
 

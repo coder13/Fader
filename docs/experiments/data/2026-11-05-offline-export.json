@@ -10,9 +10,9 @@
   "cueAbsoluteSampleSum": 48238.5147857666,
   "projectUnchanged": true,
   "failedSources": 0,
-  "importSeconds": 92.912432041,
-  "exportSeconds": 32.864779625,
-  "verificationSeconds": 9.590555792,
-  "peakResidentBytes": "13615104",
+  "importSeconds": 92.103640292,
+  "exportSeconds": 32.911834792,
+  "verificationSeconds": 9.792268916,
+  "peakResidentBytes": "12288000",
   "scope": "Full 60-minute real WAV export and full independent pre-device PCM comparison; accelerated software hosts, synthetic sparse WAV sources, no audio device/controller/UI. Not real-time deadline or acoustic qualification."
 }
