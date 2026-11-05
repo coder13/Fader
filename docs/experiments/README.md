@@ -1,6 +1,10 @@
 # Experiment reports
 
-The [read-only library inventory](2026-11-04-library-inventory.md) is complete. No audio-engine or controller qualification has been completed yet. Add a report here for each decision spike and qualification run. Use a descriptive filename such as `2026-11-xx-s4-native-routing.md`; replace the placeholder with the actual run date.
+The [read-only library inventory](2026-11-04-library-inventory.md) is complete.
+Software engine, streaming, seek, storage, export and portability reports now record their own tested scopes and remaining limits.
+Physical controller and acoustic qualification remain open.
+The [128/256-frame stress hours](2026-11-05-software-stress-followup.md) and [completed CPU diagnostic](2026-11-05-boundary-hour.md) still fail their timing gates.
+Add a report for each decision spike and qualification run, using its actual date and a descriptive filename.
 
 Copy this outline and replace the prompts with evidence. A failed experiment is a useful result when it identifies the next decision.
 

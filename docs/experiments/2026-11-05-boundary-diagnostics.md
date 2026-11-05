@@ -2,6 +2,8 @@
 
 Status: implementation candidate `806f4252b7c442e077a0ea9463b360b3814d97ad`; macOS/Windows native and Linux core CI pass.
 This is instrumentation, not a repair or a successful hour qualification.
+The [completed full-scale CPU hour](2026-11-05-boundary-hour.md) preserves all observations and controls, but still records three virtual misses and 80 late painter starts.
+Its long wall intervals contain much less observed thread CPU time, which guides the next scoped process-activity experiment.
 The [completed 128-frame run](2026-11-05-software-stress-followup.md) remains failed.
 The separate 256-frame run has finished with its original checkout and binary; its failed targets remain separate.
 No local build or additional host ran alongside it.
