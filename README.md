@@ -10,6 +10,7 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 | --- | --- |
 | [Competitive workflow audit](docs/research/competitive-workflow-audit.md) | Deeper comparison, source evidence, adoption/reuse decision gate |
 | [UI evidence atlas](docs/research/ui-evidence-atlas.md) | 33 inspected published UI images/crops across nine products |
+| [Audacity 4 design lessons](docs/research/audacity-4-design-lessons.md) | Video/transcript research translated into Fader interaction proposals |
 | [Product and UX](docs/product-and-ux.md) | User workflows, Audacity-inspired interface, feature priorities |
 | [Architecture](docs/architecture.md) | Real-time engine, editor, hardware, and export boundaries |
 | [Set format and automation](docs/set-format-and-automation.md) | Editable performance semantics, time domains, persistence |
@@ -30,6 +31,7 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 - Open source; macOS first, Windows required, Linux a bonus; investigate web as a platform.
 - Initial hardware is **Native Instruments Traktor Kontrol S4 MK3**.
 - Arrange local audio files on a timeline with visible track boundaries, beat grids, and editable automation.
+- Model the UI on the lessons of the Audacity 4 redesign: understandable defaults, direct and reversible editing, discoverable controls, and accessible presentation; validate the concrete DJ interactions.
 - Use the existing `~/Music` library directly: MP3/WAV import in the completed POC, broader common DJ formats and collection-wide qualification for the usable alpha.
 - Record a performance as automation, optionally alongside audio; record replacement sections of a prepared set.
 - Save portable, versioned set projects and export WAV, MP3, and further formats in stages.

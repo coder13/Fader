@@ -8,6 +8,8 @@ On the user's Mac with the S4 MK3, load two local MP3/WAV files from the existin
 
 The demo must show that the transition remains editable and that export agrees with the saved project. A controller moving an on-screen knob or an attractive timeline alone does not complete the POC.
 
+Apply the user-confirmed [Audacity 4 design direction](research/audacity-4-design-lessons.md) in P3/A13: discoverable clip handles, ordinary selection after zoom, clear automation/recording state, reversible edits and explicit range scope. Validate these as interaction tasks; full workspaces, ripple editing, stretch handles and effects are not added to POC scope.
+
 ## Test configuration
 
 Observed machine: Apple M3 MacBook Air, 16 GB, macOS 26.6.2 (25G83). Confirmed controller: Native Instruments Traktor Kontrol S4 MK3. Firmware, USB connection, available channel/rate configurations, and real latency remain unknown. Record these during qualification without changing firmware as a prerequisite.

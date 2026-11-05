@@ -1,6 +1,6 @@
 # Product and user experience
 
-Status: Proposed. Updated 2026-11-04. User requirements are recorded in the [README](../README.md).
+Status: Concrete interactions proposed; Audacity 4 redesign lessons are a user-confirmed UI direction. Updated 2026-11-04. User requirements are recorded in the [README](../README.md).
 
 ## Product definition
 
@@ -20,34 +20,43 @@ An arrangement lane is not permanently the same thing as a physical deck. The PO
 
 ## Interface direction
 
-Use Audacity as the reference for readable waveforms, obvious transport, direct envelope manipulation, and a visible relationship between clips and time. Use Ableton's arrangement/automation concepts as a workflow reference. This is a visual and interaction direction, not a request to copy either application's implementation. Reference observations and sources are in [product references](research/product-references.md).
+Use the **Audacity 4 redesign lessons as the primary UI direction**: a usable default, visible editing affordances, reversible operations, fewer pointer modes and accessible presentation. The [video research and timestamped design rationale](research/audacity-4-design-lessons.md) translate that direction into Fader-specific proposals. Ableton and the competitor audit remain references for automation and DJ workflows. The choice of UI framework and engine remains subject to the adoption/reuse decision.
 
 ```text
-Project name       Save   Undo   Play/Stop   Record actions [ ] Audio [ ]   Export
-Time / bars ruler ---------------- playhead ------------------ tempo map -------
-Files / Search   | Lane A   [ Track 1 waveform --------------------- ]
-Preview / BPM    |   Gain      ───────────╲____
-Folders         | Lane B                    [ Track 2 waveform ------------ ]
-                |   Gain                    ____╱───────────────────────────
-                | Master crossfader        A ─────╲───── B
-Selected clip / automation details            Compact deck and mixer controls
-Audio device • buffer • cue routing      Controller status      Recording state
+Project    Save   Undo/Redo   Play/Stop   Record actions   Audio arm   Export
+Position / tempo / snap / zoom                       Audio setup   Panels
+Time / bars ruler ---------------------- playhead --------------------------
+Loop strip                  [ practice loop ]
+Files / Search | Lane A   [ header: Track 1 ------------------------ ]
+Preview / BPM  |          < waveform / time selection               > | Details
+Folders        |   Gain       ───────────╲____                         | Owner
+               | Lane B                  [ header: Track 2 -------- ] | Value
+               |   Gain                   ____╱───────────────────── | Read
+               | Retake range + return region; armed targets named    |
+Compact mixer: controlled source • pickup • Read/Override/Record • Resume
+Controller connection • master/cue status • active recording/errors
 ```
 
-This is a proposed layout, not an implemented screenshot. At normal use, the timeline should dominate the window. Show only selected/used automation lanes by default. Keep a compact deck/mixer strip available for rehearsal; do not fill the initial screen with four large turntable graphics. Tempo, selected range, snap mode, automation arm, and override state must remain visible.
+This is a proposed layout, not an implemented screenshot. The timeline dominates the default **Edit** layout. Files and details can collapse; show selected/used automation lanes with a visible reveal action. Keep a compact mixer available for rehearsal. Audio setup contains device/rate/buffer configuration, while connection, routing failures, capture errors, armed targets and override state stay visible. No customization wizard is required before importing and editing.
+
+The POC has one layout with collapsible panels and Reset layout. Later **Edit/Perform** workspace presets may change emphasis, but never transport, capture, routing, automation ownership or undo history. Layout/theme preferences stay separate from the saved musical project. Full docking and configurable toolbars are deferred until they solve observed tasks.
 
 The file browser needs folders, search, supported-format status, duration, BPM/grid state, preview, and drag/drop. It must use the existing music-folder layout without moving or converting source files. Large-library indexing and metadata analysis run in the background. The completed POC browses a chosen folder and imports MP3/WAV; the alpha qualifies the whole collection and broader common formats. See [audio import](audio-import-and-library.md).
 
 ## Editing rules
 
-- Waveform dragging selects time; a clip header moves the clip; edges trim without modifying the source. Distinct affordances prevent accidental movement.
+- Waveform dragging selects time; a clip header moves the clip. Selected/focused clips expose visible trim handles, with keyboard/numeric alternatives for small targets. Trimming preserves the source and can be reversed by extending the handles. Future stretch has a separate labelled control; no hidden-modifier-only discovery.
+- Selection, move, trim and zoom need no persistent global pointer modes. “Show automation” never arms recording. A later split tool can support a visible command and a temporary hold shortcut with an obvious cursor and Escape cancellation.
 - A parameter's context action reveals its automation lane. Points support drag, exact numeric values, deletion, and undo.
 - Gain uses decibels in the editor, with an explicit mute value; the engine defines how values interpolate and smooth.
 - An automation mode label says **Read**, **Override**, or **Record**. A clear **Resume automation** action ends an override. Touch and latch become explicit modes later.
 - Snapping supports off/beat/bar. Display musical and absolute time; do not infer that a displayed beat grid is verified.
 - Moving a clip moves clip-owned automation. Bus/master automation stays at the set position unless the user explicitly includes it in the move.
+- Delete leaves a gap by default. Future “Close gap on selected lanes” and “Close gap across set” are separate commands with an affected-material preview. Explicit clip groups have visible membership; overlap never implicitly groups clips or includes master automation. The full ripple/grouping feature set is not added to the POC.
+- The playhead, edit selection, loop strip and retake/return region have distinct purposes and labels. Export explicitly chooses full set or a range and tail policy; a practice loop does not silently change export bounds.
+- Preview a destination before a move. If the POC cannot support that overlap, explain the limit and show a valid placement instead of silently refusing it or pretending extra sources can play.
 - Record controls distinguish automation from audio. Cue monitoring and hardware output volume are not silently recorded into the exported master.
-- Keyboard access, scalable UI, focus states, sufficient contrast, and parameter labels are part of the design. Do not use color alone to show armed or overridden state.
+- Keyboard access, scalable UI, visible focus, light/dark and high-contrast presentation, units and exact values are part of the design. Color is supplementary to labels/shapes for selection, armed/overridden state, cue and errors. No onboarding popup interrupts active performance or recording.
 
 ## Feature stages
 
@@ -65,6 +74,8 @@ The file browser needs folders, search, supported-format status, duration, BPM/g
 The goal of eventually having broad DJ features is preserved in the backlog. Plugin effects are a confirmed version 2/3 requirement: drag effects from a plugin browser onto a song or effects rack and edit their exposed parameters on the timeline. See [plugin effects](plugin-effects.md). Plugin hosting, streaming services, DRM media, DVS/timecode, stem separation, video, and cloud collaboration remain outside the POC.
 
 ## Usability evidence
+
+Validate the [Audacity-derived interaction tasks](research/audacity-4-design-lessons.md#proposed-usability-acceptance-tasks) without coaching. Include first-use clip movement/trimming, editing immediately after zooming, deletion expectations, automation visibility versus recording, and distinct loop/retake/export bounds. Record first-attempt success, mode errors, help requests and timing. The video's audience findings and untested concepts are not Fader measurements.
 
 The [UI evidence atlas](research/ui-evidence-atlas.md) records 33 inspected published images/crops. It suggests testing a selected-transition mixer, visible preview/record/override state, selective automation-lane display, and a move preview that makes automation ownership clear. These are design hypotheses, not measured usability improvements. Preserve the editing rules above until an explicit decision changes them; in particular, MixCanvas's documented lane-owned curves differ from this proposal.
 

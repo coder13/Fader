@@ -4,6 +4,8 @@ Reviewed 2026-11-04. These are workflow references, not a claim of feature parit
 
 For the deeper comparison, read the [competitive workflow audit](competitive-workflow-audit.md) and [UI evidence atlas](ui-evidence-atlas.md). They distinguish documented features, visual observations, inferences and untested questions, and propose an adoption/reuse gate before new-engine implementation.
 
+The user subsequently selected the **Audacity 4 redesign lessons** as the primary UI direction. The [timestamped video research and Fader proposals](audacity-4-design-lessons.md) now govern that reference, replacing the earlier generic “Audacity-like” description. This adds no evidence of engine, controller or current-release compatibility.
+
 | Reference | Verified observation | Design implication |
 | --- | --- | --- |
 | GlideMix | Audacity-derived arranger with published Mac/Windows binaries and GPL source archives. | First investigate an existing arranger plus focused controller integration. [Repository and releases](https://github.com/cristitm76/glidemix-releases) |

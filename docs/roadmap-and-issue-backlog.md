@@ -60,9 +60,9 @@ Acceptance: actual HID input/LED results and four-channel physical routing repor
 
 ### DJ-005 Compare minimal native and web timeline interactions
 
-Type: spike. Dependencies: none for a static/interaction prototype; DJ-001 before implementation dependencies. Scope: two waveform clips, zoom/scroll/trim, one automation lane, keyboard/numeric editing, drag/drop.
+Type: spike. Dependencies: none for a static/interaction prototype; DJ-001 before implementation dependencies. Scope: two waveform clips, zoom/scroll/trim, one automation lane, keyboard/numeric editing, drag/drop; apply the [Audacity 4 interaction direction](research/audacity-4-design-lessons.md).
 
-Acceptance: run the product workflow tasks with project owner; record mode confusion and editor implementation/bridge cost; select initial UI host or deliberately keep thin native harness until M2. Do not duplicate production audio engines. [UX plan](product-and-ux.md).
+Acceptance: run the product workflow tasks with project owner; test visible move/trim affordances, return to selection after zoom, deletion expectations, units/focus/contrast, and automation visibility versus record state. Record mode confusion and editor implementation/bridge cost; select initial UI host or deliberately keep thin native harness until M2. Workspaces remain presentation-only; no mandatory full docking or plugin work. Do not duplicate production audio engines or choose Qt solely from the reference video. [UX plan](product-and-ux.md).
 
 ## M1 native harness issues
 
