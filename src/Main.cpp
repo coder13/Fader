@@ -302,10 +302,14 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                     safe->dirty = false;
                     safe->busy = false;
                     safe->sync();
-                    safe->setStatus(safe->project.perClip
-                                        ? "Set opened. Clip automation and source identities restored."
-                                        : "Version 1 set: original playback and export preserved. Choose New "
-                                          "set to use clip automation.");
+                    safe->setStatus(
+                        safe->project.loadedSchemaVersion < 3
+                            ? "Older set opened. Saving updates its file format; use a new filename to keep "
+                              "the original."
+                        : safe->project.perClip
+                            ? "Set opened. Clip automation and source identities restored."
+                            : "Legacy mixer set: original playback and export preserved. Choose New "
+                              "set to use clip automation.");
 #if FADER_ENABLE_UI_FIXTURES
                     if (fixtureCase != 0)
                         safe->start(false);
@@ -745,6 +749,7 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
                 for (const auto &existing : base.clips)
                     if (existing.path == file.getFullPathName().toStdString()) {
                         c = existing;
+                        c.id = newIdentity(); // another instance of the same asset
                         c.automation = Clip{}.automation;
                         c.cue = false;
                         reused = true;

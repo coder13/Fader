@@ -3,9 +3,22 @@
 #include <cmath>
 #include <fader/Engine.h>
 #include <limits>
+#include <random>
 #include <stdexcept>
 
 namespace fader {
+std::string newIdentity() {
+    // 128 bits from the platform's random device; no shared PRNG state.
+    std::random_device random;
+    constexpr char digits[] = "0123456789abcdef";
+    std::string result(32, '0');
+    for (unsigned i = 0; i < 4; ++i) {
+        const auto value = static_cast<std::uint32_t>(random());
+        for (unsigned nibble = 0; nibble < 8; ++nibble)
+            result[i * 8 + nibble] = digits[(value >> (nibble * 4)) & 15];
+    }
+    return result;
+}
 float Curve::at(Frame frame) const noexcept {
     auto next = std::upper_bound(points.begin(), points.end(), frame,
                                  [](Frame f, const Point &p) { return f < p.frame; });

@@ -20,6 +20,8 @@ struct Preparation {
     bool exactFromStart = false;
 };
 enum class Param : unsigned { volume, highPass, lowPass, gainA = 0, gainB = 1, crossfader = 2 };
+std::string newIdentity(); // control/worker only; copying a model preserves its identity
+inline constexpr std::array<const char *, 3> clipParameters{"volume", "highPass", "lowPass"};
 struct Point {
     Frame frame{};
     float value{};
@@ -34,6 +36,8 @@ struct Curve {
 };
 struct AudioData {
     double sampleRate = projectRate;
+    unsigned sourceChannels = 2;
+    std::string decoder, pcmHash;
     std::array<std::vector<float>, 2> samples;
     std::vector<float> peaks;
     std::size_t peakStride = 512;
@@ -43,6 +47,7 @@ struct AudioData {
     }
 };
 struct Clip {
+    std::string id = newIdentity();
     std::shared_ptr<const AudioData> audio;
     std::string path, hash, name, artist, key;
     Frame start = 0, sourceOffset = 0, length = 0;
@@ -55,6 +60,9 @@ struct Clip {
         {Curve{0.7f, true, {{0, 0.7f}}}, Curve{0.0f, true, {{0, 0.0f}}}, Curve{1.0f, true, {{0, 1.0f}}}}};
 };
 struct Project {
+    std::string id = newIdentity();
+    int storageVersion = 3;      // supported storage writer; renderer selection remains perClip
+    int loadedSchemaVersion = 3; // provenance for the UI, never a renderer selector
     std::vector<Clip> clips = std::vector<Clip>(2);
     bool perClip = false; // Version 1 remains a separate playback-compatible path.
     std::array<Curve, 3> curves{{Curve{}, Curve{}, Curve{0.0f, false, {}}}};

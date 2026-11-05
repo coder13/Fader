@@ -2,10 +2,13 @@
 #include "Media.h"
 #include "DecodedCache.h"
 #include "FileSource.h"
+#include "ProjectStorage.h"
 #include <algorithm>
+#include <bit>
 #include <charconv>
 #include <cmath>
 #include <filesystem>
+#include <set>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -43,25 +46,20 @@ double number(const juce::var &v) {
         fail("Non-finite project value");
     return d;
 }
-juce::var writeCurve(const Curve &curve) {
-    auto v = object();
-    put(v, "initial", curve.initial);
-    put(v, "interpolation", curve.linear ? "linear" : "step");
-    juce::Array<juce::var> points;
-    for (const auto &point : curve.points) {
-        auto p = object();
-        put(p, "frame", juce::String(point.frame));
-        put(p, "value", point.value);
-        put(p, "hold", point.hold);
-        points.add(p);
-    }
-    put(v, "points", points);
-    return v;
+juce::String text(const juce::var &v, std::size_t maxBytes = 4096) {
+    if (!v.isString() || v.toString().getNumBytesAsUTF8() > maxBytes || v.toString().containsChar(0))
+        fail("Invalid project text");
+    return v.toString();
+}
+bool boolean(const juce::var &v) {
+    if (!v.isBool())
+        fail("Project flags must be booleans");
+    return static_cast<bool>(v);
 }
 Curve readCurve(const juce::var &v) {
     Curve curve;
     curve.initial = static_cast<float>(number(required(v, "initial")));
-    const auto mode = required(v, "interpolation").toString();
+    const auto mode = text(required(v, "interpolation"));
     if (mode != "step" && mode != "linear")
         fail("Unknown automation interpolation");
     curve.linear = mode == "linear";
@@ -71,7 +69,7 @@ Curve readCurve(const juce::var &v) {
     for (const auto &p : *points.getArray())
         curve.points.push_back({integer(required(p, "frame")),
                                 static_cast<float>(number(required(p, "value"))),
-                                static_cast<bool>(p["hold"])});
+                                p.hasProperty("hold") ? boolean(p["hold"]) : false});
     return curve;
 }
 } // namespace
@@ -97,6 +95,8 @@ Clip loadClip(const juce::File &file, bool cacheCompressed) {
         fail("Unsupported source sample rate");
     auto audio = std::make_shared<AudioData>();
     audio->sampleRate = reader->sampleRate;
+    audio->sourceChannels = reader->numChannels;
+    audio->decoder = reader->getFormatName().toStdString();
     const auto length = static_cast<std::size_t>(reader->lengthInSamples);
     const auto projectLength =
         static_cast<Frame>(std::floor(double(length) * projectRate / audio->sampleRate));
@@ -112,6 +112,10 @@ Clip loadClip(const juce::File &file, bool cacheCompressed) {
     const bool cacheCandidate = sequentialReplay || reader->getFormatName() == "CoreAudio supported file";
     auto decoded =
         cacheCandidate && cacheCompressed ? DecodedCache::create(reader->lengthInSamples) : nullptr;
+    // Fixed-block SHA-256 chain of canonical stereo float PCM. Bounded scratch;
+    // catches decoder-origin/padding/sample differences despite identical file SHA.
+    auto pcmDigest = juce::SHA256(juce::String("fader-pcm-v1").toUTF8()).getRawData();
+    juce::MemoryBlock pcmBlock(32 + 8192 * 2 * sizeof(float));
     for (std::size_t offset = 0; offset < length; offset += 8192) {
         const int count = static_cast<int>(std::min(std::size_t{8192}, length - offset));
         if (!reader->read(scratch.getArrayOfWritePointers(), 2, static_cast<juce::int64>(offset), count))
@@ -127,10 +131,23 @@ Clip loadClip(const juce::File &file, bool cacheCompressed) {
             auto &peak = audio->peaks[(offset + static_cast<std::size_t>(i)) / audio->peakStride];
             peak = std::max(peak, std::abs(scratch.getSample(0, i)));
         }
+        auto *bytes = static_cast<unsigned char *>(pcmBlock.getData());
+        std::copy_n(static_cast<const unsigned char *>(pcmDigest.getData()), 32, bytes);
+        for (int frame = 0; frame < count; ++frame)
+            for (int channel = 0; channel < 2; ++channel) {
+                const auto bits = std::bit_cast<std::uint32_t>(scratch.getSample(channel, frame));
+                const auto index = 32 + (frame * 2 + channel) * 4;
+                for (int byte = 0; byte < 4; ++byte)
+                    bytes[index + byte] = static_cast<unsigned char>(bits >> (byte * 8));
+            }
+        pcmDigest = juce::SHA256(bytes, 32 + count * 2 * sizeof(float)).getRawData();
         // A full/unavailable cache must not turn readable audio into an import failure.
         if (decoded && !decoded->append(scratch, count))
             decoded.reset();
     }
+    audio->pcmHash = juce::String::toHexString(pcmDigest.getData(), static_cast<int>(pcmDigest.getSize()))
+                         .removeCharacters(" ")
+                         .toStdString();
     if (decoded && !decoded->finish())
         decoded.reset();
     audio->stream =
@@ -149,77 +166,93 @@ Clip loadClip(const juce::File &file, bool cacheCompressed) {
     return clip;
 }
 namespace {
-juce::var projectDocument(const Project &project, const juce::File &file) {
-    project.validate();
-    // Relative paths must share the same physical base, even if a native chooser
-    // returns a directory alias such as /tmp instead of /private/tmp on macOS.
-    const auto base = juce::File(
-        std::filesystem::weakly_canonical(file.getParentDirectory().getFullPathName().toStdString())
-            .string());
-    auto root = object();
-    put(root, "schemaVersion", project.perClip ? 2 : 1);
-    put(root, "engineVersion", project.perClip ? 2 : 1);
-    put(root, "sampleRate", projectRate);
-    juce::Array<juce::var> clips;
-    for (const auto &clip : project.clips) {
-        if (clip.length > 0 && clip.path.empty())
-            fail("Cannot save a clip without a source file");
-        if (!clip.path.empty() && juce::File(clip.path) == file)
-            fail("A set cannot replace a source audio file");
-        auto v = object();
-        put(v, "path",
-            clip.path.empty() ? juce::String{}
-                              : juce::File(std::filesystem::weakly_canonical(clip.path).string())
-                                    .getRelativePathFrom(base));
-        put(v, "sha256", juce::String(clip.hash));
-        put(v, "start", juce::String(clip.start));
-        put(v, "sourceOffset", juce::String(clip.sourceOffset));
-        put(v, "length", juce::String(clip.length));
-        put(v, "rate", clip.rate);
-        put(v, "bpm", clip.bpm);
-        put(v, "firstBeatSeconds", clip.firstBeatSeconds);
-        if (project.perClip) {
-            put(v, "row", clip.row);
-            put(v, "name", juce::String(clip.name));
-            put(v, "artist", juce::String(clip.artist));
-            put(v, "key", juce::String(clip.key));
-            put(v, "hasGrid", clip.hasGrid);
-            juce::Array<juce::var> automation;
-            for (const auto &c : clip.automation)
-                automation.add(writeCurve(c));
-            put(v, "automation", automation);
-        }
-        clips.add(v);
-    }
-    put(root, "clips", clips);
-    juce::Array<juce::var> lanes;
-    for (const auto &curve : project.curves) {
-        auto v = object();
-        put(v, "initial", curve.initial);
-        put(v, "interpolation", curve.linear ? "linear" : "step");
-        juce::Array<juce::var> points;
-        for (const auto &point : curve.points) {
-            auto p = object();
-            put(p, "frame", juce::String(point.frame));
-            put(p, "value", point.value);
-            points.add(p);
-        }
-        put(v, "points", points);
-        lanes.add(v);
-    }
-    put(root, "automation", lanes);
-    return root;
-}
 void writeDocument(const juce::var &root, const juce::File &file) {
+    const auto content = juce::JSON::toString(root, true);
+    if (content.getNumBytesAsUTF8() > maxManifestBytes)
+        fail("Project exceeds the 8 MiB manifest limit");
     juce::TemporaryFile temporary(file);
-    if (!temporary.getFile().replaceWithText(juce::JSON::toString(root, true)))
+    if (!temporary.getFile().replaceWithText(content))
         fail("Could not write project");
     if (!temporary.overwriteTargetFileWithTemporary())
         fail("Could not replace project file");
 }
+juce::var readManifest(const juce::File &file) {
+    auto input = file.createInputStream();
+    if (!input)
+        fail("Missing project file");
+    juce::MemoryBlock block;
+    input->readIntoMemoryBlock(block, maxManifestBytes + 1);
+    if (block.getSize() > static_cast<std::size_t>(maxManifestBytes))
+        fail("Oversized project file");
+    const std::string bytes(static_cast<const char *>(block.getData()), block.getSize());
+    if (bytes.find('\0') != std::string::npos ||
+        !juce::CharPointer_UTF8::isValidString(bytes.data(), static_cast<int>(bytes.size())))
+        fail("Project must contain valid UTF-8 text");
+    struct Level {
+        char close;
+        bool key;
+        std::set<std::string> keys;
+    };
+    std::vector<Level> levels;
+    bool rootClosed = false;
+    // Bound parser recursion and reject duplicate keys before JUCE coalesces them.
+    for (std::size_t i = 0; i < bytes.size(); ++i) {
+        const auto c = bytes[i];
+        if (rootClosed && c != ' ' && c != '\t' && c != '\r' && c != '\n')
+            fail("Unexpected text after project object");
+        if (c == '\'')
+            fail("Project JSON requires double-quoted text");
+        if (c == '"') {
+            const auto first = i;
+            bool ended = false;
+            while (++i < bytes.size()) {
+                if (bytes[i] == '\\') {
+                    if (i + 1 >= bytes.size() ||
+                        std::string_view("\"\\/bfnrtu").find(bytes[i + 1]) == std::string_view::npos)
+                        fail("Invalid project text escape");
+                    if (bytes.compare(i, 6, "\\u0000") == 0)
+                        fail("NUL in project text");
+                    ++i;
+                } else if (bytes[i] == '"') {
+                    ended = true;
+                    break;
+                } else if (static_cast<unsigned char>(bytes[i]) < 0x20)
+                    fail("Invalid control character in project text");
+            }
+            if (!ended)
+                fail("Unterminated project text");
+            if (!levels.empty() && levels.back().key) {
+                const auto key = juce::JSON::fromString(
+                    juce::String::fromUTF8(bytes.data() + first, static_cast<int>(i - first + 1)));
+                if (!key.isString() || !levels.back().keys.insert(key.toString().toStdString()).second)
+                    fail("Duplicate project field");
+                levels.back().key = false;
+            }
+        } else if (c == '{' || c == '[') {
+            if (levels.size() == 64)
+                fail("Project nesting exceeds limit");
+            levels.push_back({c == '{' ? '}' : ']', c == '{', {}});
+        } else if (c == '}' || c == ']') {
+            if (levels.empty() || levels.back().close != c)
+                fail("Invalid project nesting");
+            levels.pop_back();
+            rootClosed = levels.empty();
+        } else if (c == ',' && !levels.empty() && levels.back().close == '}')
+            levels.back().key = true;
+    }
+    if (!levels.empty())
+        fail("Unterminated project object");
+    juce::var result;
+    if (juce::JSON::parse(juce::String::fromUTF8(bytes.data(), static_cast<int>(bytes.size())), result)
+            .failed())
+        fail("Invalid project JSON");
+    return result;
+}
 } // namespace
 void saveProject(const Project &project, const juce::File &file) {
-    writeDocument(projectDocument(project, file), file);
+    const auto document = projectDocument(project, file);
+    readProjectDocument(document, file, false); // same admission rules on writes, before replacement
+    writeDocument(document, file);
 }
 void saveIncompleteTake(const IncompleteTake &take, const juce::File &file) {
     if (!take.stats.failures || !take.stats.segment || take.events.size() > 200000 || take.in < 0 ||
@@ -229,7 +262,9 @@ void saveIncompleteTake(const IncompleteTake &take, const juce::File &file) {
     put(root, "format", "fader-incomplete-capture");
     put(root, "schemaVersion", 1);
     put(root, "complete", false);
-    put(root, "project", projectDocument(take.original, file));
+    const auto baseline = projectDocument(take.original, file);
+    readProjectDocument(baseline, file, false);
+    put(root, "project", baseline);
     put(root, "segment", juce::String(take.stats.segment));
     put(root, "rangeIn", juce::String(take.in));
     put(root, "rangeOut", juce::String(take.out));
@@ -251,6 +286,10 @@ void saveIncompleteTake(const IncompleteTake &take, const juce::File &file) {
         put(item, "parameter", static_cast<int>(event.param));
         put(item, "value", event.value);
         put(item, "clip", static_cast<int>(event.clip));
+        if (take.original.perClip) {
+            put(item, "clipId", juce::String(take.original.clips[event.clip].id));
+            put(item, "parameterId", clipParameters[static_cast<unsigned>(event.param)]);
+        }
         events.add(item); // ordered array preserves same-frame application order
     }
     put(root, "appliedActions", events);
@@ -259,8 +298,10 @@ void saveIncompleteTake(const IncompleteTake &take, const juce::File &file) {
 Project loadProject(const juce::File &file) {
     if (!file.existsAsFile() || file.getSize() > 8 * 1024 * 1024)
         fail("Missing or oversized project file");
-    const auto root = juce::JSON::parse(file);
+    const auto root = readManifest(file);
     const auto version = number(required(root, "schemaVersion"));
+    if (version == 3)
+        return readProjectDocument(root, file);
     if ((version != 1 && version != 2) || number(required(root, "engineVersion")) != version ||
         number(required(root, "sampleRate")) != projectRate)
         fail("Unsupported project or engine version");
@@ -271,13 +312,14 @@ Project loadProject(const juce::File &file) {
         fail("Invalid project lane count");
     Project p;
     p.perClip = version == 2;
+    p.loadedSchemaVersion = static_cast<int>(version);
     p.clips.resize(static_cast<std::size_t>(clips.size()));
     // Validate the manifest before any media decode.
     for (int i = 0; i < clips.size(); ++i) {
         const auto c = clips[i];
         auto &clip = p.clips[static_cast<std::size_t>(i)];
-        clip.path = required(c, "path").toString().toStdString();
-        clip.hash = required(c, "sha256").toString().toStdString();
+        clip.path = text(required(c, "path")).toStdString();
+        clip.hash = text(required(c, "sha256")).toStdString();
         clip.start = integer(required(c, "start"));
         clip.sourceOffset = integer(required(c, "sourceOffset"));
         clip.length = integer(required(c, "length"));
@@ -290,10 +332,10 @@ Project loadProject(const juce::File &file) {
             if (row < 0 || row > 4095 || std::floor(row) != row)
                 fail("Invalid arrangement row");
             clip.row = static_cast<int>(row);
-            clip.name = required(c, "name").toString().toStdString();
-            clip.artist = required(c, "artist").toString().toStdString();
-            clip.key = required(c, "key").toString().toStdString();
-            clip.hasGrid = static_cast<bool>(c["hasGrid"]);
+            clip.name = text(required(c, "name")).toStdString();
+            clip.artist = text(required(c, "artist")).toStdString();
+            clip.key = text(required(c, "key")).toStdString();
+            clip.hasGrid = c.hasProperty("hasGrid") ? boolean(c["hasGrid"]) : false;
             const auto a = required(c, "automation");
             if (!a.isArray() || a.size() != 3)
                 fail("Invalid clip automation count");
@@ -305,7 +347,7 @@ Project loadProject(const juce::File &file) {
         const auto l = lanes[i];
         auto &curve = p.curves[static_cast<std::size_t>(i)];
         curve.initial = static_cast<float>(number(required(l, "initial")));
-        const auto interpolation = required(l, "interpolation").toString();
+        const auto interpolation = text(required(l, "interpolation"));
         if (interpolation != "step" && interpolation != "linear")
             fail("Unknown interpolation mode");
         curve.linear = interpolation == "linear";

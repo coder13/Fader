@@ -13,6 +13,7 @@ void testAudioPlayback();
 void testSourceRates();
 void testStreamMedia();
 void testDecodedCache();
+void testProjectModel();
 void check(bool pass, const char *message) {
     if (!pass)
         throw std::runtime_error(message);
@@ -29,6 +30,7 @@ int main() {
         testSourceRates();
         testStreamMedia();
         testDecodedCache();
+        testProjectModel();
         auto data = std::make_shared<AudioData>();
         for (auto &c : data->samples) {
             c.resize(48000);
@@ -126,7 +128,7 @@ int main() {
         check(archive["format"].toString() == "fader-incomplete-capture" && !bool(archive["complete"]) &&
                   actions.size() == 3 && actions[0]["frame"].toString() == "128" &&
                   double(actions[1]["value"]) > double(actions[0]["value"]) &&
-                  archive["project"]["clips"][0]["sha256"].toString() == juce::String(clip.hash),
+                  archive["project"]["assets"][0]["sha256"].toString() == juce::String(clip.hash),
               "incomplete capture lost ordered actions or original source identity");
         const auto baseline = dir.getChildFile("archive-baseline.faderset");
         baseline.replaceWithText(juce::JSON::toString(archive["project"]));
@@ -225,7 +227,8 @@ int main() {
         std::cout << "PASS: mono/stereo source rates, cue-free export, overload policy, "
                      "content probing, streamed WAV/MP3 sequential/seek parity, changed/missing sources, "
                      "project round-trip, source identity, export "
-                     "parity, atomic cancellation, schema validation\n";
+                     "parity, atomic cancellation, schema validation, stable identities, legacy migration "
+                     "and decoder-domain checks\n";
         return 0;
     } catch (const std::exception &e) {
         dir.deleteRecursively();
