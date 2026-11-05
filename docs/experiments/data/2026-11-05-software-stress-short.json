@@ -1,0 +1,526 @@
+{
+  "normal": {
+    "metadata": {
+      "qualifiedSourceRevision": "6e25222c8e615e0e1b406d3075032758b1e6e4b6",
+      "sourceTreeSha256": "7b35d07487df902a0473fa8867f8ba8ef5816f62328b283508c5448a162df33b",
+      "sourceVerification": "Every tracked file byte-compared between the clean checkout and build source before execution",
+      "probeSha256": "1d6a17f6eaf09728a644a9a354335a177b0b09548c146bd9c1ce99f72b8530a8",
+      "buildInfo": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "source-archive",
+        "cmakeVersion": "4.4.4",
+        "generator": "Unix Makefiles",
+        "system": "Darwin",
+        "systemVersion": "25.6.0",
+        "architecture": "arm64",
+        "compiler": "AppleClang",
+        "compilerVersion": "21.0.0.21000334",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "ON",
+        "uiFixtures": "ON",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "os": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+      "machine": "arm64",
+      "python": "3.15.0",
+      "startedUtc": "2026-11-05T09:21:33.909926+00:00",
+      "fixtures": {
+        "sampleRate": 48000,
+        "sourceSeconds": 12,
+        "sources": [
+          {
+            "file": "A.wav",
+            "sha256": "387056ffae067b6cb29322c1975ade1c1825817db9af22303dc01221c5512e48",
+            "fileBytes": 2304044
+          },
+          {
+            "file": "B.wav",
+            "sha256": "c57811d43cd5feed9e3d6839f4e62a33bde63e148728bcf15a42515166b3cc51",
+            "fileBytes": 2304044
+          }
+        ]
+      },
+      "seconds": 10,
+      "blockFrames": 128,
+      "scheduler": "normal",
+      "scope": "Software sink and offscreen production painter. No audio/MIDI device or native UI interaction.",
+      "faultsExitCode": 0,
+      "timedExitCode": 0,
+      "finishedUtc": "2026-11-05T09:21:44.691794+00:00",
+      "capturedProjectSha256": "4967d433aef6d26358cdbd3dca5a73b36d079d05b51002a550bd2cc3b269eff0",
+      "capturedProjectBytes": 53563,
+      "archiveProjectExitCode": 0,
+      "archivedProjectSha256": "9647a51e2e8a0d9799ce7b20cf9f37854c0b788b2c5ed51bc17699b20aa79618"
+    },
+    "faults": {
+      "inputOverflowRetained": 4096,
+      "controlTelemetryDropReported": true,
+      "captureOverflowRetained": 16384,
+      "virtualDeviceLossRetained": 1,
+      "blockedDecodeCancelMicroseconds": 0.542,
+      "latestPreparationRecovered": true,
+      "injectedStarvationFrames": 78465,
+      "sourceGapPreservedCapture": true,
+      "missingMediaReportedAndProjectRetained": true,
+      "scope": "Isolated software faults with explicit incomplete-prefix files. No physical device or UI claim."
+    },
+    "timed": {
+      "scope": "Real-clock software sink, production arrangement painter without native input/display, synthetic library and virtual lifecycle. No audio/MIDI device or acoustic timing.",
+      "requestedSeconds": 10,
+      "observedSeconds": 10.033723458,
+      "importSeconds": 0.144037708,
+      "sampleRate": 48000,
+      "requestedScheduler": "default std::thread",
+      "realtimeThreadReported": false,
+      "blockFrames": 128,
+      "callbacks": 3750,
+      "callbackExecution": {
+        "samples": 3750,
+        "p50Microseconds": 45.333,
+        "p95Microseconds": 67.625,
+        "p99Microseconds": 146.541,
+        "p999Microseconds": 530.375,
+        "maximumMicroseconds": 1217.125
+      },
+      "virtualHostWakeLateness": {
+        "samples": 3750,
+        "p50Microseconds": 686.375,
+        "p95Microseconds": 1116.874,
+        "p99Microseconds": 1820.125,
+        "p999Microseconds": 9745.749,
+        "maximumMicroseconds": 11208.041
+      },
+      "callbackAndSinkExecution": {
+        "samples": 3750,
+        "p50Microseconds": 47.042,
+        "p95Microseconds": 70.125,
+        "p99Microseconds": 148.417,
+        "p999Microseconds": 532.292,
+        "maximumMicroseconds": 1218.416
+      },
+      "virtualDeadlineMisses": 29,
+      "headroomTargetPassed": true,
+      "softwareIntegrityPassed": true,
+      "hourTargetPassed": false,
+      "memoryMeasurementAvailable": true,
+      "sourceStarvationFrames": 0,
+      "sourceFailures": 0,
+      "pcmCacheBytes": 1048576,
+      "delayedReads": 132,
+      "artificialReadDelayMs": 1,
+      "plannedInputs": 699,
+      "attemptedInputs": 699,
+      "acceptedInputs": 699,
+      "capturedInputs": 699,
+      "controlMetrics": 699,
+      "correlationErrors": 0,
+      "inputDrops": 0,
+      "lateInputs": 676,
+      "maximumLateFrames": 323,
+      "callbackMetricDrops": 0,
+      "controlMetricDrops": 0,
+      "hostMetricDrops": 0,
+      "retentionDrops": 0,
+      "failureFlags": 0,
+      "producerWakeToReceipt": {
+        "samples": 699,
+        "p50Microseconds": 2007.041,
+        "p95Microseconds": 7446.208,
+        "p99Microseconds": 9917.875,
+        "p999Microseconds": 13808.875,
+        "maximumMicroseconds": 13808.875
+      },
+      "receiptToPredictedSoftwareOutput": {
+        "samples": 699,
+        "p50Microseconds": 4106.709,
+        "p95Microseconds": 5689.167,
+        "p99Microseconds": 6359.25,
+        "p999Microseconds": 9403.084,
+        "maximumMicroseconds": 9403.084
+      },
+      "predictedSoftwareLatencyTargetPassed": true,
+      "virtualOutputBufferFrames": 128,
+      "timingExamples": [
+        {
+          "source": "ui",
+          "receiptMicrosecondsFromStart": 9917.875,
+          "scheduledFrame": 0,
+          "commandFrame": 0,
+          "appliedFrame": 0,
+          "predictedOutputMicrosecondsFromStart": 12584.333
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 10015.583,
+          "scheduledFrame": 472,
+          "commandFrame": 472,
+          "appliedFrame": 512,
+          "predictedOutputMicrosecondsFromStart": 13519.208
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 10015.916,
+          "scheduledFrame": 472,
+          "commandFrame": 472,
+          "appliedFrame": 512,
+          "predictedOutputMicrosecondsFromStart": 13519.208
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 19232.791,
+          "scheduledFrame": 882,
+          "commandFrame": 882,
+          "appliedFrame": 896,
+          "predictedOutputMicrosecondsFromStart": 22188.042
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 26441.041,
+          "scheduledFrame": 1232,
+          "commandFrame": 1232,
+          "appliedFrame": 1280,
+          "predictedOutputMicrosecondsFromStart": 30114.083
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 36130.458,
+          "scheduledFrame": 1720,
+          "commandFrame": 1720,
+          "appliedFrame": 1792,
+          "predictedOutputMicrosecondsFromStart": 40303.792
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 41834.083,
+          "scheduledFrame": 1990,
+          "commandFrame": 1990,
+          "appliedFrame": 2048,
+          "predictedOutputMicrosecondsFromStart": 45711.458
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 50603.041,
+          "scheduledFrame": 2389,
+          "commandFrame": 2389,
+          "appliedFrame": 2432,
+          "predictedOutputMicrosecondsFromStart": 54172.292
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 62212.416,
+          "scheduledFrame": 2976,
+          "commandFrame": 2976,
+          "appliedFrame": 3072,
+          "predictedOutputMicrosecondsFromStart": 66870.208
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 68738.75,
+          "scheduledFrame": 3299,
+          "commandFrame": 3299,
+          "appliedFrame": 3328,
+          "predictedOutputMicrosecondsFromStart": 72019.875
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 75301.25,
+          "scheduledFrame": 3590,
+          "commandFrame": 3590,
+          "appliedFrame": 3712,
+          "predictedOutputMicrosecondsFromStart": 80501.542
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 83898.708,
+          "scheduledFrame": 3989,
+          "commandFrame": 3989,
+          "appliedFrame": 4096,
+          "predictedOutputMicrosecondsFromStart": 88802.333
+        }
+      ],
+      "masterAbsoluteSampleSum": 30163.349727520712,
+      "cueAbsoluteSampleSum": 63071.539611816406,
+      "nonFiniteSamples": 0,
+      "quietBlocks": 0,
+      "arrangementPaints": 500,
+      "missedPaintIntervals": 0,
+      "libraryJobs": 2,
+      "analysisJobs": 2,
+      "seekCancellations": 1,
+      "backgroundError": "",
+      "peakResidentBytesBeforeCaptureCommit": 36159488,
+      "capturePersistencePassed": true,
+      "capturePersistenceSeconds": 0.004392667,
+      "peakResidentBytes": 36159488,
+      "memoryBudgetPassed": true
+    }
+  },
+  "realtime": {
+    "metadata": {
+      "qualifiedSourceRevision": "6e25222c8e615e0e1b406d3075032758b1e6e4b6",
+      "sourceTreeSha256": "7b35d07487df902a0473fa8867f8ba8ef5816f62328b283508c5448a162df33b",
+      "sourceVerification": "Every tracked file byte-compared between the clean checkout and build source before execution",
+      "probeSha256": "1d6a17f6eaf09728a644a9a354335a177b0b09548c146bd9c1ce99f72b8530a8",
+      "buildInfo": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "source-archive",
+        "cmakeVersion": "4.4.4",
+        "generator": "Unix Makefiles",
+        "system": "Darwin",
+        "systemVersion": "25.6.0",
+        "architecture": "arm64",
+        "compiler": "AppleClang",
+        "compilerVersion": "21.0.0.21000334",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "ON",
+        "uiFixtures": "ON",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "os": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+      "machine": "arm64",
+      "python": "3.15.0",
+      "startedUtc": "2026-11-05T09:21:44.983119+00:00",
+      "fixtures": {
+        "sampleRate": 48000,
+        "sourceSeconds": 12,
+        "sources": [
+          {
+            "file": "A.wav",
+            "sha256": "387056ffae067b6cb29322c1975ade1c1825817db9af22303dc01221c5512e48",
+            "fileBytes": 2304044
+          },
+          {
+            "file": "B.wav",
+            "sha256": "c57811d43cd5feed9e3d6839f4e62a33bde63e148728bcf15a42515166b3cc51",
+            "fileBytes": 2304044
+          }
+        ]
+      },
+      "seconds": 10,
+      "blockFrames": 128,
+      "scheduler": "realtime",
+      "scope": "Software sink and offscreen production painter. No audio/MIDI device or native UI interaction.",
+      "faultsExitCode": 0,
+      "timedExitCode": 0,
+      "finishedUtc": "2026-11-05T09:21:55.720755+00:00",
+      "capturedProjectSha256": "543e1a1dac870e3fb365db87035775967c0dec81b1c640cd0c9ba6621862bca9",
+      "capturedProjectBytes": 53625,
+      "archiveProjectExitCode": 0,
+      "archivedProjectSha256": "2a6a3ad6be77d1de80f2bedc898920d18caf50ae8ccb0502635dee4383154011"
+    },
+    "faults": {
+      "inputOverflowRetained": 4096,
+      "controlTelemetryDropReported": true,
+      "captureOverflowRetained": 16384,
+      "virtualDeviceLossRetained": 1,
+      "blockedDecodeCancelMicroseconds": 0.5,
+      "latestPreparationRecovered": true,
+      "injectedStarvationFrames": 78465,
+      "sourceGapPreservedCapture": true,
+      "missingMediaReportedAndProjectRetained": true,
+      "scope": "Isolated software faults with explicit incomplete-prefix files. No physical device or UI claim."
+    },
+    "timed": {
+      "scope": "Real-clock software sink, production arrangement painter without native input/display, synthetic library and virtual lifecycle. No audio/MIDI device or acoustic timing.",
+      "requestedSeconds": 10,
+      "observedSeconds": 10.005088416,
+      "importSeconds": 0.135150833,
+      "sampleRate": 48000,
+      "requestedScheduler": "JUCE real-time thread",
+      "realtimeThreadReported": true,
+      "requestedPeriodMs": 2.666666666666667,
+      "requestedProcessingMs": 0.266666666666667,
+      "requestedMaximumProcessingMs": 1.333333333333333,
+      "blockFrames": 128,
+      "callbacks": 3750,
+      "callbackExecution": {
+        "samples": 3750,
+        "p50Microseconds": 44.459,
+        "p95Microseconds": 53.208,
+        "p99Microseconds": 58.083,
+        "p999Microseconds": 69.625,
+        "maximumMicroseconds": 86.0
+      },
+      "virtualHostWakeLateness": {
+        "samples": 3750,
+        "p50Microseconds": 0.083,
+        "p95Microseconds": 0.166,
+        "p99Microseconds": 0.166,
+        "p999Microseconds": 7.458,
+        "maximumMicroseconds": 201.291
+      },
+      "callbackAndSinkExecution": {
+        "samples": 3750,
+        "p50Microseconds": 46.25,
+        "p95Microseconds": 55.167,
+        "p99Microseconds": 60.209,
+        "p999Microseconds": 71.625,
+        "maximumMicroseconds": 88.625
+      },
+      "virtualDeadlineMisses": 0,
+      "headroomTargetPassed": true,
+      "softwareIntegrityPassed": true,
+      "hourTargetPassed": false,
+      "memoryMeasurementAvailable": true,
+      "sourceStarvationFrames": 0,
+      "sourceFailures": 0,
+      "pcmCacheBytes": 1048576,
+      "delayedReads": 132,
+      "artificialReadDelayMs": 1,
+      "plannedInputs": 699,
+      "attemptedInputs": 699,
+      "acceptedInputs": 699,
+      "capturedInputs": 699,
+      "controlMetrics": 699,
+      "correlationErrors": 0,
+      "inputDrops": 0,
+      "lateInputs": 696,
+      "maximumLateFrames": 128,
+      "callbackMetricDrops": 0,
+      "controlMetricDrops": 0,
+      "hostMetricDrops": 0,
+      "retentionDrops": 0,
+      "failureFlags": 0,
+      "producerWakeToReceipt": {
+        "samples": 699,
+        "p50Microseconds": 2252.875,
+        "p95Microseconds": 7676.541,
+        "p99Microseconds": 10034.041,
+        "p999Microseconds": 16272.416,
+        "maximumMicroseconds": 16272.416
+      },
+      "receiptToPredictedSoftwareOutput": {
+        "samples": 699,
+        "p50Microseconds": 3930.709,
+        "p95Microseconds": 5246.958,
+        "p99Microseconds": 5313.126,
+        "p999Microseconds": 5329.208,
+        "maximumMicroseconds": 5329.208
+      },
+      "predictedSoftwareLatencyTargetPassed": true,
+      "virtualOutputBufferFrames": 128,
+      "timingExamples": [
+        {
+          "source": "ui",
+          "receiptMicrosecondsFromStart": 9819.916,
+          "scheduledFrame": 471,
+          "commandFrame": 471,
+          "appliedFrame": 512,
+          "predictedOutputMicrosecondsFromStart": 13333.458
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 9822.541,
+          "scheduledFrame": 471,
+          "commandFrame": 471,
+          "appliedFrame": 512,
+          "predictedOutputMicrosecondsFromStart": 13333.458
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 9822.958,
+          "scheduledFrame": 471,
+          "commandFrame": 471,
+          "appliedFrame": 512,
+          "predictedOutputMicrosecondsFromStart": 13333.458
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 17386.041,
+          "scheduledFrame": 835,
+          "commandFrame": 835,
+          "appliedFrame": 896,
+          "predictedOutputMicrosecondsFromStart": 21333.417
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 26932.0,
+          "scheduledFrame": 1293,
+          "commandFrame": 1293,
+          "appliedFrame": 1408,
+          "predictedOutputMicrosecondsFromStart": 32000.042
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 34024.708,
+          "scheduledFrame": 1633,
+          "commandFrame": 1633,
+          "appliedFrame": 1664,
+          "predictedOutputMicrosecondsFromStart": 37333.417
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 42941.583,
+          "scheduledFrame": 2061,
+          "commandFrame": 2061,
+          "appliedFrame": 2176,
+          "predictedOutputMicrosecondsFromStart": 48000.042
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 53146.833,
+          "scheduledFrame": 2551,
+          "commandFrame": 2551,
+          "appliedFrame": 2560,
+          "predictedOutputMicrosecondsFromStart": 56000.042
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 60030.0,
+          "scheduledFrame": 2881,
+          "commandFrame": 2881,
+          "appliedFrame": 2944,
+          "predictedOutputMicrosecondsFromStart": 64000.042
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 69733.25,
+          "scheduledFrame": 3347,
+          "commandFrame": 3347,
+          "appliedFrame": 3456,
+          "predictedOutputMicrosecondsFromStart": 74666.708
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 77246.708,
+          "scheduledFrame": 3708,
+          "commandFrame": 3708,
+          "appliedFrame": 3712,
+          "predictedOutputMicrosecondsFromStart": 80000.042
+        },
+        {
+          "source": "controller",
+          "receiptMicrosecondsFromStart": 84471.666,
+          "scheduledFrame": 4055,
+          "commandFrame": 4055,
+          "appliedFrame": 4096,
+          "predictedOutputMicrosecondsFromStart": 88000.042
+        }
+      ],
+      "masterAbsoluteSampleSum": 30174.19295355637,
+      "cueAbsoluteSampleSum": 63071.539611816406,
+      "nonFiniteSamples": 0,
+      "quietBlocks": 0,
+      "arrangementPaints": 500,
+      "missedPaintIntervals": 0,
+      "libraryJobs": 1,
+      "analysisJobs": 1,
+      "seekCancellations": 1,
+      "backgroundError": "",
+      "peakResidentBytesBeforeCaptureCommit": 36290560,
+      "capturePersistencePassed": true,
+      "capturePersistenceSeconds": 0.008707042,
+      "peakResidentBytes": 36290560,
+      "memoryBudgetPassed": true
+    }
+  },
+  "threadSanitizer": {
+    "qualifiedSourceRevision": "6e25222c8e615e0e1b406d3075032758b1e6e4b6",
+    "scope": "Standalone PlaybackTests with production Engine, Playback and Streaming. Not whole-app instrumentation.",
+    "result": "PASS: scheduling/control telemetry, pressure, concurrent producers and interruption"
+  }
+}

@@ -201,13 +201,17 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
     double checksum = 0, cueChecksum = 0;
     std::string backgroundError;
     std::exception_ptr consumerError;
-    std::vector<std::jthread> workers;
+    std::vector<std::thread> workers;
     struct StopOnExit {
         std::atomic<bool> &done;
+        std::vector<std::thread> &workers;
         ~StopOnExit() {
             done.store(true);
+            for (auto &worker : workers)
+                if (worker.joinable())
+                    worker.join();
         }
-    } stop{done}; // Stop loops before jthread joins on exceptions.
+    } stop{done, workers}; // Stop loops and join on exceptions, including older libc++.
     workers.emplace_back([&] {
         try {
             const auto drain = [&] {

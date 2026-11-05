@@ -4,7 +4,7 @@ Updated 2026-11-04 after reviewing all 64 GitHub issues and the user's request t
 
 ## Immediate POC critical path
 
-**#6, #7, #8, #11 and #38 are completed.** #39 awaits native visual inspection on an unlocked Mac; its software/CI checks pass. Next independent software work: **#13 → #40**.
+**#6, #7, #8, #11 and #38 are completed.** #39 and #13 await native visual inspection on an unlocked Mac. Their software/CI checks pass. **#40 is in progress** with the [declared software workload and short-run results](experiments/2026-11-05-software-stress.md).
 
 | Order | Issue | Why it comes here |
 | --- | --- | --- |
@@ -13,7 +13,7 @@ Updated 2026-11-04 after reviewing all 64 GitHub issues and the user's request t
 | 1 · in progress | [#39](https://github.com/coder13/Fader/issues/39), cancellable state-correct seeking | [Implementation, local tests and timing evidence](experiments/2026-11-04-cancellable-seeking.md) are published; exact-source Linux/macOS CI passes; native Preparing/Cancel inspection awaits an unlocked Mac. The uncached MP3 fallback is explicitly slower. |
 | Completed | [#11](https://github.com/coder13/Fader/issues/11), stable project model | [Format 3 identities, decoder-domain preservation, strict validation and migration](project-format-v3.md) pass local and clean Linux/macOS CI qualification. #39 remains separately open for native visual inspection. |
 | 3 · in progress | [#13](https://github.com/coder13/Fader/issues/13), live/offline render parity | [Local event/range parity, failure retention and a real 60-minute export pass](experiments/2026-11-05-offline-render.md). Clean Linux/macOS CI passes. Native Cancel export/progress inspection awaits an unlocked Mac; independent #40 software preparation may proceed against the qualified backend. |
-| 4 | [#40](https://github.com/coder13/Fader/issues/40), sustained load/failure qualification | Exercise the preceding pieces together; keep physical output/acoustic claims separate. |
+| 4 · in progress | [#40](https://github.com/coder13/Fader/issues/40), sustained load/failure qualification | Short software runs and isolated fault retention pass. Complete the real-clock hour, report the 256-frame fallback, and keep physical output/acoustic claims separate. |
 
 The new product issues explicitly preserve these priorities. A failed prerequisite is repaired before advancing. CI waits can be used for independent review or fixture preparation; no dependent issue is closed without its evidence.
 

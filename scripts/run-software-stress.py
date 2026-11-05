@@ -70,11 +70,18 @@ metadata = {
 
 
 def run(label, command):
+    metadata[f"{label}StartedUtc"] = datetime.now(timezone.utc).isoformat()
+    (args.output / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     with (args.output / f"{label}.json").open("w") as output, (args.output / f"{label}.log").open("w") as log:
         print(f"Starting {label}", file=sys.stderr, flush=True)
         result = subprocess.run([str(args.probe), *map(str, command)], stdout=output, stderr=log)
-    data = json.loads((args.output / f"{label}.json").read_text())
     metadata[f"{label}ExitCode"] = result.returncode
+    metadata[f"{label}FinishedUtc"] = datetime.now(timezone.utc).isoformat()
+    try:
+        data = json.loads((args.output / f"{label}.json").read_text())
+    except json.JSONDecodeError:
+        metadata["runError"] = f"{label} exited {result.returncode} without a complete JSON report"
+        raise SystemExit(metadata["runError"] + ". Read the retained log.")
     return data
 
 
@@ -86,7 +93,7 @@ try:
     if args.scheduler == "realtime":
         command.append("--realtime")
     timed = run("timed", command)
-    metadata["finishedUtc"] = datetime.now(timezone.utc).isoformat()
+    metadata["timedPhaseFinishedUtc"] = datetime.now(timezone.utc).isoformat()
     captured = args.fixtures / f"stress-captured-{args.block}.faderset"
     if captured.is_file():
         metadata["capturedProjectSha256"] = digest(captured)
@@ -107,4 +114,5 @@ try:
         "capturedInputs", "peakResidentBytes")}, indent=2))
     sys.exit(metadata["timedExitCode"] or metadata.get("archiveProjectExitCode", 1))
 finally:
+    metadata["finishedUtc"] = datetime.now(timezone.utc).isoformat()
     (args.output / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
