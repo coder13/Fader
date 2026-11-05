@@ -11,7 +11,7 @@ struct Description {
     double sampleRate;
     unsigned channels;
     juce::int64 bytes, modified;
-    bool sequentialReplay;
+    bool sequentialReplay, cacheCandidate;
     std::shared_ptr<const DecodedCache> cache;
     bool unchanged() const {
         return file.existsAsFile() && file.getSize() == bytes &&
@@ -102,6 +102,9 @@ class FileSource final : public StreamSource {
     bool sequentialSeek() const noexcept override {
         return description.sequentialReplay && !description.cache;
     }
+    bool uncachedSeek() const noexcept override {
+        return description.cacheCandidate && !description.cache;
+    }
     std::uint64_t diskCacheBytes() const noexcept override {
         return description.cache ? description.cache->bytes() : 0;
     }
@@ -113,8 +116,9 @@ class FileSource final : public StreamSource {
 std::shared_ptr<const StreamSource> makeFileSource(const juce::File &file, SourceFrame frames,
                                                    double sampleRate, unsigned channels, juce::int64 bytes,
                                                    juce::int64 modifiedMillis, bool sequentialReplay,
+                                                   bool cacheCandidate,
                                                    std::shared_ptr<const DecodedCache> cache) {
     return std::make_shared<FileSource>(Description{file, frames, sampleRate, channels, bytes, modifiedMillis,
-                                                    sequentialReplay, std::move(cache)});
+                                                    sequentialReplay, cacheCandidate, std::move(cache)});
 }
 } // namespace fader

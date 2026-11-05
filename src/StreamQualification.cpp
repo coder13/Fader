@@ -83,6 +83,7 @@ juce::var qualifyStream(const juce::File &file, bool cacheCompressed) {
     result->setProperty("pcmCacheBytes", static_cast<int>(bank.stats().pcmBytes));
     result->setProperty("diskCacheBytes", juce::String(clip.audio->stream->diskCacheBytes()));
     result->setProperty("sequentialSeek", clip.audio->stream->sequentialSeek());
+    result->setProperty("uncachedSeek", clip.audio->stream->uncachedSeek());
     if (sequentialError > 1e-6 || seekError > 1e-6)
         throw std::runtime_error("Streaming differs from sequential reference: " +
                                  juce::JSON::toString(json, true).toStdString());

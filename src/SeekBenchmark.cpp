@@ -48,6 +48,7 @@ juce::var benchmarkSeeks(const juce::File &a, const juce::File &b, bool cacheCom
         info->setProperty("sampleRate", clip.audio->sampleRate);
         info->setProperty("sourceFrames", juce::String(stream.frames()));
         info->setProperty("sequentialSeek", stream.sequentialSeek());
+        info->setProperty("uncachedSeek", stream.uncachedSeek());
         info->setProperty("diskCacheBytes", juce::String(stream.diskCacheBytes()));
         info->setProperty("sourceOffset", juce::String(offset));
         sources.add(info);

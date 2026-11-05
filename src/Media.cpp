@@ -133,8 +133,9 @@ Clip loadClip(const juce::File &file, bool cacheCompressed) {
     }
     if (decoded && !decoded->finish())
         decoded.reset();
-    audio->stream = makeFileSource(file, reader->lengthInSamples, reader->sampleRate, reader->numChannels,
-                                   sourceBytes, sourceModified, sequentialReplay, std::move(decoded));
+    audio->stream =
+        makeFileSource(file, reader->lengthInSamples, reader->sampleRate, reader->numChannels, sourceBytes,
+                       sourceModified, sequentialReplay, cacheCandidate, std::move(decoded));
     Clip clip;
     clip.audio = audio;
     clip.path = file.getFullPathName().toStdString();

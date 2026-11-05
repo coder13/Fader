@@ -8,5 +8,6 @@ class DecodedCache;
 std::shared_ptr<const StreamSource> makeFileSource(const juce::File &, SourceFrame frames, double sampleRate,
                                                    unsigned channels, juce::int64 bytes,
                                                    juce::int64 modifiedMillis, bool sequentialReplay,
+                                                   bool cacheCandidate,
                                                    std::shared_ptr<const DecodedCache> cache = {});
 } // namespace fader

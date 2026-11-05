@@ -136,9 +136,12 @@ int main(int argc, char **argv) {
                       << '\n';
             return 0;
         }
-        if (argc == 3 && std::string(argv[1]) == "--qualify-stream") {
+        if ((argc == 3 || argc == 4) && std::string(argv[1]) == "--qualify-stream") {
+            if (argc == 4 && std::string(argv[3]) != "--uncached")
+                throw std::runtime_error("Expected --uncached");
             std::cout << juce::JSON::toString(
-                             qualifyStream(juce::File::getCurrentWorkingDirectory().getChildFile(argv[2])),
+                             qualifyStream(juce::File::getCurrentWorkingDirectory().getChildFile(argv[2]),
+                                           argc == 3),
                              true)
                       << '\n';
             return 0;

@@ -997,12 +997,11 @@ class Workspace final : public juce::Component, public juce::DragAndDropContaine
         requestGeneration = preparation.request(planSnapshot, cursor, ++nextSegment);
         play.setButtonText("Cancel");
         sync();
-        bool sequential = false;
+        bool uncached = false;
         for (const auto &clip : project.clips)
-            sequential |= clip.audio && clip.audio->stream && clip.audio->stream->sequentialSeek();
-        setStatus(sequential
-                      ? "Preparing playback. An uncached MP3 needs a slower seek; Cancel is available."
-                      : "Preparing playback... Cancel, or click the ruler to choose another position.");
+            uncached |= clip.audio && clip.audio->stream && clip.audio->stream->uncachedSeek();
+        setStatus(uncached ? "Preparing playback. An uncached source may seek slowly; Cancel is available."
+                           : "Preparing playback... Cancel, or click the ruler to choose another position.");
     }
     void cancelPreparation() {
         if (!preparing)

@@ -26,6 +26,9 @@ class StreamSource {
     virtual bool sequentialSeek() const noexcept {
         return false;
     }
+    virtual bool uncachedSeek() const noexcept {
+        return sequentialSeek();
+    }
     virtual std::uint64_t diskCacheBytes() const noexcept {
         return 0;
     }
