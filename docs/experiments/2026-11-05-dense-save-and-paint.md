@@ -3,7 +3,8 @@
 The local regression stores the dense capture model within the existing 8 MiB limit and preserves every compiled point.
 The painter visits a bounded slice of visible handles while keeping the stored curves intact.
 Exact local source: `e2842daa54da2cb419360019af819f282d162f96`.
-Clean CI and a repeated sustained run remain pending.
+Clean CI passes on Linux, macOS and Windows at that exact source.
+A repeated sustained run remains separate and has not yet completed.
 
 ## Storage
 
@@ -45,11 +46,29 @@ The native Mac preview remains preserved while the UI tool reports a locked sess
 
 ![Synthetic dense clip automation](images/2026-11-05-dense-arrangement.png)
 
+## Clean cross-platform checks
+
+[Run 42020134400](https://github.com/coder13/Fader/actions/runs/42020134400) passes five Linux core suites and seven native suites on each of macOS and Windows.
+Downloaded build metadata, JUnit and full logs match source `e2842daa54da2cb419360019af819f282d162f96`, the pinned JUCE revision and UI fixtures OFF.
+There are no failed, erroneous or skipped suites.
+The [aggregate evidence](data/2026-11-05-dense-save-ci.json) records the toolchains, counts and limits.
+
+Both native hosts compile the same 107,999-control storage workload into 149,169 points and reopen every point and identity.
+The manifest is 7,394,820 bytes on macOS and 7,383,039 bytes on Windows.
+Platform decimal formatting differs; both preserve the checked binary32 target bits and binary64 metadata within the unchanged 8 MiB bound.
+These are short-media storage tests, not sustained playback.
+
+The two-second CI smokes preserve all 247 controls, streamed audio and saved projects.
+Their ordinary-priority hosts have 506 virtual deadline misses on the shared macOS runner and 16 on Windows.
+The macOS smoke also misses the predicted-latency target.
+The smoke acceptance checks functional integrity, so successful CI does not qualify those timing targets or a full hour.
+The dedicated real-time hour must supply its own result.
+
 ## Remaining qualification
 
 All 70 tracked source, test and CMake files match the local build source byte for byte.
 The local build uses Release, AppleClang 21, CMake 4.4.4, pinned JUCE and UI fixtures ON.
-Default clean CI keeps UI fixtures OFF and must cover the same numeric, geometry, project and failure cases.
+Default clean CI keeps UI fixtures OFF and covers the numeric, geometry, project and failure cases above.
 
 The original 128-frame hour's twelve virtual deadline misses remain unexplained by its aggregate alone.
 Its callback maximum also exceeded the deadline despite low typical execution times.

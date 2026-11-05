@@ -1,0 +1,115 @@
+{
+  "sourceRevision": "e2842daa54da2cb419360019af819f282d162f96",
+  "ciRun": "https://github.com/coder13/Fader/actions/runs/42020134400",
+  "verification": "Downloaded metadata, JUnit and full test logs; exact source and JUCE pin; UI fixtures OFF; no failed, erroneous or skipped suites",
+  "hosts": [
+    {
+      "artifact": "linux-core-evidence",
+      "build": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "e2842daa54da2cb419360019af819f282d162f96",
+        "cmakeVersion": "3.31.6",
+        "generator": "Unix Makefiles",
+        "system": "Linux",
+        "systemVersion": "7.0.0-1017-azure",
+        "architecture": "x86_64",
+        "compiler": "GNU",
+        "compilerVersion": "13.3.0",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "OFF",
+        "uiFixtures": "OFF",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "testSuites": 5,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    {
+      "artifact": "mac-native-evidence",
+      "build": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "e2842daa54da2cb419360019af819f282d162f96",
+        "cmakeVersion": "4.4.4",
+        "generator": "Unix Makefiles",
+        "system": "Darwin",
+        "systemVersion": "24.6.0",
+        "architecture": "arm64",
+        "compiler": "AppleClang",
+        "compilerVersion": "17.0.0.17000013",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "ON",
+        "uiFixtures": "OFF",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "testSuites": 7,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "denseStorage": {
+        "originalControlCount": 107999,
+        "compiledPoints": 149169,
+        "manifestBytes": 7394820,
+        "reopenedAllPointsAndIdentities": true,
+        "floatControlBitsAndDoubleMetadataPassed": true
+      },
+      "twoSecondSmoke": {
+        "callbacks": 750,
+        "capturedInputs": 247,
+        "softwareIntegrityPassed": true,
+        "sourceStarvationFrames": 0,
+        "capturePersistencePassed": true,
+        "virtualDeadlineMisses": 506,
+        "predictedSoftwareLatencyTargetPassed": false,
+        "scope": "Functional integrity on a shared CI runner; not sustained timing qualification"
+      }
+    },
+    {
+      "artifact": "windows-native-evidence",
+      "build": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "e2842daa54da2cb419360019af819f282d162f96",
+        "cmakeVersion": "4.4.5",
+        "generator": "Ninja",
+        "system": "Windows",
+        "systemVersion": "10.0.26100",
+        "architecture": "AMD64",
+        "compiler": "MSVC",
+        "compilerVersion": "19.51.36260.0",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "ON",
+        "uiFixtures": "OFF",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "testSuites": 7,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "denseStorage": {
+        "originalControlCount": 107999,
+        "compiledPoints": 149169,
+        "manifestBytes": 7383039,
+        "reopenedAllPointsAndIdentities": true,
+        "floatControlBitsAndDoubleMetadataPassed": true
+      },
+      "twoSecondSmoke": {
+        "callbacks": 750,
+        "capturedInputs": 247,
+        "softwareIntegrityPassed": true,
+        "sourceStarvationFrames": 0,
+        "capturePersistencePassed": true,
+        "virtualDeadlineMisses": 16,
+        "predictedSoftwareLatencyTargetPassed": true,
+        "scope": "Functional integrity on a shared CI runner; not sustained timing qualification"
+      },
+      "appSha256": "7e31de5c7bbc343daba7de1a869ccd6af78e8f424ea05660630601daeebe5912",
+      "appBytes": 7363072
+    }
+  ]
+}
