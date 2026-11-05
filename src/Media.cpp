@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "Media.h"
 #include "DecodedCache.h"
+#include "FilePaths.h"
 #include "FileSource.h"
 #include "ProjectStorage.h"
 #include "WavExport.h"
@@ -368,9 +369,8 @@ Project loadProject(const juce::File &file) {
                 fail("Clip has no source file");
             continue;
         }
-        const auto base = juce::File(
-            std::filesystem::weakly_canonical(file.getParentDirectory().getFullPathName().toStdString())
-                .string());
+        const auto base =
+            fileFromPath(std::filesystem::weakly_canonical(filesystemPath(file.getParentDirectory())));
         const auto source = base.getChildFile(clip.path);
         const auto path = source.getFullPathName().toStdString();
         if (!media.contains(path)) {

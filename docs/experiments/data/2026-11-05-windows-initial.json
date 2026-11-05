@@ -1,0 +1,92 @@
+{
+  "qualifiedSourceRevision": "90d9abb90ae4ec5a63272bc75a325e285e6e6918",
+  "ciRun": 42005831656,
+  "hosts": {
+    "linux-core-evidence": {
+      "build": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "90d9abb90ae4ec5a63272bc75a325e285e6e6918",
+        "cmakeVersion": "3.31.6",
+        "generator": "Unix Makefiles",
+        "system": "Linux",
+        "systemVersion": "7.0.0-1017-azure",
+        "architecture": "x86_64",
+        "compiler": "GNU",
+        "compilerVersion": "13.3.0",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "OFF",
+        "uiFixtures": "OFF",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "tests": 5,
+      "failuresErrorsSkips": 0,
+      "decoderObservation": []
+    },
+    "mac-native-evidence": {
+      "build": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "90d9abb90ae4ec5a63272bc75a325e285e6e6918",
+        "cmakeVersion": "4.4.5",
+        "generator": "Unix Makefiles",
+        "system": "Darwin",
+        "systemVersion": "24.6.0",
+        "architecture": "arm64",
+        "compiler": "AppleClang",
+        "compilerVersion": "17.0.0.17000013",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "ON",
+        "uiFixtures": "OFF",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "tests": 7,
+      "failuresErrorsSkips": 0,
+      "decoderObservation": [
+        "DECODERS: WAV=WAV file; MP3=CoreAudio supported file; MP3 source frames=352800; rate=44100"
+      ]
+    },
+    "windows-native-evidence": {
+      "build": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "90d9abb90ae4ec5a63272bc75a325e285e6e6918",
+        "cmakeVersion": "4.4.5",
+        "generator": "Ninja",
+        "system": "Windows",
+        "systemVersion": "10.0.26100",
+        "architecture": "AMD64",
+        "compiler": "MSVC",
+        "compilerVersion": "19.51.36260.0",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "ON",
+        "uiFixtures": "OFF",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "tests": 7,
+      "failuresErrorsSkips": 0,
+      "decoderObservation": [
+        "DECODERS: WAV=WAV file; MP3=MP3 file; MP3 source frames=354816; rate=44100"
+      ],
+      "image": {
+        "version": "10.0.26100",
+        "build": "26100",
+        "imageOS": "win25-vs2026",
+        "imageVersion": "20261030.294.1",
+        "architecture": "64-bit",
+        "caption": "Microsoft Windows Server 2025 Datacenter"
+      },
+      "toolsetVersion": "14.51.36231",
+      "sdkVersion": "10.0.26100.0",
+      "executable": {
+        "bytes": 7226368,
+        "sha256": "bd0fa31777d6d4f1884c7c89b69be2e6c18f3ad35ee41ad509909be5d9312a9b",
+        "validatedPEMachine": "x64 / 0x8664",
+        "validatedOptionalHeader": "PE32+ / 0x20b"
+      }
+    }
+  }
+}

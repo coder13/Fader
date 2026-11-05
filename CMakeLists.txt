@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 project(Fader VERSION 0.2.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_compile_options($<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/utf-8>)
 option(FADER_BUILD_APP "Build native application and media tools" ON)
 option(FADER_ENABLE_UI_FIXTURES "Enable synthetic UI qualification fixtures (no device)" OFF)
 include(CTest)
@@ -79,10 +80,11 @@ if(FADER_BUILD_APP)
     if(BUILD_TESTING)
         juce_add_console_app(fader_media_tests PRODUCT_NAME "fader_media_tests")
         target_sources(fader_media_tests PRIVATE tests/MediaTests.cpp tests/ArrangementTests.cpp
-            tests/AudioSetupTests.cpp tests/SourceRateTests.cpp tests/StreamMediaTests.cpp tests/DecodedCacheTests.cpp tests/ProjectModelTests.cpp tests/ExportTests.cpp
+            tests/AudioSetupTests.cpp tests/SourceRateTests.cpp tests/StreamMediaTests.cpp tests/DecodedCacheTests.cpp tests/ProjectModelTests.cpp tests/ExportTests.cpp tests/PortabilityTests.cpp
             src/Arrangement.cpp src/StreamQualification.cpp)
         target_compile_definitions(fader_media_tests PRIVATE
             FADER_TEST_MP3_PATH="${JUCE_SOURCE_DIR}/examples/Assets/Notifications/sounds/served.mp3"
+            FADER_TEST_PROJECT_PATH="${CMAKE_SOURCE_DIR}/tests/fixtures/portable-v3.json"
             FADER_TEST_VBR_PATH="${CMAKE_SOURCE_DIR}/tests/fixtures/synthetic-vbr.mp3")
         target_link_libraries(fader_media_tests PRIVATE fader_media)
         add_test(NAME media COMMAND fader_media_tests)
