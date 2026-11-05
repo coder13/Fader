@@ -4,14 +4,14 @@ Updated 2026-11-04 after reviewing all 64 GitHub issues and the user's request t
 
 ## Immediate POC critical path
 
-**#6, #7, #8 and #38 are completed.** Next: **#39 → #11 → #13 → #40**.
+**#6, #7, #8, #11 and #38 are completed.** #39 awaits native visual inspection on an unlocked Mac; its software/CI checks pass. Next independent software work: **#13 → #40**.
 
 | Order | Issue | Why it comes here |
 | --- | --- | --- |
 | Completed | [#8](https://github.com/coder13/Fader/issues/8), event timing and capture failure | [Qualified clock/capture integrity](experiments/2026-11-04-playback-clock.md), including the interruption/stop race and retention of partial-take data. |
 | Completed | [#38](https://github.com/coder13/Fader/issues/38), bounded source streaming | [Bounded PCM, long-file/codec qualification and native gap-warning verification passed](experiments/2026-11-04-bounded-streaming.md). Import still scans/hashes whole files. |
 | 1 · in progress | [#39](https://github.com/coder13/Fader/issues/39), cancellable state-correct seeking | [Implementation, local tests and timing evidence](experiments/2026-11-04-cancellable-seeking.md) are published; exact-source Linux/macOS CI passes; native Preparing/Cancel inspection awaits an unlocked Mac. The uncached MP3 fallback is explicitly slower. |
-| 2 · in progress | [#11](https://github.com/coder13/Fader/issues/11), stable project model | [Format 3 identities, decoder-domain preservation, strict validation and migration](project-format-v3.md) are implemented and locally tested. Clean CI is pending; #39 remains open for native visual inspection. |
+| Completed | [#11](https://github.com/coder13/Fader/issues/11), stable project model | [Format 3 identities, decoder-domain preservation, strict validation and migration](project-format-v3.md) pass local and clean Linux/macOS CI qualification. #39 remains separately open for native visual inspection. |
 | 3 | [#13](https://github.com/coder13/Fader/issues/13), live/offline render parity | Qualifies the streamed renderer before long-run evidence is accepted. |
 | 4 | [#40](https://github.com/coder13/Fader/issues/40), sustained load/failure qualification | Exercise the preceding pieces together; keep physical output/acoustic claims separate. |
 

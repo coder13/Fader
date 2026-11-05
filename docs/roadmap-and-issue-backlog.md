@@ -314,15 +314,15 @@ GitHub: [#39](https://github.com/coder13/Fader/issues/39). Labels: `phase:poc`, 
 
 GitHub: [#11](https://github.com/coder13/Fader/issues/11). Labels: `phase:poc`, `type:feature`, `area:storage`.
 
-**Current evidence:** [Storage schema 3](project-format-v3.md) adds stable project/clip/asset IDs, named curves, decoded-domain identity, render/grid snapshots and strict read/write validation. Local migration/render/type tests pass; clean CI is pending. Legacy v1/v2 renderer behavior is preserved during storage migration.
+**Current evidence:** [Storage schema 3](project-format-v3.md) adds stable project/clip/asset IDs, named curves, decoded-domain identity, render/grid snapshots and strict read/write validation. Local migration/render/type tests and [clean Linux/macOS CI](https://github.com/coder13/Fader/actions/runs/41990487133) pass. Legacy v1/v2 renderer behavior is preserved during storage migration.
 
 **Scope:** Validate stable clip/asset/parameter addressing, initial state, units/time domains, malformed input and future render-version compatibility using the existing model.
 
 **Acceptance:**
 
-- [ ] Round-trip placement, metadata, curve values/hold semantics and source identity; moving a clip preserves its own curves.
-- [ ] Reject nonfinite values, invalid references, oversize input and unsupported schema writes; exclude device handles from saved data.
-- [ ] Define asset/project/source-frame conversion, legacy preservation and migration policy; snapshot grid/render settings rather than depending on mutable library state.
+- [x] Round-trip placement, metadata, curve values/hold semantics and source identity; moving a clip preserves its own curves.
+- [x] Reject nonfinite values, invalid references, oversize input and unsupported schema writes; exclude device handles from saved data.
+- [x] Define asset/project/source-frame conversion, legacy preservation and migration policy; snapshot grid/render settings rather than depending on mutable library state.
 
 **Dependencies:** [DJ-008](https://github.com/coder13/Fader/issues/8)
 

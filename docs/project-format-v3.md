@@ -1,6 +1,6 @@
 # Project storage version 3
 
-Tracking: [DJ-011](https://github.com/coder13/Fader/issues/11). Implemented; clean CI qualification is in progress. This is the current file contract. The broader [set design](set-format-and-automation.md) also contains future features.
+Tracking: [DJ-011](https://github.com/coder13/Fader/issues/11). Implemented and qualified on the software fixtures below. This is the current file contract. The broader [set design](set-format-and-automation.md) also contains future features.
 
 ## Identity and ownership
 
@@ -65,4 +65,6 @@ Persisted sound contains no audio-device handles, controller addresses, temporar
 
 A separate real-process experiment uses the redistributable eight-second VBR fixture. JUCE reports 354,816 frames, fingerprint `5596226ec7d626ed31be60f1fb3e29579652438ff3d831f3ff49906dd18d1599`; CoreAudio reports 352,800 frames, fingerprint `6892edc56951b7cb105065a045742db5b3b56d4a86ba0e7f61bc815ae5dee491`. Both import/save their own domain. Each rejects the other's saved project and preserves an existing output file. These are observed decoder results, not universal golden fingerprints for every OS.
 
-For API-only migration checks, `fader_probe --resave-project input.faderset output.faderset` uses the same reader/writer; it cannot bypass a saved domain mismatch. No physical audio device or controller is opened by the persistence tests. Clean CI evidence and exact final source are recorded on the issue when complete; the preview remains unchanged while the Mac is locked.
+For API-only migration checks, `fader_probe --resave-project input.faderset output.faderset` uses the same reader/writer; it cannot bypass a saved domain mismatch. No physical audio device or controller is opened by the persistence tests. Exact tested source: `758ba355f5ecbf3644ec53af3e30d05e9150d13a`, JUCE `d60b7a78030661574a615b586d9325ba7a7fa7dd`. [Clean CI](https://github.com/coder13/Fader/actions/runs/41990487133) passes Linux 4/4 (GNU 13.3, CMake 3.31.6, x86_64) and macOS 5/5 (AppleClang 17.0.0.17000013, CMake 4.4.4, arm64 Darwin 24.6.0), including the app signature check. Downloaded metadata/JUnit/logs match those exact revisions, with fixtures OFF, zero failures/errors/skips, the project-identity/migration/domain success marker and callback allocation checks. Local Release tests use AppleClang 21, CMake 4.4.4, arm64/macOS 26.6.2. No Windows native execution is claimed. The preview remains unchanged while the Mac is locked.
+
+An additional API-only schema 1 fixture exercises active gainA, gainB and crossfader curves (linear and step), nonzero source offsets and 0.75/1.25 rates. Resaving to schema 3 keeps renderer 1; pre/post 24-bit WAV outputs are byte-identical, SHA-256 `2eb8377ee9cb5ec34a2dccd3537f114ebbd76a28070fad6f37b8938e515cebda`. This complements the CI v1/v2 migration and float-master parity tests.
