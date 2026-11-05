@@ -46,7 +46,7 @@ Keep reference-count destruction, allocation, cache eviction, queue resizing, an
 
 ## Time and events
 
-Live processing uses an integer sample-frame position on the audio device clock. Timestamp inputs on receipt using a monotonic host clock, map them into the engine clock, and record the **actual applied frame**. Do not pretend an event received after its deadline can affect already-rendered samples. Track late-event counts and their lateness.
+Live processing uses an integer sample-frame position on the audio device clock. Timestamp inputs on receipt using a monotonic host clock, map them into the engine clock, and record the **actual applied frame**. Pair it with a transport segment ID and that segment's engine-frame/project-position anchor; the engine counter alone does not identify arrangement time after a seek or restart. In the POC, stop or segment capture explicitly on seek, pause, device-clock reset, or sample-rate change. A new retake can start from a nonzero project position with a new anchor. Do not pretend an event received after its deadline can affect already-rendered samples. Track late-event counts and their lateness.
 
 At each block, apply scheduled actions at their frame offsets; split processing into bounded spans where necessary. Curves can be evaluated per sample or in documented interpolated segments. Smooth discontinuous control targets to avoid zipper noise, with the smoothing policy versioned in the engine. Critical actions such as stop and clip activation must not be dropped behind meter traffic.
 
@@ -62,6 +62,8 @@ Preallocate a bounded event pool, queues, decoder windows, and working buffers. 
 - Decoder starvation produces a deliberate short fade to silence and a visible underrun record. The callback continues.
 - Under sustained overload, disable optional analysis/visual work or request a larger buffer through the host. Do not change musical timing silently.
 
+These starvation rules describe live playback. The offline host can block: it must wait for all required source windows **before** invoking the render core for a span. An unreadable source fails the export explicitly; a slow decoder must never turn into an apparently successful file containing starvation fades. Keep the core's processing nonblocking in both hosts.
+
 At 48 kHz, 128 frames give approximately 2.67 ms to process one callback. That is a deadline, not end-to-end latency. Device buffering, scheduling, USB input, stretch lookahead, conversion, and physical output add latency. See [POC measurements](poc-plan.md).
 
 ## Audio signal path
@@ -70,9 +72,11 @@ For each active source: decode/prefetch → resample or stretch → trim/gain �
 
 The POC validates basic playback and resampling first. Pitch-preserving stretch is a separately benchmarked DSP step, not a free consequence of BPM sync. A stretcher must expose/characterize its startup, lookahead, and tail requirements. Account for algorithmic latency across parallel paths and retain preroll when seeking. Offline export must use the same declared processing mode for parity tests; an optional higher-quality export mode is an explicit different render choice.
 
-Use one S4 audio device clock for master and cue where possible. Separate audio devices require an additional clock-drift/resampling design. Start with stereo WAV sources, a 48 kHz engine, floating-point mixing, and PCM WAV export. Broaden formats after engine/capture correctness; encoding runs outside the callback.
+Use one S4 audio device clock for master and cue where possible. Separate audio devices require an additional clock-drift/resampling design. Start the harness with stereo WAV sources, a 48 kHz engine, floating-point mixing, and PCM WAV export. Add MP3 decoding before the complete POC so it uses the actual library; broader import follows the [format matrix](audio-import-and-library.md). Decoding, header probing, tags, and encoding run outside the callback; source-frame seeking and encoder priming/trimming must agree across analysis, playback, and export.
 
 ## Seeking, loops, and edits during playback
+
+Third-party effects are a confirmed version 2/3 requirement, outside the POC. Preserve room for stable effect-instance IDs, ordered clip/bus racks, parameter events, state blobs, latency/tail reporting, and a separate offline chain. Loading and state changes belong outside the callback. Native VST3 hosting also works behind a desktop web UI; browser-only delivery needs a native companion or frozen audio. The [plugin design](plugin-effects.md) defines the proposed lifecycle, compensation, and compatibility gates. POC code need not implement a plugin host.
 
 Seeking must reconstruct the state at the destination: which clip is active, its source position, parameter values, and DSP history. A parameter snapshot alone cannot restore stretch or effect state. Use a bounded preroll or cached render checkpoints; if data is unavailable, show preparation state rather than producing an apparently successful but wrong playback.
 

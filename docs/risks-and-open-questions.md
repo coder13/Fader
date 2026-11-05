@@ -23,6 +23,8 @@ Open source, macOS and Windows, S4 MK3 first, Audacity-inspired clarity, editabl
 | Project media/DSP dependencies change | Old sets sound different or fail to open | Content hashes, grid snapshots, migrations, pinned render semantics | M2/M4 |
 | Timeline editor becomes a general DAW project | POC loses focus | Gate features against the flagship workflow; two lanes and few parameters first | M2 |
 | Windows driver behavior varies | Second required platform delayed | Version-specific current ASIO/WASAPI qualification | M5 |
+| Plugin latency, crashes, or unavailable versions change a set | Third-party effects break live reliability or reproducible export | Isolated scanning, state/parameter identity, delay compensation, compatibility tests and freeze path | M8 / v2–v3 |
+| Decoder/format differences reject existing songs or shift cues | The user's collection cannot be used reliably | Header-based probing, MP3/WAV POC, full-library decode report and cross-platform fixtures | A16/M4 |
 
 ## Decisions still needed
 
@@ -33,7 +35,7 @@ Open source, macOS and Windows, S4 MK3 first, Audacity-inspired clarity, editabl
 5. **DSP candidate and sound quality:** compare Rubber Band and Signalsmith at relevant tempos and latency; no algorithm selected yet.
 6. **Musical edit semantics:** validate beat-anchored versus absolute placements and automation movement rules with the user on a prototype.
 7. **Distribution baseline:** set supported macOS/Windows versions and Apple Silicon/Intel policy after build and hardware evidence. Cross-platform does not imply every old OS.
-8. **GitHub destination:** the relocated directory had no Git metadata or remote. Choose the repository/visibility before publishing the prepared issue backlog.
+8. **GitHub issue publication:** repository is [coder13/Fader](https://github.com/coder13/Fader); documentation pushes are authorized. The issue backlog remains draft and needs the planned publication step.
 
 ## Hardware details to collect during the first experiment
 
@@ -41,4 +43,4 @@ S4 firmware; direct USB versus hub; external power; current audio channel/rate o
 
 ## Roadmap boundaries
 
-Future scratch/loop automation must retain source trajectories. External synths, microphones, and hardware FX need audio capture for reproducible export. Plugin hosting requires serialized plugin state and latency/migration policies. Streaming/DRM integration requires an independent access/export design and is not implied by local-file support. Track these as later epics without making them first-POC dependencies.
+Future scratch/loop automation must retain source trajectories. External synths, microphones, and hardware FX need audio capture for reproducible export. Plugin effects are a confirmed version 2/3 requirement, starting with VST3; [the design](plugin-effects.md) covers serialized state, parameter automation, latency, export, and compatibility. The version labels do not refer to M2/M3. Streaming/DRM integration requires an independent access/export design and is not implied by local-file support. These are not first-POC dependencies.

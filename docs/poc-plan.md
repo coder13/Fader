@@ -4,7 +4,7 @@ Status: Proposed experiments and acceptance criteria. Updated 2026-11-04. **No t
 
 ## Demonstration that counts as success
 
-On the user's Mac with the S4 MK3, load two local WAV files, arrange an overlap, monitor a deck in headphones, perform a 30-second transition with channel faders/crossfader, edit that recorded automation, and record a replacement portion. Save and close the set, disconnect the controller, reopen it, replay the edited result, and export a WAV using the same rendering core.
+On the user's Mac with the S4 MK3, load two local MP3/WAV files from the existing library, arrange an overlap, monitor a deck in headphones, perform a 30-second transition with channel faders/crossfader, edit that recorded automation, and record a replacement portion. Save and close the set, disconnect the controller, reopen it, replay the edited result, and export a WAV using the same rendering core. Use WAV fixtures for strict engine comparisons and include MP3 in the user workflow.
 
 The demo must show that the transition remains editable and that export agrees with the saved project. A controller moving an on-screen knob or an attractive timeline alone does not complete the POC.
 
@@ -28,7 +28,7 @@ Do not continue polishing P3 if P1 cannot separate master/cue or P2 cannot repla
 
 ## POC scope boundaries
 
-Two internal stereo lanes/deck roles; manual BPM/first-beat metadata; fixed project tempo; basic varispeed proof; gains/crossfader and start/stop/source-offset capture; one range replacement workflow; local PCM WAV; explicit save/reopen/relink; WAV export. Optional master PCM capture supports comparisons.
+Two internal stereo lanes/deck roles; manual BPM/first-beat metadata and grid display; fixed project tempo; a static varispeed ratio set per clip before capture; gains/crossfader and start/stop/source-offset capture; one range replacement workflow; MP3 and PCM WAV import; explicit save/reopen/relink; WAV export. Independently armed master PCM recording supports audio-only or combined recording, as well as comparisons. Live rate gestures are deferred until rate-event capture is implemented. The initial audio harness can remain WAV-only; the completed POC must also use MP3.
 
 EQ, high-quality key lock, automatic beat analysis, tempo ramps, four simultaneous decks, arbitrary cue jumps/loops/scratching, controller screens/motors, MP3 export, and full library indexing follow this proof. Read-only controller traces may cover those controls earlier without promising their DSP or capture support. A generic MIDI note/CC output loopback is a small independent P1 experiment; full tempo-clock synchronization follows the tempo engine.
 
@@ -45,14 +45,15 @@ Targets are initial engineering hypotheses. A miss is reported with cause and re
 | A05 | Callback headroom | At 128 frames/48 kHz, target p99.9 execution below half the 2.67 ms budget and maximum below deadline; report buffer fallback separately |
 | A06 | Real-time discipline | Audit project-owned callback path for allocations/frees, I/O, locks and unbounded work; instrument queues/cache failures |
 | A07 | Control latency | Target p95 below 10 ms from timestamped HID receipt to predicted audible output for gain/crossfader, excluding unknown physical-device delay; measure physical/loopback latency separately and report p50/p95/p99, method, and uncertainty |
-| A08 | Correct scheduling | Synthetic events execute at the expected engine frame, including block boundaries and same-frame ordering; late inputs counted |
-| A09 | Edit/replay parity | Recorded gain/crossfader take, point edit, and range retake survive save/reopen; baseline float PCM differs by at most `1e-6` after declared alignment, with matching event frames |
+| A08 | Correct scheduling | Synthetic events execute at the expected engine frame, including block boundaries and same-frame ordering; transport anchors map a nonzero-position retake correctly; late inputs counted |
+| A09 | Edit/replay parity | Recorded gain/crossfader take, point edit, and range retake survive save/reopen; isolated step-target fixture proves no unintended interpolation before smoothing; return-region boundaries are continuous; baseline float PCM differs by at most `1e-6` after declared alignment, with matching event frames |
 | A10 | Block independence | Render baseline fixture at 64/128/256/512-frame host blocks; no changed action timing; numerical differences within baseline tolerance |
 | A11 | Portable project behavior | Reopen without controller; relocate and relink the same assets; reject wrong-content substitutions and unsupported schema writes |
 | A12 | Failure handling | Unplug/replug, queue pressure, missing media, failed save, and interrupted recording do not crash or silently corrupt a take; recovery status visible |
 | A13 | Usable workflow | User completes arrange → record → edit → retake → save/reopen → WAV export; undo restores the previous transition |
 | A14 | MIDI output proof | Timestamped note/CC events reach a virtual endpoint in order; no outgoing hardware events during offline export; this does not certify physical MIDI latency |
-| A15 | Bounded long render | Render a 60-minute set from repeated fixture placements without loading all output PCM at once; track peak memory; valid file/range/duration, cancel and disk-error behavior |
+| A15 | Bounded long render | Render a 60-minute set from repeated fixture placements without loading all output PCM at once; track peak memory; deliberately slow decoding stalls offline progress without inserting starvation silence; valid file/range/duration, cancel and disk-error behavior |
+| A16 | Existing-library import | Load representative MP3/WAV from `~/Music` and synthetic CBR/VBR/bit-depth fixtures; header-based detection handles an audio file with a mismatched suffix; seek positions agree with sequential decoding; source files remain unchanged; errors are explicit |
 
 For A07, record the device output-latency estimate, engine/DSP latency, timestamp uncertainty, and how predicted output time is derived. An internal timestamp is not a physical acoustic measurement. A hardware loopback/reference capture can measure the complete path where equipment permits; report the missing portion if it cannot.
 

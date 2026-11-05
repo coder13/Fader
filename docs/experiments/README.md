@@ -1,0 +1,25 @@
+# Experiment reports
+
+The [read-only library inventory](2026-11-04-library-inventory.md) is complete. No audio-engine or controller qualification has been completed yet. Add a report here for each decision spike and qualification run. Use a descriptive filename such as `2026-11-xx-s4-native-routing.md`; replace the placeholder with the actual run date.
+
+Copy this outline and replace the prompts with evidence. A failed experiment is a useful result when it identifies the next decision.
+
+## Question and gate
+
+State the specific uncertainty, linked backlog issue and POC criterion, and the pass condition agreed before running. Distinguish feasibility, performance target, and product preference.
+
+## Configuration
+
+Record commit/build type/compiler, dependency versions/flags, OS/chip/RAM, controller model/firmware, audio backend/rate/channels/buffer, USB/power route, DSP mode, and browser version where applicable. Record fixture identity or generation recipe. Omit serial numbers and private media paths from shared reports.
+
+## Method
+
+Describe exact steps, duration, repetitions, warm-up, load, and measurement instrumentation. For timing, name the start/end points and clock domains. Separate requested buffer size from observed buffer size, estimated latency from physical measurement, and real-time PCM from offline render output.
+
+## Results
+
+Include expected versus actual behavior, p50/p95/p99/p99.9 and maximum where relevant, sample count/duration, missed deadlines, underruns, late inputs, queue high-water marks, capture loss, and peak memory. Link raw logs/plots/fixtures. State unmeasured portions instead of estimating them silently.
+
+## Decision and follow-up
+
+Record pass/fail/partial and why. Identify supported configurations and remaining gaps. Link the ADR or design update, follow-up issue, and any scope/threshold change explicitly. Do not turn a one-machine result into a general compatibility claim.

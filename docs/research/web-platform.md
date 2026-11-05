@@ -73,6 +73,8 @@ The first browser routing test should play distinguishable quiet test signals on
 
 ## Local library, project files, and export
 
+The confirmed [library-import requirement](../audio-import-and-library.md) applies to the browser product scope too. Browser/native decoder capability and compressed-source timing must be qualified separately; if browser codecs do not meet the format matrix, evaluate shared Wasm decoding or state the reduced scope explicitly. Installed native VST3 effects require a native host or frozen audio, as described in the [version 2/3 plugin design](../plugin-effects.md).
+
 File inputs and drag/drop can support a basic local-media workflow. Chromium's File System Access API adds user-authorized directory browsing and writing, but permission and browser differences require a fallback such as selecting files and downloading project/export files. Keep media identifiers and hashes in the project; file handles alone are not a portable project format. [File System Access](https://developer.chrome.com/docs/capabilities/web-apis/file-system-access).
 
 Use browser storage for recoverable caches and autosave, not as the sole copy of the user's set. Quotas and eviction vary by browser, and best-effort storage can be removed. Offer explicit project export and media relinking. [Storage quotas and eviction](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria).
@@ -109,7 +111,7 @@ Decision gates: browser-only hardware support proceeds only if WEB-02 and WEB-03
 
 ## Open questions
 
-- Exact Mac model, macOS version, firmware and output route remain to be recorded during hardware qualification.
+- The observed host is an M3 MacBook Air with 16 GB RAM on macOS 26.6.2. Record firmware, output route, browser versions, and the full test configuration during hardware qualification.
 - Whether Chromium exposes every S4 interface needed for the first mapping is unmeasured.
 - Browser master/cue channel mapping and actual controller-to-audio latency are unmeasured.
 - The chosen DSP libraries need Wasm build, license and quality checks before shared-code portability is claimed.

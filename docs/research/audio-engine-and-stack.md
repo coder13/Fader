@@ -85,6 +85,8 @@ Outgoing MIDI clock/control should be scheduled from this transport, but operati
 
 ## Decoding, streaming, and seeking
 
+Requirement update: the existing library must work directly. The first harness can use WAV fixtures, but the completed POC now includes MP3 import; broader common formats and full collection qualification follow in M4. The [import design](../audio-import-and-library.md) governs this expanded scope.
+
 The earliest experiment may decode short test files into memory, with an explicit memory limit. A long DJ set must not require all songs to reside as decoded PCM. Decode workers should populate bounded read-ahead caches keyed by source identity, channel layout, sample rate, and source-frame range.
 
 Normal playback needs forward read-ahead; cue jumps, loops, reverse, and scratching need different cache policies. A seek should prepare a new cursor/cache/DSP state off-thread where possible, then switch cleanly. Stale worker results need generation identifiers so an old seek cannot replace a newer one. Define whether an unavailable seek waits, stays at the old position, or fades to silence; never block the callback on disk.

@@ -34,7 +34,7 @@ Audio device • buffer • cue routing      Controller status      Recording st
 
 This is a proposed layout, not an implemented screenshot. At normal use, the timeline should dominate the window. Show only selected/used automation lanes by default. Keep a compact deck/mixer strip available for rehearsal; do not fill the initial screen with four large turntable graphics. Tempo, selected range, snap mode, automation arm, and override state must remain visible.
 
-The file browser needs folders, search, supported-format status, duration, BPM/grid state, preview, and drag/drop. Large-library indexing and metadata analysis run in the background. The first POC can browse a chosen folder; broad library management comes later.
+The file browser needs folders, search, supported-format status, duration, BPM/grid state, preview, and drag/drop. It must use the existing music-folder layout without moving or converting source files. Large-library indexing and metadata analysis run in the background. The completed POC browses a chosen folder and imports MP3/WAV; the alpha qualifies the whole collection and broader common formats. See [audio import](audio-import-and-library.md).
 
 ## Editing rules
 
@@ -52,14 +52,15 @@ The file browser needs folders, search, supported-format status, duration, BPM/g
 | Capability | First complete POC | Following milestones |
 | --- | --- | --- |
 | Tracks and mixing | Two stereo sources, gain and crossfader, master/cue | Four decks, EQ/filter/effects, flexible arrangement buses |
-| Tempo and beat grids | Manual BPM/first beat; fixed project tempo; rate change proof | Editable detected grids, key-lock quality, changing tempo and variable grids |
+| Tempo and beat grids | Manual BPM/first beat; fixed project tempo; static per-clip varispeed before capture | Captured rate gestures, editable detected grids, key-lock quality, changing tempo and variable grids |
 | Automation | Gains/crossfader, starts/stops/source offsets, manual editing, range replacement | Touch/latch, tempo/loop/jog/FX gestures, take comparison |
 | Controller | S4 essential controls and LED feedback | Four-deck layers, jog behavior, screens and motors qualified individually |
-| Files | Local PCM WAV, source relinking, set save/reopen | MP3/FLAC import/export, collect-media bundle, long library |
+| Files | MP3/WAV import, source relinking, set save/reopen, WAV export | AIFF/FLAC/AAC/ALAC/Vorbis/Opus import, full-library qualification, MP3/FLAC export, collect-media bundle |
 | Platforms | Apple Silicon macOS | Windows, Linux; web editor/hybrid based on experiments |
 | MIDI output | Basic timestamped output proof | Mapping presets and clock/start/stop with measured timing |
+| Plugin effects | Excluded | Version 2/3: VST3 song/lane/master racks, saved settings, parameter automation and processed export |
 
-The goal of eventually having broad DJ features is preserved in the backlog. Streaming services, DRM media, DVS/timecode, stem separation, video, cloud collaboration, and arbitrary plugin hosting are outside the first planning-to-POC cycle.
+The goal of eventually having broad DJ features is preserved in the backlog. Plugin effects are a confirmed version 2/3 requirement: drag effects from a plugin browser onto a song or effects rack and edit their exposed parameters on the timeline. See [plugin effects](plugin-effects.md). Plugin hosting, streaming services, DRM media, DVS/timecode, stem separation, video, and cloud collaboration remain outside the POC.
 
 ## Usability evidence
 
