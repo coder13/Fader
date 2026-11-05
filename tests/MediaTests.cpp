@@ -15,6 +15,7 @@ void testStreamMedia();
 void testDecodedCache();
 void testProjectModel();
 void testExportFailures();
+void testPortability();
 void check(bool pass, const char *message) {
     if (!pass)
         throw std::runtime_error(message);
@@ -28,6 +29,7 @@ int main() {
                          .getNonexistentChildFile("fader-test", {}, false);
     dir.createDirectory();
     try {
+        testPortability();
         testSourceRates();
         testStreamMedia();
         testDecodedCache();
@@ -65,7 +67,8 @@ int main() {
         exportWav(reopened, output, true);
         auto rendered = loadClip(output);
         const auto renderedSamples = readImportedSamples(rendered);
-        Engine e(p);
+        auto eOwned = std::make_unique<Engine>(p);
+        auto &e = *eOwned;
         juce::AudioBuffer<float> expected(2, 48000);
         renderPrepared(e, expected);
         for (int i = 0; i < 48000; ++i)
@@ -158,7 +161,8 @@ int main() {
         exportWav(modernReopened, modernWave, true);
         auto modernAudio = loadClip(modernWave);
         const auto modernSamples = readImportedSamples(modernAudio);
-        Engine modernEngine(modern);
+        auto modernEngineOwned = std::make_unique<Engine>(modern);
+        auto &modernEngine = *modernEngineOwned;
         renderPrepared(modernEngine, expected);
         for (int i = 0; i < 48000; ++i)
             check(std::abs(expected.getSample(0, i) - modernSamples[0][static_cast<std::size_t>(i)]) < 1e-6f,

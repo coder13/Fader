@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "Library.h"
+#include "FilePaths.h"
 #include <cmath>
 #include <filesystem>
 #include <stdexcept>
@@ -197,16 +198,15 @@ Preferences Preferences::load(const juce::File &file) {
     const auto ni =
         juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("Native Instruments");
     std::error_code error;
-    std::filesystem::directory_iterator entries(ni.getFullPathName().toStdString(),
-                                                std::filesystem::directory_options::skip_permission_denied,
-                                                error),
+    std::filesystem::directory_iterator entries(
+        filesystemPath(ni), std::filesystem::directory_options::skip_permission_denied, error),
         end;
     for (; entries != end; entries.increment(error)) {
         if (error) {
             error.clear();
             continue;
         }
-        const juce::File dir(entries->path().string());
+        const auto dir = fileFromPath(entries->path());
         if (!dir.getFileName().startsWithIgnoreCase("Traktor"))
             continue;
         const auto nml = dir.getChildFile("collection.nml");
@@ -251,8 +251,7 @@ LibraryResult scanLibrary(const Preferences &p) {
                 identities[id].push_back(entry);
     std::error_code error;
     std::filesystem::recursive_directory_iterator it(
-        p.musicFolder.getFullPathName().toStdString(),
-        std::filesystem::directory_options::skip_permission_denied, error),
+        filesystemPath(p.musicFolder), std::filesystem::directory_options::skip_permission_denied, error),
         end;
     std::map<juce::String, bool> seen;
     for (; it != end; it.increment(error)) {
@@ -262,7 +261,7 @@ LibraryResult scanLibrary(const Preferences &p) {
         }
         if (!it->is_regular_file(error))
             continue;
-        juce::File file(it->path().string());
+        const auto file = fileFromPath(it->path());
         if (!file.hasFileExtension("mp3;wav;wave;aif;aiff;flac;m4a;aac;ogg;opus;alac"))
             continue;
         auto found = traktor.cend();
@@ -272,8 +271,7 @@ LibraryResult scanLibrary(const Preferences &p) {
             if (candidates != identities.end())
                 for (const auto candidate : candidates->second) {
                     std::error_code identityError;
-                    if (std::filesystem::equivalent(it->path(),
-                                                    candidate->second.file.getFullPathName().toStdString(),
+                    if (std::filesystem::equivalent(it->path(), filesystemPath(candidate->second.file),
                                                     identityError) &&
                         !identityError) {
                         found = candidate;

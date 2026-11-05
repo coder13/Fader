@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "ProjectStorage.h"
+#include "FilePaths.h"
 #include <charconv>
 #include <cmath>
 #include <filesystem>
@@ -189,9 +190,7 @@ void checkAsset(const Asset &a) {
         bad("Invalid asset reference or sample domain");
 }
 juce::File baseDirectory(const juce::File &file) {
-    return juce::File(
-        std::filesystem::weakly_canonical(file.getParentDirectory().getFullPathName().toStdString())
-            .string());
+    return fileFromPath(std::filesystem::weakly_canonical(filesystemPath(file.getParentDirectory())));
 }
 void checkText(const std::string &s, std::size_t size = 4096) {
     if (s.size() > size || !juce::CharPointer_UTF8::isValidString(s.data(), static_cast<int>(s.size())))
@@ -244,8 +243,8 @@ juce::var projectDocument(const Project &project, const juce::File &file) {
                 auto item = object();
                 put(item, "id", juce::String(ref));
                 put(item, "path",
-                    juce::File(std::filesystem::weakly_canonical(a.path).string())
-                        .getRelativePathFrom(baseDirectory(file)));
+                    relativeMediaPath(fileFromPath(std::filesystem::weakly_canonical(filesystemPath(a.path))),
+                                      baseDirectory(file)));
                 put(item, "sha256", juce::String(a.hash));
                 put(item, "pcmHash", juce::String(a.pcmHash));
                 put(item, "decoder", juce::String(a.decoder));

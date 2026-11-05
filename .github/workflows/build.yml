@@ -42,6 +42,57 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
+  windows:
+    name: Native app and tests / Windows x64
+    runs-on: windows-2025
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Record Windows image and Visual Studio installation
+        run: |
+          New-Item -ItemType Directory -Force build | Out-Null
+          $os = Get-CimInstance Win32_OperatingSystem
+          @{ imageOS = $env:ImageOS; imageVersion = $env:ImageVersion;
+             caption = $os.Caption; version = $os.Version; build = $os.BuildNumber;
+             architecture = $os.OSArchitecture } | ConvertTo-Json | Set-Content build/windows-image.json
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          & $vswhere -latest -products * -format json | Set-Content build/windows-visual-studio.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Configure pinned native dependencies for MSVC x64
+        run: cmake --preset native -G "Visual Studio 17 2022" -A x64
+      - name: Build app, probe and tests
+        run: cmake --build --preset native
+      - name: Test without audio or MIDI hardware
+        run: |
+          ctest --preset native --verbose --output-junit results.xml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (!(Test-Path build/native/results.xml)) { throw "JUnit results are missing" }
+      - name: Record built application
+        run: |
+          $app = "build/native/Fader_artefacts/Release/Fader.exe"
+          if (!(Test-Path $app) -or (Get-Item $app).Length -eq 0) { throw "Built app is missing" }
+          Get-FileHash -Algorithm SHA256 $app | Format-List | Out-File build/windows-app.txt
+      - name: Retain Windows build and test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-native-evidence
+          path: |
+            build/windows-image.json
+            build/windows-visual-studio.json
+            build/windows-app.txt
+            build/native/fader-build-info.json
+            build/native/results.xml
+            build/native/Testing/Temporary/LastTest.log
+            build/native/Fader_artefacts/Release/Fader.exe
+          retention-days: 14
+          if-no-files-found: warn
+
   mac:
     name: Native app and tests / macOS
     runs-on: macos-15

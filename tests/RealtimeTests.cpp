@@ -140,7 +140,8 @@ int main() {
     times.reserve(20000);
     double sum = 0;
     for (int batch = 0; batch < 200; ++batch) {
-        Engine engine(project);
+        auto engineOwned = std::make_unique<Engine>(project);
+        auto &engine = *engineOwned;
         engine.arm(0, 48000);
         for (int block = 0; block < 100; ++block) {
             engine.command({engine.position() + 17, Param::gainA, float(block % 10) / 10});

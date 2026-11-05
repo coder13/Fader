@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 project(Fader VERSION 0.2.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/utf-8>)
 option(FADER_BUILD_APP "Build native application and media tools" ON)
 option(FADER_ENABLE_UI_FIXTURES "Enable synthetic UI qualification fixtures (no device)" OFF)
 include(CTest)
@@ -79,7 +80,7 @@ if(FADER_BUILD_APP)
     if(BUILD_TESTING)
         juce_add_console_app(fader_media_tests PRODUCT_NAME "fader_media_tests")
         target_sources(fader_media_tests PRIVATE tests/MediaTests.cpp tests/ArrangementTests.cpp
-            tests/AudioSetupTests.cpp tests/SourceRateTests.cpp tests/StreamMediaTests.cpp tests/DecodedCacheTests.cpp tests/ProjectModelTests.cpp tests/ExportTests.cpp
+            tests/AudioSetupTests.cpp tests/SourceRateTests.cpp tests/StreamMediaTests.cpp tests/DecodedCacheTests.cpp tests/ProjectModelTests.cpp tests/ExportTests.cpp tests/PortabilityTests.cpp
             src/Arrangement.cpp src/StreamQualification.cpp)
         target_compile_definitions(fader_media_tests PRIVATE
             FADER_TEST_MP3_PATH="${JUCE_SOURCE_DIR}/examples/Assets/Notifications/sounds/served.mp3"

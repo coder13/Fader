@@ -36,7 +36,8 @@ void testMixer() {
     project.perClip = true;
     project.clips = {constant(0.2f, -0.1f, 0.25f), constant(0.4f, 0.3f, 0.5f)};
     project.clips[0].cue = true;
-    Engine mixed(project);
+    auto mixedOwned = std::make_unique<Engine>(project);
+    auto &mixed = *mixedOwned;
     Block out{};
     process(mixed, out);
     for (int i = 0; i < 128; ++i) {
@@ -56,7 +57,8 @@ void testMixer() {
         clip.automation[1] = {1, true, {{0, 1}}};
         clip.automation[2] = {0, true, {{0, 0}}};
     }
-    Engine monitor(muted);
+    auto monitorOwned = std::make_unique<Engine>(muted);
+    auto &monitor = *monitorOwned;
     process(monitor, out);
     for (int i = 0; i < 128; ++i) {
         near(out[0][i], 0, "muted master is audible");
@@ -68,7 +70,8 @@ void testMixer() {
 
     auto loud = project;
     loud.clips = {constant(0.75f, -0.75f, 1), constant(0.75f, -0.75f, 1)};
-    Engine unclipped(loud);
+    auto unclippedOwned = std::make_unique<Engine>(loud);
+    auto &unclipped = *unclippedOwned;
     process(unclipped, out);
     near(out[0][0], 1.5f, "master silently clips or limits floating-point mix");
     near(out[1][0], -1.5f, "negative master silently clips");
@@ -93,7 +96,8 @@ void testMixer() {
             clip.sourceOffset = 13;
             clip.rate = rate;
             clip.length = Frame(std::floor(287 * double(projectRate) / sourceRate / rate));
-            Engine engine(ramp);
+            auto engineOwned = std::make_unique<Engine>(ramp);
+            auto &engine = *engineOwned;
             Frame frame = 0;
             while (frame < ramp.end() + 128) {
                 process(engine, out);
@@ -117,7 +121,8 @@ void testMixer() {
         legacy.curves[0] = {0.25f, false, {}};
         legacy.curves[1] = {0.5f, false, {}};
         legacy.curves[2] = {crossfade, false, {}};
-        Engine engine(legacy);
+        auto engineOwned = std::make_unique<Engine>(legacy);
+        auto &engine = *engineOwned;
         process(engine, out);
         const float a = crossfade < 0 ? 1 : crossfade > 0 ? 0 : std::sqrt(0.5f);
         const float b = crossfade > 0 ? 1 : crossfade < 0 ? 0 : std::sqrt(0.5f);

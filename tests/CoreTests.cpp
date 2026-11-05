@@ -45,19 +45,23 @@ int main() {
         testMixer();
         testPlayback();
         const auto project = fixture();
-        Engine reference(project);
+        auto referenceOwned = std::make_unique<Engine>(project);
+        auto &reference = *referenceOwned;
         const auto baseline = render(reference, 64, project.end());
         for (int block : {1, 127, 128, 256, 512, 1024}) {
-            Engine e(project);
+            auto eOwned = std::make_unique<Engine>(project);
+            auto &e = *eOwned;
             require(render(e, block, project.end()) == baseline, "block-dependent render");
         }
-        Engine seek(project, 5311);
+        auto seekOwned = std::make_unique<Engine>(project, 5311);
+        auto &seek = *seekOwned;
         auto suffix = render(seek, 128, project.end());
         require(std::equal(suffix.begin(), suffix.end(), baseline.begin() + 5311),
                 "seek did not reconstruct smoother");
         auto p = fixture();
         p.curves[0].points.clear();
-        Engine live(p);
+        auto liveOwned = std::make_unique<Engine>(p);
+        auto &live = *liveOwned;
         live.arm(100, 9000);
         require(live.command({128, Param::gainA, 0.1f}), "queue push");
         require(live.command({769, Param::gainA, 0.9f}), "queue push");
@@ -70,7 +74,8 @@ int main() {
                 "capture timestamps wrong");
         require(!live.captureFailed(), "unexpected capture overflow");
         commitTake(p, capture, 100, 9000);
-        Engine replay(p);
+        auto replayOwned = std::make_unique<Engine>(p);
+        auto &replay = *replayOwned;
         require(render(replay, 127, 9000) == actual, "captured target replay differs");
         require(p.curves[0].at(127) == 0.7f, "target interpolated before its timestamp");
         auto unchanged = p.curves[1].points;
@@ -79,7 +84,8 @@ int main() {
                 "retake changed outside region");
         auto boundary = fixture();
         boundary.curves[0].points = {{128, 0.1f}, {4980, 0.6f}, {5100, 0.3f}};
-        Engine performing(boundary, 4000);
+        auto performingOwned = std::make_unique<Engine>(boundary, 4000);
+        auto &performing = *performingOwned;
         performing.arm(4000, 5000);
         performing.command({4001, Param::gainA, 0.8f});
         performing.command({4500, Param::gainA, 0.4f});
@@ -88,7 +94,8 @@ int main() {
         while (performing.captured(event))
             retake.push_back(event);
         commitTake(boundary, retake, 4000, 5000);
-        Engine boundaryReplay(boundary, 4000);
+        auto boundaryReplayOwned = std::make_unique<Engine>(boundary, 4000);
+        auto &boundaryReplay = *boundaryReplayOwned;
         require(render(boundaryReplay, 127, boundary.end()) == performed, "retake punch-out replay differs");
         require(boundary.curves[0].at(5100) == 0.3f, "retake erased a following target");
         auto atomic = fixture();
@@ -101,7 +108,8 @@ int main() {
             failed = true;
         }
         require(failed && atomic.curves[0].points == before, "failed take partially changed project");
-        Engine pressure(project);
+        auto pressureOwned = std::make_unique<Engine>(project);
+        auto &pressure = *pressureOwned;
         pressure.arm(0, project.end());
         float a{}, b{};
         float *output[]{&a, &b};
@@ -126,7 +134,10 @@ int main() {
         require(rejected, "duplicate timestamps accepted");
         auto cueProject = fixture();
         cueProject.clips[0].cue = true;
-        Engine cue(cueProject), noCue(project);
+        auto cueOwned = std::make_unique<Engine>(cueProject);
+        auto &cue = *cueOwned;
+        auto noCueOwned = std::make_unique<Engine>(project);
+        auto &noCue = *noCueOwned;
         require(render(cue, 128, 12000) == render(noCue, 128, 12000), "cue leaked to master");
         auto clips = fixture();
         clips.perClip = true;
@@ -134,33 +145,39 @@ int main() {
         clips.clips[0].automation[1].points = {{0, 0}, {3000, 0.55f}};
         clips.clips[0].automation[2].points = {{0, 1}, {7500, 0.4f}};
         clips.clips[1].automation[0].points = {{0, 0.3f}, {8000, 0.8f}};
-        Engine clipEngine(clips);
+        auto clipEngineOwned = std::make_unique<Engine>(clips);
+        auto &clipEngine = *clipEngineOwned;
         const auto clipBaseline = render(clipEngine, 64, clips.end());
         for (int block : {1, 127, 512}) {
-            Engine e(clips);
+            auto eOwned = std::make_unique<Engine>(clips);
+            auto &e = *eOwned;
             require(render(e, block, clips.end()) == clipBaseline,
                     "clip/filter render depends on block size");
         }
-        Engine clipSeek(clips, 5311);
+        auto clipSeekOwned = std::make_unique<Engine>(clips, 5311);
+        auto &clipSeek = *clipSeekOwned;
         const auto clipSuffix = render(clipSeek, 128, clips.end());
         require(std::equal(clipSuffix.begin(), clipSuffix.end(), clipBaseline.begin() + 5311),
                 "seek lost filter history");
         auto single = clips;
         single.clips.resize(1);
-        Engine originalClip(single);
+        auto originalClipOwned = std::make_unique<Engine>(single);
+        auto &originalClip = *originalClipOwned;
         const auto originalAudio = render(originalClip, 128, single.end());
         const auto originalPoints = single.clips[0].automation[0].points;
         const auto originalLength = single.clips[0].length;
         single.clips[0].start = 5000;
         single.clips[0].row = 24;
-        Engine moved(single);
+        auto movedOwned = std::make_unique<Engine>(single);
+        auto &moved = *movedOwned;
         const auto movedAudio = render(moved, 128, single.end());
         require(single.clips[0].length == originalLength &&
                     single.clips[0].automation[0].points == originalPoints,
                 "moving clip resized or detached automation");
         require(std::equal(originalAudio.begin(), originalAudio.end(), movedAudio.begin() + 5000),
                 "moving clip changed its rendered sound");
-        Engine performingClip(clips, 1000);
+        auto performingClipOwned = std::make_unique<Engine>(clips, 1000);
+        auto &performingClip = *performingClipOwned;
         performingClip.arm(1000, 5000, 7, 0);
         performingClip.command({1001, Param::volume, 0.2f, 0});
         performingClip.command({2500, Param::highPass, 0.7f, 0});
@@ -170,7 +187,8 @@ int main() {
             clipTake.push_back(event);
         const auto otherClip = clips.clips[1].automation[0].points;
         commitTake(clips, clipTake, 1000, 5000);
-        Engine clipReplay(clips, 1000);
+        auto clipReplayOwned = std::make_unique<Engine>(clips, 1000);
+        auto &clipReplay = *clipReplayOwned;
         const auto replayedClip = render(clipReplay, 127, clips.end());
         require(clips.clips[1].automation[0].points == otherClip, "recording one clip changed another");
         for (std::size_t i = 0; i < performedClip.size(); ++i)
@@ -191,7 +209,8 @@ int main() {
                 const auto v = i == 0 ? 1.0f : i == 1 ? hp : lp;
                 p.clips[0].automation[i] = {v, true, {{0, v}}};
             }
-            Engine e(p);
+            auto eOwned = std::make_unique<Engine>(p);
+            auto &e = *eOwned;
             const auto pcm = render(e, 128, p.end());
             double sum = 0;
             for (std::size_t i = 24000; i < pcm.size(); ++i)
