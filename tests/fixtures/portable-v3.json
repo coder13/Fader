@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 3,
+  "projectId": "00112233445566778899aabbccddeeff",
+  "render": {
+    "engineVersion": 2,
+    "sampleRate": 48000,
+    "smoothingFrames": 240,
+    "sourceInterpolation": "linear-v1",
+    "mixLaw": "sum-v2",
+    "filter": "one-pole-hp-lp-v2",
+    "cutoffMap": "log-20-20000-v2",
+    "timeBasis": "project-frame",
+    "seekPrerollFrames": "96000"
+  },
+  "assets": [
+    {
+      "id": "asset-1d6d0ee8b71a974741da85a4c5079bdd88928a17d4836763e04293944ac6e1e2",
+      "path": "素材/Track déjà-vu α 音楽 🎵.wav",
+      "sha256": "9274aec9d580f2434ac82f1f602a052a4c48c6f5a09165fbb38b5a47ce841977",
+      "pcmHash": "3f3cd41159de8c77db90c35d1fee239429edac6b0b75458878da3ac277828c96",
+      "decoder": "Independent PCM16 reference",
+      "sampleRate": 48000,
+      "frames": "8192",
+      "channels": 2
+    }
+  ],
+  "clips": [
+    {
+      "id": "ffeeddccbbaa99887766554433221100",
+      "assetId": "asset-1d6d0ee8b71a974741da85a4c5079bdd88928a17d4836763e04293944ac6e1e2",
+      "start": "0",
+      "sourceOffset": "0",
+      "length": "8192",
+      "rate": 1,
+      "row": 0,
+      "name": "Prepared café α 音楽",
+      "artist": "Synthetic 🎵",
+      "key": "8m",
+      "bpm": 128,
+      "hasGrid": true,
+      "firstBeatSeconds": 0,
+      "automation": [
+        {
+          "parameter": "volume",
+          "initial": 1,
+          "interpolation": "linear",
+          "points": [
+            {
+              "frame": "0",
+              "value": 1,
+              "hold": false
+            }
+          ]
+        },
+        {
+          "parameter": "highPass",
+          "initial": 0,
+          "interpolation": "linear",
+          "points": [
+            {
+              "frame": "0",
+              "value": 0,
+              "hold": false
+            }
+          ]
+        },
+        {
+          "parameter": "lowPass",
+          "initial": 1,
+          "interpolation": "linear",
+          "points": [
+            {
+              "frame": "0",
+              "value": 1,
+              "hold": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "automation": [
+    {
+      "parameter": "gainA",
+      "initial": 0.7,
+      "interpolation": "linear",
+      "points": [
+        {
+          "frame": "0",
+          "value": 0.7,
+          "hold": false
+        }
+      ]
+    },
+    {
+      "parameter": "gainB",
+      "initial": 0.7,
+      "interpolation": "linear",
+      "points": [
+        {
+          "frame": "0",
+          "value": 0.7,
+          "hold": false
+        }
+      ]
+    },
+    {
+      "parameter": "crossfader",
+      "initial": 0,
+      "interpolation": "linear",
+      "points": [
+        {
+          "frame": "0",
+          "value": 0,
+          "hold": false
+        }
+      ]
+    }
+  ]
+}

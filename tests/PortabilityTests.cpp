@@ -78,6 +78,21 @@ void testPortability() {
     clip.automation[0] = {1, true, {{0, 1}}};
     clip.automation[1] = {0, true, {{0, 0}}};
     clip.automation[2] = {1, true, {{0, 1}}};
+    const auto referenceFile = folder.getChildFile("Common reference.faderset");
+    check(juce::File(FADER_TEST_PROJECT_PATH).copyFileTo(referenceFile),
+          "Cannot copy the common project fixture");
+    const auto common = loadProject(referenceFile);
+    check(common.id == "00112233445566778899aabbccddeeff" &&
+              common.clips[0].id == "ffeeddccbbaa99887766554433221100" && common.clips[0].hash == clip.hash &&
+              common.clips[0].name == clip.name,
+          "Common project identities, metadata or asset changed across the host");
+    pcm(common);
+    const auto commonSaved = folder.getChildFile("Common resaved.faderset");
+    saveProject(common, commonSaved);
+    const auto commonReopened = loadProject(commonSaved);
+    check(commonReopened.id == common.id && commonReopened.clips[0].id == common.clips[0].id,
+          "Common project lost its identities when resaved");
+    pcm(commonReopened);
     Project project;
     project.perClip = true;
     project.clips = {clip};
