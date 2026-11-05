@@ -56,6 +56,10 @@ It requests the block period, one tenth of the period as expected computation, a
 The harness fails explicitly if JUCE cannot start that thread.
 Its reported JUCE flag records the requested mode, not proof against later kernel demotion.
 Neither mode changes persistent system configuration or measures driver behavior.
+The [scoped playback-activity candidate](experiments/2026-11-05-playback-activity.md) also requests a macOS user-initiated process activity.
+Its report records the request; the OS can override it.
+The process activity ends after the virtual callback and its workers finish.
+This candidate keeps all original workloads and targets and leaves the earlier failed results intact.
 Never reset the host origin after a late wake.
 Report wake lateness, callback duration and completion after the virtual deadline independently.
 Report the duration of the checksum and telemetry submission outside the production callback separately.

@@ -325,6 +325,9 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
     std::string backgroundError;
     std::exception_ptr consumerError;
     std::vector<std::thread> workers;
+    // End the activity after StopOnExit joins the virtual callback on every exit.
+    // The silent sink uses the native bridge's user-requested process activity.
+    juce::ScopedLowPowerModeDisabler playbackActivity;
     struct StopOnExit {
         std::atomic<bool> &done;
         std::vector<std::thread> &workers;
@@ -635,6 +638,14 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
     out->setProperty("importSeconds", double(imported - importing) / second);
     out->setProperty("sampleRate", projectRate);
     out->setProperty("requestedScheduler", realtimeThread ? "JUCE real-time thread" : "default std::thread");
+    out->setProperty(
+        "processActivityPolicy",
+        "JUCE scoped user-initiated process activity during playback; macOS only, no-op elsewhere");
+#if JUCE_MAC
+    out->setProperty("macProcessActivityRequested", true);
+#else
+    out->setProperty("macProcessActivityRequested", false);
+#endif
     out->setProperty("realtimeThreadReported", realtimeThread && realtime.isRealtime());
     if (realtimeThread) {
         out->setProperty("requestedPeriodMs", intervalMs);

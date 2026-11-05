@@ -23,6 +23,8 @@ class AudioPlayback final : public juce::AudioIODeviceCallback {
   private:
     Playback &playback;
     juce::AudioDeviceManager *manager = nullptr;
+    // Control-thread lifetime only. The callback never creates or ends an OS activity.
+    std::unique_ptr<juce::ScopedLowPowerModeDisabler> activity;
     bool detaching = false; // protected by the manager callback lock
 };
 } // namespace fader

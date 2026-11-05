@@ -4,19 +4,32 @@
 namespace fader {
 void AudioPlayback::attach(juce::AudioDeviceManager &deviceManager) {
     detach();
+    // Classify continuous, user-requested playback for the process. JUCE requests
+    // a scoped macOS user-initiated activity; other platforms currently do nothing.
+    activity = std::make_unique<juce::ScopedLowPowerModeDisabler>();
     manager = &deviceManager;
-    manager->addAudioCallback(this);
+    try {
+        manager->addAudioCallback(this);
+    } catch (...) {
+        detach();
+        throw;
+    }
 }
 void AudioPlayback::detach() {
-    if (!manager)
+    if (!manager) {
+        activity.reset();
         return;
+    }
     // Serialize with device-stop notification. Suppress only the synthetic
     // stopped() emitted by removeAudioCallback, never an earlier real fault.
-    const juce::ScopedLock lock(manager->getAudioCallbackLock());
-    detaching = true;
-    manager->removeAudioCallback(this);
-    detaching = false;
-    manager = nullptr;
+    {
+        const juce::ScopedLock lock(manager->getAudioCallbackLock());
+        detaching = true;
+        manager->removeAudioCallback(this);
+        detaching = false;
+        manager = nullptr;
+    }
+    activity.reset(); // After callback detachment and outside the manager's lock.
 }
 void AudioPlayback::audioDeviceIOCallbackWithContext(const float *const *, int, float *const *output,
                                                      int channels, int frames,
