@@ -37,7 +37,7 @@ Open source, macOS and Windows, S4 MK3 first, Audacity-inspired clarity, editabl
 5. **DSP candidate and sound quality:** compare Rubber Band and Signalsmith at relevant tempos and latency; no algorithm selected yet.
 6. **Musical edit semantics:** validate beat-anchored versus absolute placements and automation movement rules with the user on a prototype.
 7. **Distribution baseline:** set supported macOS/Windows versions and Apple Silicon/Intel policy after build and hardware evidence. Cross-platform does not imply every old OS.
-8. **Milestone execution:** the [43 published issues and 10 milestones](roadmap-and-issue-backlog.md) now track the work. DJ-017 is the explicit POC-to-product decision; open hardware and long-run gates remain visible.
+8. **Milestone execution:** the [64 published issues and 10 milestones](roadmap-and-issue-backlog.md) now track the work. DJ-017 is the POC-to-product decision; DJ-057 is the complete Mac/Windows v1 release gate. The [product-completion issues](product-completion-backlog.md) track the reviewed gaps; optional feature decisions remain unscheduled. Open hardware and long-run gates remain visible.
 
 ## Hardware details to collect during the first experiment
 

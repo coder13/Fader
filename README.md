@@ -22,6 +22,7 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 | [Audio import and library compatibility](docs/audio-import-and-library.md) | Common formats, existing-library workflow, and qualification |
 | [POC plan](docs/poc-plan.md) | Smallest useful Mac + S4 MK3 demonstration and pass/fail evidence |
 | [Roadmap and issue backlog](docs/roadmap-and-issue-backlog.md) | Published milestones, dependencies and POC-to-product exit gate |
+| [Product completion issues](docs/product-completion-backlog.md) | 21 published follow-ups for release scope, editing, DJ tools, design validation and optional decisions |
 | [Stack decision](docs/decisions/0001-platform-and-engine.md) | Conditional C++ fallback after application/engine reuse evaluation |
 | [Risks and open questions](docs/risks-and-open-questions.md) | Unresolved decisions and how to resolve them |
 | [Experiment report template](docs/experiments/README.md) | Evidence format for hardware, timing, and design decisions |
@@ -56,4 +57,4 @@ This repository is the source of truth for design. Each implementation issue sho
 
 Record experiments under `docs/experiments/` with date, commit, dependency versions, machine/OS, firmware, settings, measurements, and conclusion. Keep research claims linked to primary sources and recheck changing claims at the point of adoption. Preserve rejected alternatives and their reasons in decision records. Keep hardware support claims tied to completed qualification reports.
 
-Repository: [coder13/Fader](https://github.com/coder13/Fader). The user authorizes direct commits and pushes of documentation updates to `main`; see [working conventions](AGENTS.md). [43 GitHub issues](https://github.com/coder13/Fader/issues) and [10 milestones](https://github.com/coder13/Fader/milestones) are published; the roadmap maps stable planning IDs to them. The experimental implementation carries AGPL-3.0-or-later in [LICENSE](LICENSE), compatible with the chosen JUCE route. The user deferred license preferences; this does not record a final product licensing decision.
+Repository: [coder13/Fader](https://github.com/coder13/Fader). The user authorizes direct commits and pushes of documentation updates to `main`; see [working conventions](AGENTS.md). [64 GitHub issues](https://github.com/coder13/Fader/issues) and [10 milestones](https://github.com/coder13/Fader/milestones) are published; the roadmap maps stable planning IDs to them. The experimental implementation carries AGPL-3.0-or-later in [LICENSE](LICENSE), compatible with the chosen JUCE route. The user deferred license preferences; this does not record a final product licensing decision.

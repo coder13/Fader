@@ -2,7 +2,7 @@
 
 Reviewed 2026-11-04. **Evidence:** live GitHub bodies for all 43 issues, their 10 attached milestones, the design documents on `main` at `ea3e246`, and the linked prototype reports at `3a3b58456065f6cfed4c9f23f1a0252047d80a89`. All 43 issues were open; all 10 milestones had zero closed issues. Open status does not mean no implementation exists. This review inspected plans and recorded evidence; it did not rerun the app, audio tests or user sessions.
 
-**Confirmed by the user during this review:** Fader is a **DJ performance editor with selected DAW tools**. It is not currently scoped as a full music-production DAW with MIDI composition, instruments and multitrack recording. This clarification belongs to the product requirements. The additions below are **proposals**, not newly accepted requirements, published issues or measured results.
+**Confirmed by the user during this review:** Fader is a **DJ performance editor with selected DAW tools**. It is not currently scoped as a full music-production DAW with MIDI composition, instruments and multitrack recording. This clarification belongs to the product requirements. At the time of review, the additions below were **proposals**, not accepted implementation scope or measured results. The user subsequently authorized issue creation; the [21 published follow-ups](../product-completion-backlog.md) now track them. DJ-044 selects the release subset; optional features remain decisions rather than commitments.
 
 ## Assessment
 
@@ -71,9 +71,9 @@ Proposed evidence before calling the UI polished:
 - **Display and access matrix:** declare supported logical window sizes/scales before testing; consider 1280 × 720, 1440 × 900 and a large display, plus text scaling and bright/dim environments. These are proposed test sizes, not a claim of present support. Verify keyboard-only editing, focus, screen-reader names and non-color state cues.
 - **Proposed release rule:** zero unresolved findings that lose work, conceal capture failure or prevent a core task on a supported configuration. Set timing/completion goals before testing, preserve actual results, and rerun failures. Screenshot regressions support consistency but cannot replace task tests.
 
-## Proposed backlog changes
+## Review recommendations and published follow-up
 
-These review IDs are not GitHub issue IDs. Nothing was published or changed in the issue tracker as part of this review. The immediate streaming/seeking/load work remains the current engineering priority.
+R1–R8 remain review IDs, not GitHub issue numbers. After this review, the user authorized publication of DJ-044–DJ-064. The [review-to-issue map and full acceptance criteria](../product-completion-backlog.md#review-to-issue-map) record the result. Existing epics now link to those issues, Mac/Windows release criteria are strengthened, and Linux qualification is separate from optional integrations. The immediate streaming/seeking/load work remains the current engineering priority.
 
 | Review ID | Proposed change | Placement and completion evidence |
 | --- | --- | --- |
@@ -86,4 +86,4 @@ These review IDs are not GitHub issue IDs. Nothing was published or changed in t
 | R7 | Extend the visual system and qualify layouts | Build on the existing theme; compare variants, define spacing/type/icon/control-state rules, qualify small/dense/scaled/accessibility states, obtain owner visual approval and maintain representative screenshot checks. Feed #26 and R1. |
 | R8 | Separate optional future product decisions | Keep stems/DVS/streaming/collaboration, external inputs/samplers, richer routing and four-deck performance individually selectable. Split Linux qualification from unrelated optional feature planning when scheduling. Preserve #33/#34 for VST3 v2/v3. |
 
-Choose the v1 subset before creating a large new ticket set. A complete Fader release should let a target DJ finish, revise and deliver a real set confidently; it need not implement every feature found in either a DAW or a live DJ application.
+The published scope issue DJ-044 must select the v1 subset before implementation commitments are finalized. A complete Fader release should let a target DJ finish, revise and deliver a real set confidently; it need not implement every feature found in either a DAW or a live DJ application.
