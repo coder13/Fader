@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "ProjectStorage.h"
 #include "ReadFixture.h"
+#include <bit>
+#include <cmath>
 #include <filesystem>
+#include <iostream>
 #include <limits>
 #include <stdexcept>
 
@@ -24,6 +27,94 @@ juce::var clone(const juce::var &v) {
 }
 void write(const juce::File &file, const juce::var &v) {
     check(file.replaceWithText(juce::JSON::toString(v, true)), "Cannot write fixture");
+}
+void numericRoundTrip(Project project, const juce::File &file) {
+    project.clips.resize(1);
+    auto &clip = project.clips[0];
+    clip.rate = double(std::nextafter(.75f, 1.0f));
+    clip.firstBeatSeconds = double(std::nextafter(.1723f, 1.0f));
+    clip.bpm = 123.456789012345;
+    clip.name = "Escapes: \" \\ \n \t café α 音楽";
+    const std::vector<float> values{-0.0f,
+                                    std::numeric_limits<float>::denorm_min(),
+                                    std::numeric_limits<float>::min(),
+                                    .2f,
+                                    std::nextafter(.2f, 1.0f),
+                                    .7f,
+                                    std::nextafter(1.0f, 0.0f),
+                                    1.0f};
+    clip.automation[0].initial = -0.0f;
+    clip.automation[0].points.clear();
+    for (std::size_t i = 0; i < values.size(); ++i)
+        clip.automation[0].points.push_back({Frame(i), values[i], true});
+    saveProject(project, file);
+    const auto opened = loadProject(file);
+    const auto &actual = opened.clips[0];
+    check(actual.rate == clip.rate && actual.firstBeatSeconds == clip.firstBeatSeconds &&
+              actual.bpm == clip.bpm && actual.name == clip.name,
+          "Compact manifest lost binary64 metadata or string escapes");
+    check(std::bit_cast<std::uint32_t>(actual.automation[0].initial) ==
+              std::bit_cast<std::uint32_t>(clip.automation[0].initial),
+          "Initial signed zero changed");
+    for (std::size_t i = 0; i < values.size(); ++i)
+        check(std::bit_cast<std::uint32_t>(actual.automation[0].points[i].value) ==
+                  std::bit_cast<std::uint32_t>(values[i]),
+              "Compact manifest did not preserve the exact binary32 target");
+}
+void denseRoundTrip(Project project, const juce::File &file) {
+    // Same declared point density and control count as the hour workload, with
+    // short media so this storage regression does not pretend to be a soak.
+    constexpr Frame end = Frame{3600} * projectRate;
+    for (std::size_t index = 0; index < project.clips.size(); ++index) {
+        auto &clip = project.clips[index];
+        clip.start = 0;
+        clip.length = end;
+        clip.row = int(index);
+        for (unsigned p = 0; p < 3; ++p) {
+            auto &curve = clip.automation[p];
+            curve.points.clear();
+            for (Frame frame = 0; frame <= end; frame += projectRate / 4) {
+                const auto step = frame / (projectRate / 4);
+                const auto value = p == 0   ? .3f + .1f * float(step % 3)
+                                   : p == 1 ? .05f + .03f * float(step % 4)
+                                            : .7f + .05f * float(step % 5);
+                curve.points.push_back({frame, value, step % 7 == 0});
+            }
+            curve.initial = curve.points.front().value;
+            curve.linear = true;
+        }
+    }
+    std::vector<Event> actions;
+    const auto block = [](Frame frame) { return (frame + 127) / 128 * 128; };
+    for (int i = 0; i < 35999; ++i)
+        actions.push_back({block(Frame(i) * (projectRate / 10)), static_cast<Param>(i % 3),
+                           .2f + float(i * 2) * .000001f, 0});
+    int controllerIndex = 0;
+    for (int burst = 0; burst < 120; ++burst)
+        for (int tick = 0; tick < 600; ++tick, ++controllerIndex)
+            actions.push_back({block(Frame(burst * 30) * projectRate + tick * (projectRate / 120)),
+                               static_cast<Param>(controllerIndex % 3),
+                               .2f + float(controllerIndex * 2 + 1) * .000001f, 0});
+    std::stable_sort(actions.begin(), actions.end(),
+                     [](const Event &a, const Event &b) { return a.frame < b.frame; });
+    check(actions.size() == 107999, "Dense storage workload lost original controls");
+    commitTake(project, actions, 0, end);
+    saveProject(project, file);
+    check(file.getSize() <= maxManifestBytes, "Dense capture cannot fit the unchanged manifest bound");
+    const auto opened = loadProject(file);
+    check(opened.id == project.id && opened.clips.size() == project.clips.size(),
+          "Dense capture changed project identity or clip count");
+    std::size_t points = 0;
+    for (std::size_t c = 0; c < project.clips.size(); ++c) {
+        check(opened.clips[c].id == project.clips[c].id, "Dense capture changed clip identity");
+        for (unsigned p = 0; p < 3; ++p) {
+            points += project.clips[c].automation[p].points.size();
+            check(opened.clips[c].automation[p].points == project.clips[c].automation[p].points,
+                  "Compact save removed or changed dense automation targets");
+        }
+    }
+    std::cout << "PASS: dense manifest preserves 107999 original-control compilation, " << points
+              << " points in " << file.getSize() << " bytes; float target bits and double metadata\n";
 }
 void source(const juce::File &file) {
     std::unique_ptr<juce::OutputStream> stream = file.createOutputStream();
@@ -165,6 +256,8 @@ void testProjectModel() {
         check(!opened.clips[0].cue && !doc["clips"][0].hasProperty("cue") && !doc.hasProperty("device"),
               "Monitoring/device state entered the saved sound model");
         parity(p, opened);
+        numericRoundTrip(p, dir.getChildFile("numeric.faderset"));
+        denseRoundTrip(p, dir.getChildFile("dense.faderset"));
         const auto before = opened.clips[0].automation;
         opened.clips[0].start += 1234;
         opened.clips[0].row = 40;

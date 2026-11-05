@@ -102,6 +102,32 @@ std::vector<InputRecord> inputPlan(int seconds, InputSource source) {
     }
     return records;
 }
+Project makeStressProject(const juce::File &folder, Frame frames) {
+    Project project;
+    project.perClip = true;
+    project.clips = {loadClip(folder.getChildFile("A.wav")), loadClip(folder.getChildFile("B.wav"))};
+    for (unsigned index = 0; index < 2; ++index) {
+        auto &clip = project.clips[index];
+        require(clip.length >= frames, "Stress sources are shorter than the declared interval");
+        clip.length = frames;
+        clip.row = int(index);
+        clip.cue = true;
+        for (unsigned p = 0; p < 3; ++p) {
+            auto &curve = clip.automation[p];
+            curve.points.clear();
+            for (Frame at = 0; at <= frames; at += projectRate / 4) {
+                const auto step = at / (projectRate / 4);
+                const float value = p == 0   ? .3f + .1f * float(step % 3)
+                                    : p == 1 ? .05f + .03f * float(step % 4)
+                                             : .7f + .05f * float(step % 5);
+                curve.points.push_back({at, value, step % 7 == 0});
+            }
+            curve.initial = curve.points.front().value;
+            curve.linear = true;
+        }
+    }
+    return project;
+}
 struct HostMetric {
     HostTime wake{}, outer{};
     bool missed = false;
@@ -128,30 +154,8 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
     require(seconds >= 1 && seconds <= 3600 && (blockFrames == 128 || blockFrames == 256),
             "Stress duration must be 1..3600 seconds and block size 128 or 256");
     const auto importing = monotonicTime();
-    Project project;
-    project.perClip = true;
-    project.clips = {loadClip(folder.getChildFile("A.wav")), loadClip(folder.getChildFile("B.wav"))};
     const Frame frames = (Frame(seconds) * projectRate + blockFrames - 1) / blockFrames * blockFrames;
-    for (unsigned index = 0; index < 2; ++index) {
-        auto &clip = project.clips[index];
-        require(clip.length >= frames, "Stress sources are shorter than the declared interval");
-        clip.length = frames;
-        clip.row = int(index);
-        clip.cue = true;
-        for (unsigned p = 0; p < 3; ++p) {
-            auto &curve = clip.automation[p];
-            curve.points.clear();
-            for (Frame at = 0; at <= frames; at += projectRate / 4) {
-                const auto step = at / (projectRate / 4);
-                const float value = p == 0   ? .3f + .1f * float(step % 3)
-                                    : p == 1 ? .05f + .03f * float(step % 4)
-                                             : .7f + .05f * float(step % 5);
-                curve.points.push_back({at, value, step % 7 == 0});
-            }
-            curve.initial = curve.points.front().value;
-            curve.linear = true;
-        }
-    }
+    auto project = makeStressProject(folder, frames);
     const auto analysis = folder.getChildFile("analysis.wav");
     require(analysis.existsAsFile(), "Stress analysis fixture is missing");
     Preferences prefs;
@@ -515,6 +519,18 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
         out->setProperty("peakResidentBytesBeforeCaptureCommit", bytes);
     }
 #endif
+    // Correlations and distributions are already in the aggregate. Releasing
+    // qualification-only history before storage keeps its lifetime separate
+    // from the product model. ru_maxrss below still includes every earlier stage.
+    std::vector<HostTime>().swap(callbacks);
+    std::vector<HostTime>().swap(wakes);
+    std::vector<HostTime>().swap(outer);
+    std::vector<HostTime>().swap(receiptJitter);
+    std::vector<HostTime>().swap(outputLatency);
+    inputByValue.clear();
+    controlByValue.clear();
+    seen.clear();
+    std::vector<ControlMetric>().swap(controls);
     bool persisted = false;
     const auto persistenceStart = monotonicTime();
     try {
@@ -547,5 +563,56 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
                                                  sources.pcmBytes <= 1024 * 1024);
     }
 #endif
+    return out;
+}
+
+juce::var snapshotStressArrangement(const juce::File &folder, const juce::File &png) {
+    auto project = makeStressProject(folder, Frame{3600} * projectRate);
+    Arrangement arrangement;
+    arrangement.project = &project;
+    arrangement.selected = 0;
+    arrangement.setSize(1200, 700);
+    arrangement.refresh();
+    juce::Image image(juce::Image::ARGB, 1200, 700, true);
+    std::vector<HostTime> times;
+    times.reserve(100);
+    for (int frame = -1; frame < 100; ++frame) {
+        arrangement.parameter = std::max(0, frame) % 3;
+        arrangement.viewport.setViewPosition(std::max(0, frame) * 251, 0);
+        const auto before = monotonicTime();
+        {
+            juce::Graphics graphics(image);
+            arrangement.paintEntireComponent(graphics, true);
+        }
+        if (frame >= 0)
+            times.push_back(monotonicTime() - before);
+    }
+    // A closer view makes individual points legible in the shared image. The
+    // timing above uses the same ten pixels/second as the hour workload.
+    arrangement.zoom(40);
+    arrangement.viewport.setViewPosition(0, 0);
+    arrangement.parameter = 0;
+    {
+        juce::Graphics graphics(image);
+        arrangement.paintEntireComponent(graphics, true);
+    }
+    juce::TemporaryFile temporary(png);
+    auto output = temporary.getFile().createOutputStream();
+    require(output && juce::PNGImageFormat{}.writeImageToStream(image, *output),
+            "Cannot write synthetic arrangement snapshot");
+    output->flush();
+    require(output->getStatus().wasOk(), "Cannot flush synthetic arrangement snapshot");
+    output.reset();
+    require(temporary.overwriteTargetFileWithTemporary(), "Cannot publish synthetic arrangement snapshot");
+    auto *out = new juce::DynamicObject();
+    out->setProperty("scope", "Offscreen production arrangement component with synthetic continuous sources; "
+                              "no native window/device");
+    out->setProperty("projectSeconds", 3600);
+    out->setProperty("pointsPerClipParameter", 14401);
+    out->setProperty("imageWidth", image.getWidth());
+    out->setProperty("imageHeight", image.getHeight());
+    out->setProperty("timingPixelsPerSecond", 10);
+    out->setProperty("snapshotPixelsPerSecond", 40);
+    out->setProperty("densePaintExecution", distribution(times));
     return out;
 }

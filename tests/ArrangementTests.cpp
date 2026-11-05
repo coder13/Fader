@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "Arrangement.h"
+#include <cmath>
 #include <stdexcept>
 using namespace fader;
 namespace {
@@ -29,6 +30,33 @@ juce::MouseEvent event(juce::Component *canvas, juce::Point<float> point, juce::
 }
 } // namespace
 void testArrangement() {
+    // Geometric reference: every circle that can touch the viewport must be in
+    // the returned slice, including edges and far-timeline float rounding. The
+    // slice size must depend on visible time, rather than total point count.
+    Curve dense;
+    dense.points.clear();
+    for (int i = 0; i <= 100000; ++i)
+        dense.points.push_back({Frame(i) * (projectRate / 10), .5f});
+    for (double scale : {2.0, 10.0, 100.0})
+        for (int start : {0, 20000, 76000}) {
+            const auto x = float(80 + start * scale);
+            const auto full = dense.points.back().frame;
+            for (Frame length : {full, full / 2})
+                for (double offset : {-100.0, 100.0, double(length) / projectRate * scale / 2,
+                                      double(length) / projectRate * scale - 100}) {
+                    const auto firstX = int(x + offset), lastX = firstX + 1700;
+                    const auto subset = detail::visiblePointHandles(dense, x, scale, length, firstX, lastX);
+                    const auto maximum = std::size_t(std::ceil((1700 + 12) / scale * 10)) + 2;
+                    require(subset.size() <= maximum, "handle paint work grows with offscreen history");
+                    for (const auto &point : dense.points) {
+                        const auto px = x + float(double(point.frame) / projectRate * scale);
+                        if (point.frame <= length && px + 4 >= firstX && px - 4 <= lastX)
+                            require(!subset.empty() && &point >= subset.data() &&
+                                        &point < subset.data() + subset.size(),
+                                    "visible automation handle was culled at a viewport edge");
+                    }
+                }
+        }
     Project project;
     project.perClip = true;
     project.clips[0].length = 12 * projectRate;

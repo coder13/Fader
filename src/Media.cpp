@@ -3,6 +3,7 @@
 #include "DecodedCache.h"
 #include "FilePaths.h"
 #include "FileSource.h"
+#include "ManifestJson.h"
 #include "ProjectStorage.h"
 #include "WavExport.h"
 #include <algorithm>
@@ -169,7 +170,7 @@ Clip loadClip(const juce::File &file, bool cacheCompressed) {
 }
 namespace {
 void writeDocument(const juce::var &root, const juce::File &file) {
-    const auto content = juce::JSON::toString(root, true);
+    const auto content = encodeManifest(root);
     if (content.getNumBytesAsUTF8() > maxManifestBytes)
         fail("Project exceeds the 8 MiB manifest limit");
     juce::TemporaryFile temporary(file);
