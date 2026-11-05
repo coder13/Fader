@@ -1,11 +1,13 @@
 # Software stress qualification
 
-The short software runs pass source and capture integrity.
-They do not complete [#40](https://github.com/coder13/Fader/issues/40) or the hour gate.
+The full software hour fails its deadline, storage and process-memory targets.
+It retains every applied control and reports zero source starvation.
+[#40](https://github.com/coder13/Fader/issues/40) remains open for remediation and qualification.
 The first hour attempt used source `6e25222c8e615e0e1b406d3075032758b1e6e4b6`.
 It stopped after about five timed minutes when macOS CI exposed a harness portability error.
 That partial attempt does not count toward the hour gate.
-The corrected hour run uses source `566b0ca981f86d33c873a9b63a5b0919068ae7c2` and remains in progress.
+The completed hour run uses source `566b0ca981f86d33c873a9b63a5b0919068ae7c2`.
+Its failed result is retained below without changing the declared targets.
 No audio or MIDI device opens during these runs.
 
 ## Reproducible workload
@@ -53,6 +55,42 @@ This result supports an hour trial with that policy, not a claim of sustained re
 The predicted output calculation assumes one virtual block of buffering.
 It does not measure device, controller, converter or acoustic delay.
 
+## Full-hour result
+
+The [complete aggregate](data/2026-11-05-software-stress-hour-failed.json) records the exact build, fixture hashes and all reported counters.
+The host processes 1,350,000 callbacks over 3,600.022 seconds at 48 kHz/128 frames.
+It captures and correlates all 107,999 planned inputs with zero queue, metric or retained-event loss.
+Both sources remain active, with zero starvation, failed sources, non-finite samples or quiet blocks.
+The two PCM page caches total 1 MiB, and 42,202 decoder reads receive the declared 1 ms delay.
+
+| Measurement | Target | Observed |
+| --- | --- | --- |
+| Virtual deadline misses | 0 | 12 |
+| Callback p99.9 | Below 1.333 ms | 0.027458 ms |
+| Callback maximum | Below 2.667 ms | 3.173500 ms |
+| Host wake lateness maximum | Report separately | 15.124583 ms |
+| Receipt to predicted software output p95 | Below 10 ms | 5.136792 ms |
+| Process peak before capture commit | Report separately | 85.797 MiB |
+| Process peak including commit/save | At most 128 MiB | 150.469 MiB |
+| Editable captured-set save | Within the 8 MiB manifest bound | Rejected as oversized |
+| Offscreen arrangement paints | Target 50 per second | 133,593 total, about 37.1 per second |
+
+The callback wall-time maximum includes possible descheduling.
+The current aggregate does not preserve enough per-outlier correlation to attribute the timing tails to DSP computation or the host scheduler.
+The next diagnostic must retain callback/frame/wake relationships and report the limits of its clock model.
+These virtual deadline misses are not measured driver xruns or acoustic dropouts.
+
+The painter misses its declared cadence on this dense project.
+Its selected-handle loop visits every stored point, including points outside the viewport.
+That is a concrete UI workload to repair without deleting automation or reducing the declared point density.
+The run completes 360 library scans, 360 analysis imports and 120 seek cancellations.
+
+The final capture commit reaches the current manifest-size rejection, and no captured project is published.
+All applied targets are present in the measured in-memory take, but this does not satisfy durable editable-set delivery.
+The process peak rises during commit/save, beyond its pre-commit peak and declared budget.
+The next storage trial must retain all curves and targets, preserve numeric meaning and existing destination protection, and measure the full process peak again.
+Do not turn this result into a pass by lowering event rates, sparsifying curves or increasing the declared limits.
+
 ## Fault retention and callback discipline
 
 The fault runs retain 4,096 captured events after input queue overflow and 16,384 after capture queue overflow.
@@ -89,6 +127,7 @@ No local build or sanitizer process runs during the sustained measurement.
 The sustained command wraps the driver in `caffeinate -i` to prevent idle system sleep for its process lifetime.
 It does not disable the lock screen.
 
-The hour result, 256-frame fallback, native seek/export observations and physical device evidence remain incomplete.
+The 128-frame hour failed the targets above.
+A corrected hour, separately reported 256-frame fallback, native seek/export observations and physical device evidence remain required.
 The preview remains preserved because the UI tool reports the Mac as locked.
 Keep #40 open until its stated evidence exists.
