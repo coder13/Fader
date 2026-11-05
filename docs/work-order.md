@@ -4,16 +4,16 @@ Updated 2026-11-04 after reviewing all 64 GitHub issues and the user's request t
 
 ## Immediate POC critical path
 
-**#6, #7 and #8 are completed.** #38 has passed software tests and clean CI; its native source-gap warning still needs visual verification before closure. Continue: **#38 → #39 → #11 → #13 → #40**.
+**#6, #7, #8 and #38 are completed.** Next: **#39 → #11 → #13 → #40**.
 
 | Order | Issue | Why it comes here |
 | --- | --- | --- |
 | Completed | [#8](https://github.com/coder13/Fader/issues/8), event timing and capture failure | [Qualified clock/capture integrity](experiments/2026-11-04-playback-clock.md), including the interruption/stop race and retention of partial-take data. |
-| 1 · active | [#38](https://github.com/coder13/Fader/issues/38), bounded source streaming | [Bounded PCM and long-file qualification passed](experiments/2026-11-04-bounded-streaming.md); finish the pending native visual check. Import still scans/hashes whole files. |
-| 2 | [#39](https://github.com/coder13/Fader/issues/39), cancellable state-correct seeking | Depends on #8 and #38; removes long blocking seek preparation. |
-| 3 | [#11](https://github.com/coder13/Fader/issues/11), stable project model | Supplies the persistence/identity contract required by export, complete capture and editing. |
-| 4 | [#13](https://github.com/coder13/Fader/issues/13), live/offline render parity | Qualifies the streamed renderer before long-run evidence is accepted. |
-| 5 | [#40](https://github.com/coder13/Fader/issues/40), sustained load/failure qualification | Exercise the preceding pieces together; keep physical output/acoustic claims separate. |
+| Completed | [#38](https://github.com/coder13/Fader/issues/38), bounded source streaming | [Bounded PCM, long-file/codec qualification and native gap-warning verification passed](experiments/2026-11-04-bounded-streaming.md). Import still scans/hashes whole files. |
+| 1 · next | [#39](https://github.com/coder13/Fader/issues/39), cancellable state-correct seeking | Depends on #8 and #38; removes long blocking seek preparation. |
+| 2 | [#11](https://github.com/coder13/Fader/issues/11), stable project model | Supplies the persistence/identity contract required by export, complete capture and editing. |
+| 3 | [#13](https://github.com/coder13/Fader/issues/13), live/offline render parity | Qualifies the streamed renderer before long-run evidence is accepted. |
+| 4 | [#40](https://github.com/coder13/Fader/issues/40), sustained load/failure qualification | Exercise the preceding pieces together; keep physical output/acoustic claims separate. |
 
 The new product issues explicitly preserve these priorities. A failed prerequisite is repaired before advancing. CI waits can be used for independent review or fixture preparation; no dependent issue is closed without its evidence.
 

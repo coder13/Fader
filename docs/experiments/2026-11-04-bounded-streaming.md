@@ -1,6 +1,6 @@
 # Bounded streaming qualification
 
-Issue: [DJ-038](https://github.com/coder13/Fader/issues/38). Status: software implementation, local qualification and clean CI pass. Native visual verification remains pending before issue closure. No physical audio device or controller is opened by these fixtures.
+Issue: [DJ-038](https://github.com/coder13/Fader/issues/38). Status: software implementation, local qualification, clean CI and native visual verification passed. DJ-038 software acceptance is met within the limits below. No physical audio device or controller is opened by these fixtures.
 
 ## Configuration
 
@@ -77,6 +77,10 @@ This proves bounded PCM storage, tested ownership/failure behavior and source-fr
 
 Downloaded `linux-core-evidence` and `mac-native-evidence` from run **41978599974** were checked against source **aa23cc0df03b7e5fa691218ef21454d1555a286b** and the JUCE pin. JUnit had no failure, error or skipped case; logs contained the streaming allocation/concealment, cache ownership and native media parity results. A local source comparison verified that the staged build inputs matched the committed source. Subsequent evidence updates change documentation only.
 
-## Native visual check still pending
+## Native visual verification
 
-The local build enables `FADER_ENABLE_UI_FIXTURES=ON`; normal and CI builds leave it off. `--source-gap-fixture <synthetic.faderset>` exercises the actual streamed playback and timer status after cancelled source reads, with no device attachment. Use the fixture from `scripts/make-ui-fixture.py`, inspect the READ GAP label/status and Stop behavior, then reopen the owner's saved recovery set in the same preview bundle. This has not yet been visually verified because the Mac is locked. The running preview was not replaced or closed. The local recovery copy was verified unchanged. No screenshot or UI-pass claim is inferred from compiled strings.
+The local build enabled `FADER_ENABLE_UI_FIXTURES=ON`; normal and CI builds leave it off. `--source-gap-fixture <synthetic.faderset>` exercised actual streamed playback and timer status after cancelled source reads, without a device attachment. The two synthetic clips from `scripts/make-ui-fixture.py` appeared with their waveforms and volume envelopes. Native inspection confirmed the red **READ GAP** label and visible source-gap explanation. **Stop** returned to **EDIT** with **Play** available and a persistent explanation that playback had stopped after source gaps. The screenshot was shared in the development conversation and contains only synthetic media.
+
+Before replacement, the owner's preview had new unsaved changes. These were saved to a fresh local recovery copy; the previous copy was retained. The app was updated in place at the existing Fader Dark Preview path with its existing display name and bundle ID, re-signed and signature-verified. The fresh recovery set was reopened successfully with the same clip metadata and saved automation, its saved bytes verified unchanged, and its prior timeline zoom restored. The app was left open for the owner. Personal media paths and tracklists are not published here.
+
+Together with the blocked-read/fade, offline-failure, lifetime, codec, cache-memory and clean-build evidence above, this completes DJ-038's stated software acceptance. It does not close the broader POC or any hardware gate. Fast/cancellable seeking is the next issue.

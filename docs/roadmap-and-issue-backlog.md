@@ -276,7 +276,7 @@ GitHub: [#10](https://github.com/coder13/Fader/issues/10). Labels: `phase:poc`, 
 
 GitHub: [#38](https://github.com/coder13/Fader/issues/38). Labels: `phase:poc`, `type:feature`, `area:audio`, `priority:next`.
 
-**Original evidence:** The prototype fully decoded sources with 256 MiB/source and 1 GiB/set caps. The [bounded-streaming implementation and measured results](experiments/2026-11-04-bounded-streaming.md) replace those limits; the issue remains open until the remaining native visual check passes.
+**Original evidence:** The prototype fully decoded sources with 256 MiB/source and 1 GiB/set caps. The [bounded-streaming implementation and measured results](experiments/2026-11-04-bounded-streaming.md) replace those limits. Software/CI and native visual checks passed; fast seek and sustained-load work remain separate issues.
 
 **Scope:** Add worker-side decoding/prefetch and a bounded source-window cache; maintain a nonblocking render path and deterministic source-frame semantics. Keep offline readiness distinct from live starvation.
 
