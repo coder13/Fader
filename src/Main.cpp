@@ -1,48 +1,38 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "Arrangement.h"
 #include "LibraryView.h"
+#include "Theme.h"
 #include <cmath>
 #include <deque>
 #include <set>
 
 using namespace fader;
 namespace {
-const juce::Colour ink{0xff27343c}, paper{0xfff5f7f9}, accent{0xff087f8c}, muted{0xff75838c};
+const auto ink = ui::text, paper = ui::background, accent = ui::accent, muted = ui::muted;
 class Workspace final : public juce::Component,
                         public juce::DragAndDropContainer,
                         private juce::AudioIODeviceCallback,
                         private juce::Timer {
   public:
     Workspace() : workers(2), libraryWorker(1) {
-        look.setColour(juce::ResizableWindow::backgroundColourId, paper);
-        look.setColour(juce::Label::textColourId, ink);
-        look.setColour(juce::TextButton::buttonColourId, juce::Colours::white);
-        look.setColour(juce::TextButton::buttonOnColourId, accent);
-        look.setColour(juce::TextButton::textColourOffId, ink);
-        look.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
-        look.setColour(juce::Slider::thumbColourId, accent);
-        look.setColour(juce::Slider::trackColourId, accent);
-        look.setColour(juce::Slider::textBoxTextColourId, ink);
-        look.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colours::white);
-        look.setColour(juce::TextEditor::backgroundColourId, juce::Colours::white);
-        look.setColour(juce::TextEditor::textColourId, ink);
-        look.setColour(juce::TextEditor::highlightColourId, juce::Colour(0xffcde7ea));
-        look.setColour(juce::ToggleButton::textColourId, ink);
-        look.setColour(juce::ToggleButton::tickColourId, accent);
-        look.setColour(juce::ComboBox::backgroundColourId, juce::Colours::white);
-        look.setColour(juce::ComboBox::textColourId, ink);
-        look.setColour(juce::ComboBox::arrowColourId, ink);
-        look.setColour(juce::ToggleButton::tickDisabledColourId, muted);
-        look.setColour(juce::PopupMenu::backgroundColourId, juce::Colours::white);
-        look.setColour(juce::PopupMenu::textColourId, ink);
-        look.setColour(juce::TableHeaderComponent::backgroundColourId, juce::Colour(0xffedf2f5));
-        look.setColour(juce::TableHeaderComponent::textColourId, ink);
         setLookAndFeel(&look);
-        for (auto *c : std::array<juce::Component *, 21>{
-                 &arrangement, &library, &newButton, &open,   &save,          &exportButton, &prefsButton,
-                 &undo,        &rewind,  &play,      &record, &resume,        &zoom,         &snap,
-                 &title,       &mode,    &position,  &status, &selectedTitle, &selectedMeta, &remove})
+        tooltips.setLookAndFeel(&look);
+        for (auto *c : std::array<juce::Component *, 18>{
+                 &arrangement, &library, &save, &undo, &rewind, &play, &record, &resume, &zoom, &snap, &title,
+                 &mode, &position, &status, &selectedTitle, &selectedMeta, &setMenuButton, &clipMenuButton})
             addAndMakeVisible(c);
+        for (auto *c :
+             std::array<juce::Component *, 5>{&newButton, &open, &exportButton, &prefsButton, &remove})
+            addChildComponent(c);
+        setMenuButton.onClick = [this] { showSetMenu(&setMenuButton); };
+        clipMenuButton.onClick = [this] { showClipMenu(&clipMenuButton); };
+        setMenuButton.setTooltip("New, open, export and preferences");
+        clipMenuButton.setTooltip("Clip actions and retake options; also available on right-click");
+        save.setTooltip("Save set (Cmd/Ctrl+S)");
+        undo.setTooltip("Undo (Cmd/Ctrl+Z)");
+        play.setTooltip("Play / stop (Space)");
+        rewind.setTooltip("Return to the beginning");
+        setWantsKeyboardFocus(true);
         for (auto *c : std::array<juce::Component *, 4>{&clipStart, &punchIn, &punchOut, &cue})
             addAndMakeVisible(c);
         for (int i = 0; i < 3; ++i) {
@@ -163,6 +153,8 @@ class Workspace final : public juce::Component,
         for (auto *e : {&punchIn, &punchOut}) {
             e->setInputRestrictions(10, "0123456789.");
             e->setText("0");
+            e->onTextChange = [this] { repaint(); };
+            e->setTooltip("Absolute seconds; 0 means current position / clip end");
         }
         cue.setButtonText("Headphone cue");
         cue.onClick = [this] {
@@ -204,6 +196,16 @@ class Workspace final : public juce::Component,
                 setStatus("Finish this take before selecting a different clip.");
             }
             syncControls();
+        };
+        arrangement.contextMenu = [this](int clip, int point) {
+            if (clip < 0)
+                showSetMenu(nullptr);
+            else
+                showClipMenu(nullptr, point);
+        };
+        library.preferences = [this] {
+            if (prefsButton.isEnabled())
+                showPreferences();
         };
         arrangement.seek = [this](Frame f) {
             if (busy)
@@ -249,7 +251,8 @@ class Workspace final : public juce::Component,
                 });
             }
         });
-        setStatus("Drag a track into the grid. Move its header; draw automation on its waveform.");
+        setStatus(
+            "Drag songs to arrange. Move clip headers; draw envelopes on waveforms. Right-click for more.");
     }
     ~Workspace() override {
         stopTimer();
@@ -295,70 +298,211 @@ class Workspace final : public juce::Component,
     }
     void paint(juce::Graphics &g) override {
         g.fillAll(paper);
+        g.setColour(ui::panel);
+        g.fillRect(0, 0, getWidth(), 54);
         g.setColour(ink);
-        g.setFont(26);
-        g.drawText("Fader", 24, 10, 120, 32, juce::Justification::left);
-        g.setColour(muted);
-        g.setFont(12);
-        g.drawText("PREPARED SETS", 134, 16, 130, 24, juce::Justification::left);
-        g.setColour(juce::Colour(0xffdce3e8));
-        g.drawHorizontalLine(94, 24, float(getWidth() - 24));
-        const auto panel =
-            juce::Rectangle<float>(float(getWidth() - 308), 106, 284, float(getHeight() - 424));
-        g.setColour(juce::Colours::white);
-        g.fillRoundedRectangle(panel, 7);
+        g.setFont(22);
+        g.drawText("Fader", 20, 12, 85, 28, juce::Justification::left);
+        g.setColour(ui::border);
+        g.drawHorizontalLine(53, 0, float(getWidth()));
+        const int x = getWidth() - 264;
+        g.setColour(ui::panel);
+        g.fillRect(getWidth() - 280, 108, 260, getHeight() - 410);
         g.setColour(muted);
         g.setFont(11);
-        g.drawText("SELECTED CLIP", getWidth() - 292, 116, 250, 20, juce::Justification::left);
-        const int x = getWidth() - 292;
-        g.setColour(ink);
+        g.drawText("SELECTED CLIP", x, 120, 160, 20, juce::Justification::left);
         g.setFont(12);
         for (int i = 0; i < 3; ++i)
             g.drawText(i == 0   ? "VOLUME"
                        : i == 1 ? "LOW CUT / HIGH-PASS"
                                 : "HIGH CUT / LOW-PASS",
-                       x, 219 + i * 62, 250, 20, juce::Justification::left);
-        g.setColour(muted);
-        g.drawText("START (seconds)", x, 409, 130, 18, juce::Justification::left);
-        g.drawText("RETAKE: FROM / TO (0 = current / clip end)", x, 473, 260, 18, juce::Justification::left);
-        g.drawText("Zoom", getWidth() - 575, 110, 42, 24, juce::Justification::left);
+                       x, 214 + i * 70, 228, 20, juce::Justification::left);
+        g.drawText("START / SECONDS", x, 424, 228, 18, juce::Justification::left);
+        if (retakeVisible)
+            g.drawText("RETAKE / FROM - TO", x, 516, 228, 18, juce::Justification::left);
+        else if (hasRetakeRange()) {
+            g.setColour(accent);
+            g.drawText("Retake range active - Clip menu", x, 516, 228, 20, juce::Justification::left);
+        }
+        g.drawText("Zoom", getWidth() - 460, 66, 42, 24, juce::Justification::left);
     }
     void resized() override {
-        title.setBounds(285, 13, 430, 28);
-        mode.setBounds(getWidth() - 360, 13, 120, 28);
-        position.setBounds(getWidth() - 234, 13, 210, 28);
-        int x = 24;
-        for (auto *b : {&newButton, &open, &save, &exportButton}) {
-            b->setBounds(x, 55, 76, 28);
-            x += 84;
+        title.setBounds(110, 13, std::max(130, getWidth() - 760), 28);
+        position.setBounds(getWidth() - 620, 13, 180, 28);
+        mode.setBounds(getWidth() - 430, 13, 110, 28);
+        undo.setBounds(getWidth() - 286, 13, 66, 28);
+        save.setBounds(getWidth() - 212, 13, 66, 28);
+        setMenuButton.setBounds(getWidth() - 134, 13, 114, 28);
+        rewind.setBounds(20, 64, 36, 30);
+        play.setBounds(64, 64, 70, 30);
+        record.setBounds(142, 64, 112, 30);
+        for (int i = 0; i < 3; ++i)
+            parameterButtons[static_cast<std::size_t>(i)].setBounds(278 + i * 100, 64, 96, 30);
+        snap.setBounds(594, 64, 170, 30);
+        zoom.setBounds(getWidth() - 412, 64, 112, 30);
+        arrangement.setBounds(20, 108, getWidth() - 320, getHeight() - 410);
+        library.setBounds(20, getHeight() - 284, getWidth() - 40, 246);
+        status.setBounds(20, getHeight() - 30, getWidth() - 40, 24);
+        const int x = getWidth() - 264;
+        clipMenuButton.setBounds(getWidth() - 100, 117, 64, 25);
+        selectedTitle.setBounds(x, 148, 228, 32);
+        selectedMeta.setBounds(x, 180, 228, 26);
+        for (int i = 0; i < 3; ++i)
+            controls[static_cast<std::size_t>(i)].setBounds(x, 237 + i * 70, 228, 28);
+        clipStart.setBounds(x, 448, 228, 26);
+        cue.setBounds(x, 480, 228, 28);
+        punchIn.setBounds(x, 539, 106, 26);
+        punchOut.setBounds(x + 116, 539, 112, 26);
+        punchIn.setVisible(retakeVisible);
+        punchOut.setVisible(retakeVisible);
+        resume.setBounds(x, 580, 228, 28);
+    }
+    bool keyPressed(const juce::KeyPress &key) override {
+        const auto mods = key.getModifiers();
+        if (mods.isCommandDown()) {
+            switch (key.getKeyCode()) {
+            case 'N':
+                newButton.onClick();
+                return true;
+            case 'O':
+                open.onClick();
+                return true;
+            case 'S':
+                save.onClick();
+                return true;
+            case 'Z':
+                undo.onClick();
+                return true;
+            case ',':
+                if (prefsButton.isEnabled())
+                    showPreferences();
+                return true;
+            case 'E':
+                if (mods.isShiftDown()) {
+                    exportButton.onClick();
+                    return true;
+                }
+                break;
+            }
         }
-        undo.setBounds(x, 55, 65, 28);
-        x += 75;
-        prefsButton.setBounds(x, 55, 100, 28);
-        rewind.setBounds(595, 55, 42, 28);
-        play.setBounds(646, 55, 76, 28);
-        record.setBounds(731, 55, 106, 28);
-        resume.setBounds(846, 55, 148, 28);
-        for (int i = 0; i < 3; ++i)
-            parameterButtons[static_cast<std::size_t>(i)].setBounds(24 + i * 116, 108, 108, 28);
-        snap.setBounds(382, 108, 177, 28);
-        zoom.setBounds(getWidth() - 535, 108, 190, 28);
-        arrangement.setBounds(24, 147, getWidth() - 348, getHeight() - 465);
-        library.setBounds(24, getHeight() - 298, getWidth() - 48, 258);
-        status.setBounds(24, getHeight() - 33, getWidth() - 48, 26);
-        const int cx = getWidth() - 292;
-        selectedTitle.setBounds(cx, 140, 252, 42);
-        selectedMeta.setBounds(cx, 182, 252, 30);
-        for (int i = 0; i < 3; ++i)
-            controls[static_cast<std::size_t>(i)].setBounds(cx, 241 + i * 62, 252, 28);
-        clipStart.setBounds(cx, 431, 118, 26);
-        cue.setBounds(cx + 124, 430, 136, 28);
-        punchIn.setBounds(cx, 496, 118, 26);
-        punchOut.setBounds(cx + 128, 496, 124, 26);
-        remove.setBounds(cx, 540, 252, 28);
+        auto *focused = juce::Component::getCurrentlyFocusedComponent();
+        const bool typing = focused && (dynamic_cast<juce::TextEditor *>(focused) ||
+                                        focused->findParentComponentOfClass<juce::TextEditor>());
+        if (!typing && key.getKeyCode() == juce::KeyPress::spaceKey) {
+            play.onClick();
+            return true;
+        }
+        if (!typing && key.getKeyCode() == juce::KeyPress::F10Key && mods.isShiftDown()) {
+            showClipMenu(&clipMenuButton);
+            return true;
+        }
+        return false;
+    }
+    void mouseDown(const juce::MouseEvent &e) override {
+        if (e.mods.isPopupMenu())
+            showSetMenu(nullptr);
     }
 
   private:
+    bool hasRetakeRange() const {
+        return punchIn.getText().getDoubleValue() > 0 || punchOut.getText().getDoubleValue() > 0;
+    }
+    void showSetMenu(juce::Component *anchor) {
+        juce::PopupMenu menu;
+        menu.setLookAndFeel(&look);
+        menu.addSectionHeader("Set");
+        menu.addItem(1, "New set", !busy);
+        menu.addItem(2, "Open set...", !busy);
+        menu.addItem(3, "Save set...", !busy);
+        menu.addItem(4, "Export WAV...", !busy && project.end() > 0);
+        menu.addSeparator();
+        menu.addItem(5, "Preferences...", !busy && prefsButton.isEnabled());
+        auto options =
+            juce::PopupMenu::Options().withTargetComponent(anchor ? anchor : this).withMinimumWidth(210);
+        if (!anchor)
+            options = options.withMousePosition();
+        menu.showMenuAsync(options, [safe = juce::Component::SafePointer<Workspace>(this)](int action) {
+            if (!safe || safe->busy)
+                return;
+            switch (action) {
+            case 1:
+                safe->newButton.onClick();
+                break;
+            case 2:
+                safe->open.onClick();
+                break;
+            case 3:
+                safe->save.onClick();
+                break;
+            case 4:
+                safe->exportButton.onClick();
+                break;
+            case 5:
+                if (safe->prefsButton.isEnabled())
+                    safe->showPreferences();
+                break;
+            }
+        });
+    }
+    void showClipMenu(juce::Component *anchor, int point = -1) {
+        const int clip = arrangement.selected, parameter = arrangement.parameter;
+        const bool enabled = editableSelection() && !busy && !recording;
+        juce::PopupMenu menu;
+        menu.setLookAndFeel(&look);
+        menu.addSectionHeader("Selected clip");
+        for (int p = 0; p < 3; ++p)
+            menu.addItem(10 + p,
+                         p == 0   ? "Show volume"
+                         : p == 1 ? "Show low cut (HP)"
+                                  : "Show high cut (LP)",
+                         enabled, p == parameter);
+        if (point >= 0) {
+            menu.addSeparator();
+            menu.addItem(20, "Delete automation point", enabled);
+        }
+        menu.addSeparator();
+        menu.addItem(30, "Show retake range", enabled, retakeVisible);
+        menu.addItem(31, "Clear retake range",
+                     enabled && (punchIn.getText() != "0" || punchOut.getText() != "0"));
+        menu.addSeparator();
+        menu.addItem(40, "Remove clip", enabled);
+        auto options =
+            juce::PopupMenu::Options().withTargetComponent(anchor ? anchor : this).withMinimumWidth(220);
+        if (!anchor)
+            options = options.withMousePosition();
+        menu.showMenuAsync(options, [safe = juce::Component::SafePointer<Workspace>(this), clip, parameter,
+                                     point](int action) {
+            if (!safe || action == 0 || safe->busy || safe->recording || safe->arrangement.selected != clip ||
+                !safe->editableSelection())
+                return;
+            if (action >= 10 && action <= 12) {
+                const int p = action - 10;
+                safe->arrangement.parameter = p;
+                safe->parameterButtons[static_cast<std::size_t>(p)].setToggleState(
+                    true, juce::dontSendNotification);
+                safe->arrangement.refresh();
+            } else if (action == 20) {
+                safe->stop();
+                auto &points = safe->project.clips[static_cast<std::size_t>(clip)]
+                                   .automation[static_cast<std::size_t>(parameter)]
+                                   .points;
+                if (point >= 0 && static_cast<std::size_t>(point) < points.size()) {
+                    safe->checkpoint();
+                    points.erase(points.begin() + point);
+                    safe->dirty = true;
+                    safe->sync();
+                }
+            } else if (action == 30) {
+                safe->retakeVisible = !safe->retakeVisible;
+                safe->resized();
+                safe->repaint();
+            } else if (action == 31) {
+                safe->punchIn.setText("0");
+                safe->punchOut.setText("0");
+            } else if (action == 40)
+                safe->remove.onClick();
+        });
+    }
     bool editableSelection() const {
         return project.perClip && arrangement.selected >= 0 &&
                static_cast<std::size_t>(arrangement.selected) < project.clips.size();
@@ -377,6 +521,7 @@ class Workspace final : public juce::Component,
     }
     void checkpoint() {
         history.push_back(project);
+        undo.setEnabled(!busy);
         if (history.size() > 24)
             history.erase(history.begin());
     }
@@ -403,6 +548,9 @@ class Workspace final : public juce::Component,
         clipStart.setEnabled(enabled);
         cue.setEnabled(enabled);
         record.setEnabled(enabled);
+        clipMenuButton.setEnabled(enabled);
+        undo.setEnabled(!busy && !history.empty());
+        save.setEnabled(!busy);
         arrangement.editable = !busy && project.perClip;
         if (arrangement.selected < 0 ||
             static_cast<std::size_t>(arrangement.selected) >= project.clips.size()) {
@@ -598,6 +746,7 @@ class Workspace final : public juce::Component,
         juce::AlertWindow::showAsync(
             juce::MessageBoxOptions{}
                 .withIconType(juce::MessageBoxIconType::QuestionIcon)
+                .withAssociatedComponent(this)
                 .withTitle("Unsaved set")
                 .withMessage(
                     "This set has unsaved changes. Save it before continuing if you want to keep them.")
@@ -867,10 +1016,15 @@ class Workspace final : public juce::Component,
                      : engine     ? "READ"
                                   : "EDIT",
                      juce::dontSendNotification);
-        mode.setColour(juce::Label::textColourId, recording ? juce::Colour(0xffb44832) : accent);
+        mode.setColour(juce::Label::textColourId, recording ? ui::danger : accent);
+        record.setColour(juce::TextButton::textColourOffId, recording ? ui::danger : ui::text);
+        resume.setVisible(engine && overriding);
+        if (!recording)
+            record.setButtonText(hasRetakeRange() ? "Record range" : "Record clip");
         resume.setEnabled(engine && overriding);
     }
-    juce::LookAndFeel_V4 look;
+    ui::Theme look;
+    juce::TooltipWindow tooltips{this, 650};
     Project project;
     Preferences preferences;
     Arrangement arrangement;
@@ -878,6 +1032,8 @@ class Workspace final : public juce::Component,
     juce::TextButton newButton{"New set"}, open{"Open"}, save{"Save"}, exportButton{"Export"},
         prefsButton{"Preferences"}, undo{"Undo"}, rewind{"|<"}, play{"Play"}, record{"Record clip"},
         resume{"Resume automation"}, remove{"Remove selected clip"};
+    juce::TextButton setMenuButton{"Set ..."}, clipMenuButton{"Clip ..."};
+    bool retakeVisible = false;
     std::array<juce::TextButton, 3> parameterButtons;
     std::array<juce::Slider, 3> controls;
     juce::Slider zoom;

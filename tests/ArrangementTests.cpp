@@ -71,9 +71,24 @@ void testArrangement() {
     canvas->mouseDrag(event(canvas, movedKnot, knot, true));
     canvas->mouseUp(event(canvas, movedKnot, knot, true));
     require(clip.automation[1].points[1].frame == 5 * projectRate, "UI curve drag did not move the point");
+    int contextClip = -1, contextPoint = -1;
+    arrangement.contextMenu = [&](int c, int p) {
+        contextClip = c;
+        contextPoint = p;
+    };
+    const int editsBeforeMenu = edits;
     canvas->mouseDown(event(canvas, movedKnot, movedKnot, false, true));
     canvas->mouseUp(event(canvas, movedKnot, movedKnot, false, true));
-    require(clip.automation[1].points.size() == 1, "UI right-click did not remove point");
+    require(contextClip == 1 && contextPoint == 1 && clip.automation[1].points.size() == 2 &&
+                edits == editsBeforeMenu,
+            "Opening a context menu changed automation or targeted the wrong point");
+    int seeks = 0;
+    arrangement.seek = [&](Frame) { ++seeks; };
+    const juce::Point<float> ruler{200, 10};
+    canvas->mouseDown(event(canvas, ruler, ruler, false, true));
+    canvas->mouseUp(event(canvas, ruler, ruler, false, true));
+    require(contextClip == -1 && contextPoint == -1 && seeks == 0 && edits == editsBeforeMenu,
+            "Opening the ruler context menu moved the playhead or edited the set");
     arrangement.viewport.setViewPosition(0, 0);
     arrangement.zoom(80);
     require(arrangement.viewport.getViewPositionX() == 0, "zoom moved the timeline origin out of view");

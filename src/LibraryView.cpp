@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "LibraryView.h"
+#include "Theme.h"
 #include <cmath>
 #include <set>
 namespace fader {
 namespace {
-const juce::Colour ink{0xff27343c}, muted{0xff75838c}, accent{0xff087f8c};
+const auto ink = ui::text, muted = ui::muted, accent = ui::accent;
 }
 LibraryView::LibraryView()
     : sourceModel(*this), table("Music library", this), sources("Sources", &sourceModel) {
@@ -14,8 +15,19 @@ LibraryView::LibraryView()
     search.setName("Search music library");
     search.onTextChange = [this] { rebuild(); };
     rescan.onClick = [this] {
-        if (refresh)
-            refresh();
+        juce::PopupMenu menu;
+        menu.setLookAndFeel(&getLookAndFeel());
+        menu.addItem(1, "Refresh library");
+        menu.addItem(2, "Library preferences...");
+        menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(rescan),
+                           [safe = juce::Component::SafePointer<LibraryView>(this)](int action) {
+                               if (!safe)
+                                   return;
+                               if (action == 1 && safe->refresh)
+                                   safe->refresh();
+                               if (action == 2 && safe->preferences)
+                                   safe->preferences();
+                           });
     };
     auto &h = table.getHeader();
     h.addColumn("Title", 1, 300, 140, 900);
@@ -30,9 +42,9 @@ LibraryView::LibraryView()
     table.setHeaderHeight(28);
     table.setOutlineThickness(0);
     table.setMultipleSelectionEnabled(false);
-    table.setColour(juce::ListBox::backgroundColourId, juce::Colours::white);
+    table.setColour(juce::ListBox::backgroundColourId, ui::panel);
     sources.setRowHeight(29);
-    sources.setColour(juce::ListBox::backgroundColourId, juce::Colour(0xfff0f3f5));
+    sources.setColour(juce::ListBox::backgroundColourId, ui::field);
     sourceNames.add("All music");
     sourceNames.add("Traktor metadata");
     sourceNames.add("Missing files");
@@ -40,11 +52,11 @@ LibraryView::LibraryView()
     detail.setColour(juce::Label::textColourId, muted);
 }
 void LibraryView::paint(juce::Graphics &g) {
-    g.fillAll(juce::Colours::white);
+    g.fillAll(ui::panel);
     g.setColour(ink);
     g.setFont(14);
     g.drawText("MUSIC LIBRARY", 12, 3, 160, 30, juce::Justification::left);
-    g.setColour(juce::Colour(0xffdce3e8));
+    g.setColour(ui::border);
     g.drawHorizontalLine(0, 0, float(getWidth()));
 }
 void LibraryView::resized() {
@@ -156,13 +168,12 @@ juce::String LibraryView::value(const TrackInfo &t, int column) const {
     }
 }
 void LibraryView::paintRowBackground(juce::Graphics &g, int row, int w, int h, bool selected) {
-    g.fillAll(selected ? juce::Colour(0xffd9eef0)
-                       : (row % 2 ? juce::Colour(0xfff7f9fa) : juce::Colours::white));
+    g.fillAll(selected ? ui::selection : (row % 2 ? ui::field : ui::panel));
     if (selected) {
         g.setColour(accent);
         g.fillRect(0, 0, 3, h);
     }
-    g.setColour(juce::Colour(0xffedf0f2));
+    g.setColour(ui::grid);
     g.drawHorizontalLine(h - 1, 0, float(w));
 }
 void LibraryView::paintCell(juce::Graphics &, int, int, int, int, bool) {}
@@ -180,8 +191,7 @@ juce::Component *LibraryView::refreshComponentForCell(int row, int column, bool,
         return label;
     }
     const auto &t = library.tracks[filtered[static_cast<std::size_t>(row)]];
-    label->setColour(juce::Label::textColourId,
-                     t.missing ? juce::Colour(0xffaa4c37) : (column == 4 ? accent : ink));
+    label->setColour(juce::Label::textColourId, t.missing ? ui::danger : (column == 4 ? accent : ink));
     label->setName(table.getHeader().getColumnName(column));
     label->setText(value(t, column), juce::dontSendNotification);
     return label;
@@ -189,6 +199,20 @@ juce::Component *LibraryView::refreshComponentForCell(int row, int column, bool,
 void LibraryView::cellDoubleClicked(int row, int, const juce::MouseEvent &) {
     if (row >= 0 && row < getNumRows() && addTrack)
         addTrack(library.tracks[filtered[static_cast<std::size_t>(row)]]);
+}
+void LibraryView::cellClicked(int row, int, const juce::MouseEvent &e) {
+    if (!e.mods.isPopupMenu() || row < 0 || row >= getNumRows())
+        return;
+    table.selectRow(row);
+    const auto track = library.tracks[filtered[static_cast<std::size_t>(row)]];
+    juce::PopupMenu menu;
+    menu.setLookAndFeel(&getLookAndFeel());
+    menu.addItem(1, "Add to arrangement", !track.missing);
+    menu.showMenuAsync(juce::PopupMenu::Options().withTargetComponent(table).withMousePosition(),
+                       [safe = juce::Component::SafePointer<LibraryView>(this), track](int action) {
+                           if (safe && action == 1 && safe->addTrack)
+                               safe->addTrack(track);
+                       });
 }
 void LibraryView::sortOrderChanged(int column, bool direction) {
     sortColumn = column;
@@ -203,7 +227,7 @@ juce::var LibraryView::getDragSourceDescription(const juce::SparseSet<int> &rows
 }
 void LibraryView::paintListBoxItem(int row, juce::Graphics &g, int w, int h, bool selected) {
     if (selected)
-        g.fillAll(juce::Colour(0xffdce9ed));
+        g.fillAll(ui::selection);
     g.setColour(selected ? accent : ink);
     g.setFont(12);
     g.drawText(sourceNames[row], 12, 0, w - 20, h, juce::Justification::centredLeft, true);
@@ -261,7 +285,7 @@ PreferencesPanel::PreferencesPanel(juce::AudioDeviceManager &manager, Preference
     setSize(720, 620);
 }
 void PreferencesPanel::paint(juce::Graphics &g) {
-    g.fillAll(juce::Colour(0xfff5f7f9));
+    g.fillAll(ui::background);
     g.setColour(ink);
     g.setFont(20);
     g.drawText("Library & audio", 24, 15, 500, 32, juce::Justification::left);

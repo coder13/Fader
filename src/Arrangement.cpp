@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #include "Arrangement.h"
+#include "Theme.h"
 #include <cmath>
 namespace fader {
 namespace {
 constexpr int rowHeight = 142, left = 80, top = 34;
-const juce::Colour ink{0xff27343c}, muted{0xff71818b}, line{0xffdce3e8};
+const auto ink = ui::text, muted = ui::muted, line = ui::grid;
 juce::Colour curveColour(int p) {
-    return juce::Colour(p == 0 ? 0xff087f8c : p == 1 ? 0xff3267c8 : 0xffb76a25);
+    return ui::envelope(p);
 }
 } // namespace
 Arrangement::Arrangement() : canvas(*this) {
@@ -61,13 +62,13 @@ int Arrangement::Canvas::hit(juce::Point<float> position) const {
     return -1;
 }
 void Arrangement::Canvas::paint(juce::Graphics &g) {
-    g.fillAll(juce::Colour(0xfff2f5f7));
+    g.fillAll(ui::background);
     const auto visible = owner.viewport.getViewArea();
     const int firstRow = std::max(0, (visible.getY() - top) / rowHeight),
               lastRow = (visible.getBottom() - top) / rowHeight;
     for (int row = firstRow; row <= lastRow; ++row) {
         const int y = top + row * rowHeight;
-        g.setColour(row % 2 ? juce::Colour(0xfff6f8fa) : juce::Colour(0xffedf2f5));
+        g.setColour(row % 2 ? ui::panel : ui::background);
         g.fillRect(0, y, getWidth(), rowHeight);
         g.setColour(line);
         g.drawHorizontalLine(y, 0, float(getWidth()));
@@ -97,13 +98,13 @@ void Arrangement::Canvas::paint(juce::Graphics &g) {
         if (!b.intersects(visible.toFloat()) || b.getWidth() < 1)
             continue;
         const bool selected = static_cast<int>(i) == owner.selected;
-        const juce::Colour colour(i % 2 ? 0xffc08451 : 0xff388d9a);
-        g.setColour(colour.interpolatedWith(juce::Colours::white, 0.88f));
-        g.fillRoundedRectangle(b, 5);
-        g.setColour(colour.withAlpha(0.12f));
+        const auto colour = ui::clip(static_cast<int>(i));
+        g.setColour(ui::panel.interpolatedWith(colour, 0.10f));
+        g.fillRect(b);
+        g.setColour(colour.withAlpha(0.14f));
         g.fillRect(b.withHeight(35));
         g.setColour(selected ? curveColour(owner.parameter) : colour.withAlpha(0.5f));
-        g.drawRoundedRectangle(b.reduced(0.7f), 5, selected ? 2.0f : 1.0f);
+        g.drawRect(b.reduced(0.7f), selected ? 1.5f : 1.0f);
         g.setColour(ink);
         g.setFont(13);
         g.drawText(juce::String(c.name), b.getSmallestIntegerContainer().withTrimmedLeft(10).withHeight(21),
@@ -119,7 +120,7 @@ void Arrangement::Canvas::paint(juce::Graphics &g) {
         const int begin = std::max(int(b.getX()), visible.getX()),
                   end = std::min(int(b.getRight()), visible.getRight());
         if (c.audio) {
-            g.setColour(colour.withAlpha(0.38f));
+            g.setColour(colour.withAlpha(0.62f));
             for (int px = begin; px < end; ++px) {
                 const auto source = double(c.sourceOffset) +
                                     (px - b.getX()) / owner.pixelsPerSecond * c.rate * c.audio->sampleRate;
@@ -171,7 +172,7 @@ void Arrangement::Canvas::paint(juce::Graphics &g) {
         }
     }
     g.restoreState();
-    g.setColour(juce::Colour(0xfff2f5f7));
+    g.setColour(ui::raised);
     g.fillRect(visible.withHeight(top));
     g.setColour(muted);
     g.setFont(11);
@@ -181,7 +182,7 @@ void Arrangement::Canvas::paint(juce::Graphics &g) {
                    visible.getY() + 4, 60, 22, juce::Justification::left);
     }
     const auto px = float(left + double(owner.playhead) / projectRate * owner.pixelsPerSecond);
-    g.setColour(juce::Colour(0xffd96b45));
+    g.setColour(ui::text);
     g.drawLine(px, float(visible.getY()), px, float(visible.getBottom()), 1.5f);
     if (owner.project->clips.empty()) {
         g.setColour(muted);
@@ -210,12 +211,19 @@ void Arrangement::Canvas::mouseDown(const juce::MouseEvent &e) {
     if (!owner.project)
         return;
     if (e.position.y < owner.viewport.getViewPositionY() + top) {
-        if (owner.seek)
+        if (e.mods.isPopupMenu()) {
+            if (owner.contextMenu)
+                owner.contextMenu(-1, -1);
+        } else if (owner.seek)
             owner.seek(frame(e.position.x));
         return;
     }
     const int clip = hit(e.position);
     if (clip < 0) {
+        if (e.mods.isPopupMenu() && owner.contextMenu) {
+            owner.contextMenu(-1, -1);
+            return;
+        }
         if (owner.seek)
             owner.seek(frame(e.position.x));
         return;
@@ -229,6 +237,23 @@ void Arrangement::Canvas::mouseDown(const juce::MouseEvent &e) {
     if (!owner.editable || !owner.project->perClip)
         return;
     const auto b = bounds(owner.project->clips[static_cast<std::size_t>(clip)]);
+    if (e.mods.isPopupMenu()) {
+        int nearby = -1;
+        const auto &points = owner.project->clips[static_cast<std::size_t>(clip)]
+                                 .automation[static_cast<std::size_t>(owner.parameter)]
+                                 .points;
+        for (std::size_t i = 0; i < points.size(); ++i) {
+            const float x = b.getX() + float(double(points[i].frame) / projectRate * owner.pixelsPerSecond);
+            const float y = b.getBottom() - 12 - points[i].value * (b.getHeight() - 57);
+            if (std::abs(x - e.position.x) < 8 && std::abs(y - e.position.y) < 9) {
+                nearby = static_cast<int>(i);
+                break;
+            }
+        }
+        if (owner.contextMenu)
+            owner.contextMenu(clip, nearby);
+        return;
+    }
     if (e.position.y < b.getY() + 36) {
         moving = clip;
         originalStart = owner.project->clips[static_cast<std::size_t>(clip)].start;
@@ -254,11 +279,7 @@ void Arrangement::Canvas::mouseDown(const juce::MouseEvent &e) {
             break;
         }
     }
-    if (e.mods.isRightButtonDown()) {
-        if (point >= 0)
-            curve.points.erase(curve.points.begin() + point);
-        point = -1;
-    } else if (point < 0) {
+    if (point < 0) {
         auto at = std::lower_bound(curve.points.begin(), curve.points.end(), local,
                                    [](const Point &p, Frame f) { return p.frame < f; });
         point = static_cast<int>(at - curve.points.begin());

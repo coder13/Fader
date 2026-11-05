@@ -15,6 +15,7 @@ class Arrangement final : public juce::Component {
     std::function<bool()> beginEdit;
     std::function<void()> changed;
     std::function<void(int)> selectionChanged;
+    std::function<void(int, int)> contextMenu; // Clip index and nearby point (-1 when absent).
     std::function<void(Frame)> seek;
     std::function<void(const juce::File &, Frame, int)> drop;
     void resized() override;

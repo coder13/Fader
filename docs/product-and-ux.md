@@ -20,16 +20,16 @@ An arrangement lane is not permanently the same thing as a physical deck. The v0
 
 ## Interface direction
 
-Use Audacity as the reference for readable waveforms, obvious transport, direct envelope manipulation, and a visible relationship between clips and time. Use Ableton's arrangement/automation concepts as a workflow reference. This is a visual and interaction direction, not a request to copy either application's implementation. Reference observations and sources are in [product references](research/product-references.md).
+Use Audacity as the reference for readable waveforms, obvious transport, direct envelope manipulation, and a visible relationship between clips and time. Use Traktor for a restrained dark palette and a dense, readable library. Use Ableton's arrangement/automation concepts as a workflow reference. The user has requested flat dark surfaces and menus for rarely used actions; the implemented [theme and interaction rules](theme-and-interaction.md) define those choices. This is a visual and interaction direction, not a request to copy another application's implementation. Reference observations and sources are in [product references](research/product-references.md).
 
 ```text
-Project     New / Open / Save / Undo / Preferences    Play / Record clip / Export
-Volume / Low cut / High cut       Snap / Zoom         READ / OVERRIDE / RECORD
+Project                         Undo / Save / Set ...       EDIT / READ / OVERRIDE / RECORD
+Play / Record clip       Volume / Low cut / High cut        Snap / Zoom
 Time ruler ---------------------------------------------------------------
-Track 1  [ Song waveform + selected envelope ------- ] | Selected clip
+Track 1  [ Song waveform + selected envelope ------- ] | Selected clip / Clip ...
 Track 2             [ Song waveform + envelope ----- ] | Volume / HP / LP
-Track 3  ... scroll in time and vertically ...          | Placement / Retake
-Library: folders | Search | Title / Artist / BPM / Key / Time / Genre / Source
+Track 3  ... scroll in time and vertically ...          | Placement / optional Retake
+Library: folders | Search | Title / Artist / BPM / Key / Time / Genre / Source | Library ...
 ```
 
 

@@ -14,6 +14,7 @@ class LibraryView final : public juce::Component,
     const TrackInfo *find(const juce::File &) const;
     std::function<void(const TrackInfo &)> addTrack;
     std::function<void()> refresh;
+    std::function<void()> preferences;
 
   private:
     int getNumRows() override;
@@ -21,6 +22,7 @@ class LibraryView final : public juce::Component,
     void paintCell(juce::Graphics &, int, int, int, int, bool) override;
     juce::Component *refreshComponentForCell(int, int, bool, juce::Component *) override;
     void cellDoubleClicked(int, int, const juce::MouseEvent &) override;
+    void cellClicked(int, int, const juce::MouseEvent &) override;
     void sortOrderChanged(int, bool) override;
     juce::var getDragSourceDescription(const juce::SparseSet<int> &) override;
     void paintListBoxItem(int, juce::Graphics &, int, int, bool) override;
@@ -49,7 +51,7 @@ class LibraryView final : public juce::Component,
     bool ascending = true;
     juce::File folder;
     juce::TextEditor search;
-    juce::TextButton rescan{"Refresh"};
+    juce::TextButton rescan{"Library ..."};
     juce::Label countLabel, detail;
     juce::TableListBox table;
     juce::ListBox sources;
