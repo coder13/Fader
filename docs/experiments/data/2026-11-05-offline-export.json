@@ -1,0 +1,18 @@
+{
+  "frames": "172800000",
+  "durationSeconds": 3600.0,
+  "fileBytes": "1382400104",
+  "pcmCacheBytes": "1048576",
+  "delayedReads": "36929",
+  "artificialReadDelayMs": 1,
+  "maxAbsolutePCMError": 0.0,
+  "absoluteSampleSum": 23739.295237375783,
+  "cueAbsoluteSampleSum": 48238.5147857666,
+  "projectUnchanged": true,
+  "failedSources": 0,
+  "importSeconds": 92.912432041,
+  "exportSeconds": 32.864779625,
+  "verificationSeconds": 9.590555792,
+  "peakResidentBytes": "13615104",
+  "scope": "Full 60-minute real WAV export and full independent pre-device PCM comparison; accelerated software hosts, synthetic sparse WAV sources, no audio device/controller/UI. Not real-time deadline or acoustic qualification."
+}
