@@ -1,0 +1,1356 @@
+{
+  "wav": {
+    "importAndCacheMs": 65351.669916,
+    "projectSeconds": 9898.0,
+    "sources": [
+      {
+        "sampleRate": 48000.0,
+        "sourceFrames": "388800000",
+        "sequentialSeek": false,
+        "diskCacheBytes": "0",
+        "sourceOffset": "96000"
+      },
+      {
+        "sampleRate": 48000.0,
+        "sourceFrames": "388800000",
+        "sequentialSeek": false,
+        "diskCacheBytes": "0",
+        "sourceOffset": "96000"
+      }
+    ],
+    "diskCacheBytes": "0",
+    "maxPCMBytes": "1048576",
+    "maxPrerollFrames": "96000",
+    "cold": {
+      "count": 40,
+      "p50Ms": 8.798209,
+      "p95Ms": 11.285417,
+      "maxMs": 14.666167,
+      "targetMs": 500.0,
+      "misses": 0
+    },
+    "warm": {
+      "count": 40,
+      "p50Ms": 10.058959,
+      "p95Ms": 11.28175,
+      "maxMs": 14.968125,
+      "targetMs": 150.0,
+      "misses": 0
+    },
+    "samples": [
+      {
+        "frame": "86880000",
+        "repeat": false,
+        "readyMs": 14.666167
+      },
+      {
+        "frame": "86880000",
+        "repeat": true,
+        "readyMs": 10.979958
+      },
+      {
+        "frame": "218402461",
+        "repeat": false,
+        "readyMs": 10.908458
+      },
+      {
+        "frame": "218402461",
+        "repeat": true,
+        "readyMs": 11.083875
+      },
+      {
+        "frame": "349924923",
+        "repeat": false,
+        "readyMs": 11.241792
+      },
+      {
+        "frame": "349924923",
+        "repeat": true,
+        "readyMs": 8.635291
+      },
+      {
+        "frame": "171982769",
+        "repeat": false,
+        "readyMs": 9.844375
+      },
+      {
+        "frame": "171982769",
+        "repeat": true,
+        "readyMs": 9.844834
+      },
+      {
+        "frame": "303505230",
+        "repeat": false,
+        "readyMs": 10.035417
+      },
+      {
+        "frame": "303505230",
+        "repeat": true,
+        "readyMs": 8.1605
+      },
+      {
+        "frame": "125563076",
+        "repeat": false,
+        "readyMs": 9.591667
+      },
+      {
+        "frame": "125563076",
+        "repeat": true,
+        "readyMs": 11.110208
+      },
+      {
+        "frame": "257085538",
+        "repeat": false,
+        "readyMs": 8.782416
+      },
+      {
+        "frame": "257085538",
+        "repeat": true,
+        "readyMs": 9.70875
+      },
+      {
+        "frame": "388608000",
+        "repeat": false,
+        "readyMs": 7.419083
+      },
+      {
+        "frame": "388608000",
+        "repeat": true,
+        "readyMs": 8.558625
+      },
+      {
+        "frame": "210665846",
+        "repeat": false,
+        "readyMs": 8.773375
+      },
+      {
+        "frame": "210665846",
+        "repeat": true,
+        "readyMs": 9.785958
+      },
+      {
+        "frame": "342188307",
+        "repeat": false,
+        "readyMs": 8.567875
+      },
+      {
+        "frame": "342188307",
+        "repeat": true,
+        "readyMs": 11.239583
+      },
+      {
+        "frame": "164246153",
+        "repeat": false,
+        "readyMs": 8.679958
+      },
+      {
+        "frame": "164246153",
+        "repeat": true,
+        "readyMs": 10.058959
+      },
+      {
+        "frame": "295768615",
+        "repeat": false,
+        "readyMs": 8.787792
+      },
+      {
+        "frame": "295768615",
+        "repeat": true,
+        "readyMs": 11.316666
+      },
+      {
+        "frame": "117826461",
+        "repeat": false,
+        "readyMs": 8.798209
+      },
+      {
+        "frame": "117826461",
+        "repeat": true,
+        "readyMs": 8.572125
+      },
+      {
+        "frame": "249348923",
+        "repeat": false,
+        "readyMs": 8.790375
+      },
+      {
+        "frame": "249348923",
+        "repeat": true,
+        "readyMs": 10.072167
+      },
+      {
+        "frame": "380871384",
+        "repeat": false,
+        "readyMs": 8.796
+      },
+      {
+        "frame": "380871384",
+        "repeat": true,
+        "readyMs": 7.526291
+      },
+      {
+        "frame": "202929230",
+        "repeat": false,
+        "readyMs": 8.773458
+      },
+      {
+        "frame": "202929230",
+        "repeat": true,
+        "readyMs": 10.954666
+      },
+      {
+        "frame": "334451692",
+        "repeat": false,
+        "readyMs": 10.0565
+      },
+      {
+        "frame": "334451692",
+        "repeat": true,
+        "readyMs": 11.209958
+      },
+      {
+        "frame": "156509538",
+        "repeat": false,
+        "readyMs": 10.023459
+      },
+      {
+        "frame": "156509538",
+        "repeat": true,
+        "readyMs": 10.070417
+      },
+      {
+        "frame": "288032000",
+        "repeat": false,
+        "readyMs": 7.519875
+      },
+      {
+        "frame": "288032000",
+        "repeat": true,
+        "readyMs": 8.584833
+      },
+      {
+        "frame": "110089846",
+        "repeat": false,
+        "readyMs": 7.316458
+      },
+      {
+        "frame": "110089846",
+        "repeat": true,
+        "readyMs": 10.074166
+      },
+      {
+        "frame": "241612307",
+        "repeat": false,
+        "readyMs": 8.77825
+      },
+      {
+        "frame": "241612307",
+        "repeat": true,
+        "readyMs": 10.055583
+      },
+      {
+        "frame": "373134769",
+        "repeat": false,
+        "readyMs": 7.527
+      },
+      {
+        "frame": "373134769",
+        "repeat": true,
+        "readyMs": 11.28175
+      },
+      {
+        "frame": "195192615",
+        "repeat": false,
+        "readyMs": 7.346708
+      },
+      {
+        "frame": "195192615",
+        "repeat": true,
+        "readyMs": 7.534292
+      },
+      {
+        "frame": "326715076",
+        "repeat": false,
+        "readyMs": 8.593584
+      },
+      {
+        "frame": "326715076",
+        "repeat": true,
+        "readyMs": 8.801666
+      },
+      {
+        "frame": "148772923",
+        "repeat": false,
+        "readyMs": 8.769875
+      },
+      {
+        "frame": "148772923",
+        "repeat": true,
+        "readyMs": 11.163834
+      },
+      {
+        "frame": "280295384",
+        "repeat": false,
+        "readyMs": 9.805083
+      },
+      {
+        "frame": "280295384",
+        "repeat": true,
+        "readyMs": 11.21025
+      },
+      {
+        "frame": "102353230",
+        "repeat": false,
+        "readyMs": 8.670833
+      },
+      {
+        "frame": "102353230",
+        "repeat": true,
+        "readyMs": 9.659208
+      },
+      {
+        "frame": "233875692",
+        "repeat": false,
+        "readyMs": 8.776708
+      },
+      {
+        "frame": "233875692",
+        "repeat": true,
+        "readyMs": 8.777583
+      },
+      {
+        "frame": "365398153",
+        "repeat": false,
+        "readyMs": 11.169958
+      },
+      {
+        "frame": "365398153",
+        "repeat": true,
+        "readyMs": 9.671
+      },
+      {
+        "frame": "187456000",
+        "repeat": false,
+        "readyMs": 11.035542
+      },
+      {
+        "frame": "187456000",
+        "repeat": true,
+        "readyMs": 9.598917
+      },
+      {
+        "frame": "318978461",
+        "repeat": false,
+        "readyMs": 11.285417
+      },
+      {
+        "frame": "318978461",
+        "repeat": true,
+        "readyMs": 14.968125
+      },
+      {
+        "frame": "141036307",
+        "repeat": false,
+        "readyMs": 9.778959
+      },
+      {
+        "frame": "141036307",
+        "repeat": true,
+        "readyMs": 10.060166
+      },
+      {
+        "frame": "272558769",
+        "repeat": false,
+        "readyMs": 9.48925
+      },
+      {
+        "frame": "272558769",
+        "repeat": true,
+        "readyMs": 10.010459
+      },
+      {
+        "frame": "94616615",
+        "repeat": false,
+        "readyMs": 11.253291
+      },
+      {
+        "frame": "94616615",
+        "repeat": true,
+        "readyMs": 10.144
+      },
+      {
+        "frame": "226139076",
+        "repeat": false,
+        "readyMs": 9.668458
+      },
+      {
+        "frame": "226139076",
+        "repeat": true,
+        "readyMs": 10.879375
+      },
+      {
+        "frame": "357661538",
+        "repeat": false,
+        "readyMs": 11.259959
+      },
+      {
+        "frame": "357661538",
+        "repeat": true,
+        "readyMs": 11.046
+      },
+      {
+        "frame": "179719384",
+        "repeat": false,
+        "readyMs": 10.406042
+      },
+      {
+        "frame": "179719384",
+        "repeat": true,
+        "readyMs": 11.221584
+      },
+      {
+        "frame": "311241846",
+        "repeat": false,
+        "readyMs": 11.314208
+      },
+      {
+        "frame": "311241846",
+        "repeat": true,
+        "readyMs": 8.798417
+      },
+      {
+        "frame": "133299692",
+        "repeat": false,
+        "readyMs": 10.031667
+      },
+      {
+        "frame": "133299692",
+        "repeat": true,
+        "readyMs": 11.1825
+      },
+      {
+        "frame": "264822153",
+        "repeat": false,
+        "readyMs": 8.788959
+      },
+      {
+        "frame": "264822153",
+        "repeat": true,
+        "readyMs": 10.051167
+      }
+    ],
+    "scope": "40 first-visit/repeat pairs; fresh engine/readers every time. Cold is a new destination, warm is its immediate repeat. OS cache is not purged; import/cache construction is separate. 1 ms polling; native UI adds up to one 30 Hz tick. No audio device."
+  },
+  "mp3": {
+    "importAndCacheMs": 5354.597625,
+    "projectSeconds": 9028.045708333333,
+    "sources": [
+      {
+        "sampleRate": 48000.0,
+        "sourceFrames": "86401152",
+        "sequentialSeek": false,
+        "diskCacheBytes": "691209216",
+        "sourceOffset": "96000"
+      },
+      {
+        "sampleRate": 44100.0,
+        "sourceFrames": "79382016",
+        "sequentialSeek": false,
+        "diskCacheBytes": "635056128",
+        "sourceOffset": "88200"
+      }
+    ],
+    "diskCacheBytes": "1326265344",
+    "maxPCMBytes": "1048576",
+    "maxPrerollFrames": "96000",
+    "cold": {
+      "count": 40,
+      "p50Ms": 9.839417,
+      "p95Ms": 11.336416,
+      "maxMs": 13.581417,
+      "targetMs": 500.0,
+      "misses": 0
+    },
+    "warm": {
+      "count": 40,
+      "p50Ms": 11.29725,
+      "p95Ms": 12.554708,
+      "maxMs": 12.59425,
+      "targetMs": 150.0,
+      "misses": 0
+    },
+    "samples": [
+      {
+        "frame": "347520000",
+        "repeat": false,
+        "readyMs": 11.390416
+      },
+      {
+        "frame": "347520000",
+        "repeat": true,
+        "readyMs": 11.356125
+      },
+      {
+        "frame": "384261425",
+        "repeat": false,
+        "readyMs": 9.695417
+      },
+      {
+        "frame": "384261425",
+        "repeat": true,
+        "readyMs": 7.524125
+      },
+      {
+        "frame": "421002850",
+        "repeat": false,
+        "readyMs": 11.278208
+      },
+      {
+        "frame": "421002850",
+        "repeat": true,
+        "readyMs": 10.028208
+      },
+      {
+        "frame": "371293863",
+        "repeat": false,
+        "readyMs": 8.565334
+      },
+      {
+        "frame": "371293863",
+        "repeat": true,
+        "readyMs": 11.0365
+      },
+      {
+        "frame": "408035288",
+        "repeat": false,
+        "readyMs": 9.776708
+      },
+      {
+        "frame": "408035288",
+        "repeat": true,
+        "readyMs": 12.188958
+      },
+      {
+        "frame": "358326301",
+        "repeat": false,
+        "readyMs": 9.931625
+      },
+      {
+        "frame": "358326301",
+        "repeat": true,
+        "readyMs": 8.778417
+      },
+      {
+        "frame": "395067726",
+        "repeat": false,
+        "readyMs": 13.581417
+      },
+      {
+        "frame": "395067726",
+        "repeat": true,
+        "readyMs": 11.28775
+      },
+      {
+        "frame": "431809152",
+        "repeat": false,
+        "readyMs": 11.336416
+      },
+      {
+        "frame": "431809152",
+        "repeat": true,
+        "readyMs": 12.307291
+      },
+      {
+        "frame": "382100164",
+        "repeat": false,
+        "readyMs": 11.299375
+      },
+      {
+        "frame": "382100164",
+        "repeat": true,
+        "readyMs": 10.075209
+      },
+      {
+        "frame": "418841590",
+        "repeat": false,
+        "readyMs": 9.855625
+      },
+      {
+        "frame": "418841590",
+        "repeat": true,
+        "readyMs": 9.779459
+      },
+      {
+        "frame": "369132603",
+        "repeat": false,
+        "readyMs": 8.778667
+      },
+      {
+        "frame": "369132603",
+        "repeat": true,
+        "readyMs": 9.832375
+      },
+      {
+        "frame": "405874028",
+        "repeat": false,
+        "readyMs": 10.044334
+      },
+      {
+        "frame": "405874028",
+        "repeat": true,
+        "readyMs": 12.54625
+      },
+      {
+        "frame": "356165041",
+        "repeat": false,
+        "readyMs": 9.76825
+      },
+      {
+        "frame": "356165041",
+        "repeat": true,
+        "readyMs": 11.347333
+      },
+      {
+        "frame": "392906466",
+        "repeat": false,
+        "readyMs": 10.048542
+      },
+      {
+        "frame": "392906466",
+        "repeat": true,
+        "readyMs": 12.36725
+      },
+      {
+        "frame": "429647891",
+        "repeat": false,
+        "readyMs": 9.839417
+      },
+      {
+        "frame": "429647891",
+        "repeat": true,
+        "readyMs": 9.828584
+      },
+      {
+        "frame": "379938904",
+        "repeat": false,
+        "readyMs": 8.307375
+      },
+      {
+        "frame": "379938904",
+        "repeat": true,
+        "readyMs": 11.313916
+      },
+      {
+        "frame": "416680329",
+        "repeat": false,
+        "readyMs": 10.030084
+      },
+      {
+        "frame": "416680329",
+        "repeat": true,
+        "readyMs": 11.338167
+      },
+      {
+        "frame": "366971342",
+        "repeat": false,
+        "readyMs": 8.585666
+      },
+      {
+        "frame": "366971342",
+        "repeat": true,
+        "readyMs": 10.068459
+      },
+      {
+        "frame": "403712768",
+        "repeat": false,
+        "readyMs": 8.657208
+      },
+      {
+        "frame": "403712768",
+        "repeat": true,
+        "readyMs": 10.055333
+      },
+      {
+        "frame": "354003780",
+        "repeat": false,
+        "readyMs": 8.775583
+      },
+      {
+        "frame": "354003780",
+        "repeat": true,
+        "readyMs": 11.315792
+      },
+      {
+        "frame": "390745206",
+        "repeat": false,
+        "readyMs": 8.779917
+      },
+      {
+        "frame": "390745206",
+        "repeat": true,
+        "readyMs": 11.29725
+      },
+      {
+        "frame": "427486631",
+        "repeat": false,
+        "readyMs": 11.299
+      },
+      {
+        "frame": "427486631",
+        "repeat": true,
+        "readyMs": 12.554708
+      },
+      {
+        "frame": "377777644",
+        "repeat": false,
+        "readyMs": 8.779042
+      },
+      {
+        "frame": "377777644",
+        "repeat": true,
+        "readyMs": 11.339458
+      },
+      {
+        "frame": "414519069",
+        "repeat": false,
+        "readyMs": 8.792209
+      },
+      {
+        "frame": "414519069",
+        "repeat": true,
+        "readyMs": 9.793917
+      },
+      {
+        "frame": "364810082",
+        "repeat": false,
+        "readyMs": 10.03925
+      },
+      {
+        "frame": "364810082",
+        "repeat": true,
+        "readyMs": 10.053208
+      },
+      {
+        "frame": "401551507",
+        "repeat": false,
+        "readyMs": 10.033917
+      },
+      {
+        "frame": "401551507",
+        "repeat": true,
+        "readyMs": 8.801542
+      },
+      {
+        "frame": "351842520",
+        "repeat": false,
+        "readyMs": 10.036208
+      },
+      {
+        "frame": "351842520",
+        "repeat": true,
+        "readyMs": 11.340208
+      },
+      {
+        "frame": "388583945",
+        "repeat": false,
+        "readyMs": 8.771041
+      },
+      {
+        "frame": "388583945",
+        "repeat": true,
+        "readyMs": 10.072625
+      },
+      {
+        "frame": "425325371",
+        "repeat": false,
+        "readyMs": 8.792333
+      },
+      {
+        "frame": "425325371",
+        "repeat": true,
+        "readyMs": 12.309333
+      },
+      {
+        "frame": "375616384",
+        "repeat": false,
+        "readyMs": 11.04475
+      },
+      {
+        "frame": "375616384",
+        "repeat": true,
+        "readyMs": 11.305417
+      },
+      {
+        "frame": "412357809",
+        "repeat": false,
+        "readyMs": 8.559959
+      },
+      {
+        "frame": "412357809",
+        "repeat": true,
+        "readyMs": 12.5705
+      },
+      {
+        "frame": "362648822",
+        "repeat": false,
+        "readyMs": 9.91575
+      },
+      {
+        "frame": "362648822",
+        "repeat": true,
+        "readyMs": 11.017833
+      },
+      {
+        "frame": "399390247",
+        "repeat": false,
+        "readyMs": 8.784792
+      },
+      {
+        "frame": "399390247",
+        "repeat": true,
+        "readyMs": 10.063667
+      },
+      {
+        "frame": "349681260",
+        "repeat": false,
+        "readyMs": 8.781667
+      },
+      {
+        "frame": "349681260",
+        "repeat": true,
+        "readyMs": 11.329209
+      },
+      {
+        "frame": "386422685",
+        "repeat": false,
+        "readyMs": 10.045708
+      },
+      {
+        "frame": "386422685",
+        "repeat": true,
+        "readyMs": 11.300208
+      },
+      {
+        "frame": "423164110",
+        "repeat": false,
+        "readyMs": 11.120458
+      },
+      {
+        "frame": "423164110",
+        "repeat": true,
+        "readyMs": 12.59425
+      },
+      {
+        "frame": "373455123",
+        "repeat": false,
+        "readyMs": 8.566
+      },
+      {
+        "frame": "373455123",
+        "repeat": true,
+        "readyMs": 10.072958
+      },
+      {
+        "frame": "410196548",
+        "repeat": false,
+        "readyMs": 9.885125
+      },
+      {
+        "frame": "410196548",
+        "repeat": true,
+        "readyMs": 12.420208
+      },
+      {
+        "frame": "360487561",
+        "repeat": false,
+        "readyMs": 10.023625
+      },
+      {
+        "frame": "360487561",
+        "repeat": true,
+        "readyMs": 11.334917
+      },
+      {
+        "frame": "397228987",
+        "repeat": false,
+        "readyMs": 8.735625
+      },
+      {
+        "frame": "397228987",
+        "repeat": true,
+        "readyMs": 11.2295
+      }
+    ],
+    "scope": "40 first-visit/repeat pairs; fresh engine/readers every time. Cold is a new destination, warm is its immediate repeat. OS cache is not purged; import/cache construction is separate. 1 ms polling; native UI adds up to one 30 Hz tick. No audio device."
+  },
+  "uncached": {
+    "importAndCacheMs": 5219.476417,
+    "projectSeconds": 9028.045708333333,
+    "sources": [
+      {
+        "sampleRate": 48000.0,
+        "sourceFrames": "86401152",
+        "sequentialSeek": true,
+        "diskCacheBytes": "0",
+        "sourceOffset": "96000"
+      },
+      {
+        "sampleRate": 44100.0,
+        "sourceFrames": "79382016",
+        "sequentialSeek": true,
+        "diskCacheBytes": "0",
+        "sourceOffset": "88200"
+      }
+    ],
+    "diskCacheBytes": "0",
+    "maxPCMBytes": "1048576",
+    "maxPrerollFrames": "96000",
+    "cold": {
+      "count": 40,
+      "p50Ms": 1342.442959,
+      "p95Ms": 2553.605834,
+      "maxMs": 2717.700833,
+      "targetMs": 500.0,
+      "misses": 33
+    },
+    "warm": {
+      "count": 40,
+      "p50Ms": 1341.487625,
+      "p95Ms": 2589.51425,
+      "maxMs": 2918.704625,
+      "targetMs": 150.0,
+      "misses": 38
+    },
+    "samples": [
+      {
+        "frame": "347520000",
+        "repeat": false,
+        "readyMs": 53.794625
+      },
+      {
+        "frame": "347520000",
+        "repeat": true,
+        "readyMs": 54.835416
+      },
+      {
+        "frame": "384261425",
+        "repeat": false,
+        "readyMs": 1200.713541
+      },
+      {
+        "frame": "384261425",
+        "repeat": true,
+        "readyMs": 1210.174209
+      },
+      {
+        "frame": "421002850",
+        "repeat": false,
+        "readyMs": 2354.521916
+      },
+      {
+        "frame": "421002850",
+        "repeat": true,
+        "readyMs": 2389.71475
+      },
+      {
+        "frame": "371293863",
+        "repeat": false,
+        "readyMs": 798.4545
+      },
+      {
+        "frame": "371293863",
+        "repeat": true,
+        "readyMs": 797.761459
+      },
+      {
+        "frame": "408035288",
+        "repeat": false,
+        "readyMs": 1961.579708
+      },
+      {
+        "frame": "408035288",
+        "repeat": true,
+        "readyMs": 1944.661625
+      },
+      {
+        "frame": "358326301",
+        "repeat": false,
+        "readyMs": 395.829541
+      },
+      {
+        "frame": "358326301",
+        "repeat": true,
+        "readyMs": 493.694917
+      },
+      {
+        "frame": "395067726",
+        "repeat": false,
+        "readyMs": 1637.117834
+      },
+      {
+        "frame": "395067726",
+        "repeat": true,
+        "readyMs": 1582.7415
+      },
+      {
+        "frame": "431809152",
+        "repeat": false,
+        "readyMs": 2717.700833
+      },
+      {
+        "frame": "431809152",
+        "repeat": true,
+        "readyMs": 2918.704625
+      },
+      {
+        "frame": "382100164",
+        "repeat": false,
+        "readyMs": 1151.785292
+      },
+      {
+        "frame": "382100164",
+        "repeat": true,
+        "readyMs": 1160.486042
+      },
+      {
+        "frame": "418841590",
+        "repeat": false,
+        "readyMs": 2377.906042
+      },
+      {
+        "frame": "418841590",
+        "repeat": true,
+        "readyMs": 2282.481666
+      },
+      {
+        "frame": "369132603",
+        "repeat": false,
+        "readyMs": 729.424458
+      },
+      {
+        "frame": "369132603",
+        "repeat": true,
+        "readyMs": 731.639334
+      },
+      {
+        "frame": "405874028",
+        "repeat": false,
+        "readyMs": 1915.595834
+      },
+      {
+        "frame": "405874028",
+        "repeat": true,
+        "readyMs": 1904.263833
+      },
+      {
+        "frame": "356165041",
+        "repeat": false,
+        "readyMs": 329.584667
+      },
+      {
+        "frame": "356165041",
+        "repeat": true,
+        "readyMs": 332.263166
+      },
+      {
+        "frame": "392906466",
+        "repeat": false,
+        "readyMs": 1505.785667
+      },
+      {
+        "frame": "392906466",
+        "repeat": true,
+        "readyMs": 1555.285834
+      },
+      {
+        "frame": "429647891",
+        "repeat": false,
+        "readyMs": 2642.245833
+      },
+      {
+        "frame": "429647891",
+        "repeat": true,
+        "readyMs": 2622.409542
+      },
+      {
+        "frame": "379938904",
+        "repeat": false,
+        "readyMs": 1065.512125
+      },
+      {
+        "frame": "379938904",
+        "repeat": true,
+        "readyMs": 1080.237
+      },
+      {
+        "frame": "416680329",
+        "repeat": false,
+        "readyMs": 2214.47775
+      },
+      {
+        "frame": "416680329",
+        "repeat": true,
+        "readyMs": 2279.795792
+      },
+      {
+        "frame": "366971342",
+        "repeat": false,
+        "readyMs": 664.536625
+      },
+      {
+        "frame": "366971342",
+        "repeat": true,
+        "readyMs": 661.852667
+      },
+      {
+        "frame": "403712768",
+        "repeat": false,
+        "readyMs": 1805.577334
+      },
+      {
+        "frame": "403712768",
+        "repeat": true,
+        "readyMs": 1822.985291
+      },
+      {
+        "frame": "354003780",
+        "repeat": false,
+        "readyMs": 260.425875
+      },
+      {
+        "frame": "354003780",
+        "repeat": true,
+        "readyMs": 258.372
+      },
+      {
+        "frame": "390745206",
+        "repeat": false,
+        "readyMs": 1446.123917
+      },
+      {
+        "frame": "390745206",
+        "repeat": true,
+        "readyMs": 1494.729917
+      },
+      {
+        "frame": "427486631",
+        "repeat": false,
+        "readyMs": 2553.605834
+      },
+      {
+        "frame": "427486631",
+        "repeat": true,
+        "readyMs": 2559.147
+      },
+      {
+        "frame": "377777644",
+        "repeat": false,
+        "readyMs": 999.424083
+      },
+      {
+        "frame": "377777644",
+        "repeat": true,
+        "readyMs": 999.090625
+      },
+      {
+        "frame": "414519069",
+        "repeat": false,
+        "readyMs": 2147.122792
+      },
+      {
+        "frame": "414519069",
+        "repeat": true,
+        "readyMs": 2195.64825
+      },
+      {
+        "frame": "364810082",
+        "repeat": false,
+        "readyMs": 595.492875
+      },
+      {
+        "frame": "364810082",
+        "repeat": true,
+        "readyMs": 637.151792
+      },
+      {
+        "frame": "401551507",
+        "repeat": false,
+        "readyMs": 1784.05125
+      },
+      {
+        "frame": "401551507",
+        "repeat": true,
+        "readyMs": 1731.667083
+      },
+      {
+        "frame": "351842520",
+        "repeat": false,
+        "readyMs": 192.4305
+      },
+      {
+        "frame": "351842520",
+        "repeat": true,
+        "readyMs": 193.094833
+      },
+      {
+        "frame": "388583945",
+        "repeat": false,
+        "readyMs": 1342.442959
+      },
+      {
+        "frame": "388583945",
+        "repeat": true,
+        "readyMs": 1341.487625
+      },
+      {
+        "frame": "425325371",
+        "repeat": false,
+        "readyMs": 2524.652375
+      },
+      {
+        "frame": "425325371",
+        "repeat": true,
+        "readyMs": 2589.51425
+      },
+      {
+        "frame": "375616384",
+        "repeat": false,
+        "readyMs": 1004.195083
+      },
+      {
+        "frame": "375616384",
+        "repeat": true,
+        "readyMs": 952.50425
+      },
+      {
+        "frame": "412357809",
+        "repeat": false,
+        "readyMs": 2121.038583
+      },
+      {
+        "frame": "412357809",
+        "repeat": true,
+        "readyMs": 2243.935208
+      },
+      {
+        "frame": "362648822",
+        "repeat": false,
+        "readyMs": 556.007084
+      },
+      {
+        "frame": "362648822",
+        "repeat": true,
+        "readyMs": 548.782417
+      },
+      {
+        "frame": "399390247",
+        "repeat": false,
+        "readyMs": 1751.533083
+      },
+      {
+        "frame": "399390247",
+        "repeat": true,
+        "readyMs": 1692.603666
+      },
+      {
+        "frame": "349681260",
+        "repeat": false,
+        "readyMs": 134.33475
+      },
+      {
+        "frame": "349681260",
+        "repeat": true,
+        "readyMs": 140.090625
+      },
+      {
+        "frame": "386422685",
+        "repeat": false,
+        "readyMs": 1299.082542
+      },
+      {
+        "frame": "386422685",
+        "repeat": true,
+        "readyMs": 1261.839958
+      },
+      {
+        "frame": "423164110",
+        "repeat": false,
+        "readyMs": 2430.718375
+      },
+      {
+        "frame": "423164110",
+        "repeat": true,
+        "readyMs": 2412.537334
+      },
+      {
+        "frame": "373455123",
+        "repeat": false,
+        "readyMs": 888.912125
+      },
+      {
+        "frame": "373455123",
+        "repeat": true,
+        "readyMs": 862.905209
+      },
+      {
+        "frame": "410196548",
+        "repeat": false,
+        "readyMs": 2016.779667
+      },
+      {
+        "frame": "410196548",
+        "repeat": true,
+        "readyMs": 1984.959417
+      },
+      {
+        "frame": "360487561",
+        "repeat": false,
+        "readyMs": 460.440417
+      },
+      {
+        "frame": "360487561",
+        "repeat": true,
+        "readyMs": 456.501292
+      },
+      {
+        "frame": "397228987",
+        "repeat": false,
+        "readyMs": 1608.944333
+      },
+      {
+        "frame": "397228987",
+        "repeat": true,
+        "readyMs": 1583.992792
+      }
+    ],
+    "scope": "40 first-visit/repeat pairs; fresh engine/readers every time. Cold is a new destination, warm is its immediate repeat. OS cache is not purged; import/cache construction is separate. 1 ms polling; native UI adds up to one 30 Hz tick. No audio device."
+  },
+  "alignment": {
+    "cbr": {
+      "format": "MP3 file",
+      "sampleRate": 48000.0,
+      "sourceFrames": "86401152",
+      "durationSeconds": 1800.024,
+      "peakStride": 1024,
+      "sequentialMaxError": 0.0,
+      "seekMaxError": 0.0,
+      "seekWindows": 14,
+      "pcmCacheBytes": 524288,
+      "diskCacheBytes": "691209216",
+      "sequentialSeek": false
+    },
+    "vbr": {
+      "format": "MP3 file",
+      "sampleRate": 44100.0,
+      "sourceFrames": "79382016",
+      "durationSeconds": 1800.0457083333333,
+      "peakStride": 1024,
+      "sequentialMaxError": 0.0,
+      "seekMaxError": 0.0,
+      "seekWindows": 14,
+      "pcmCacheBytes": 524288,
+      "diskCacheBytes": "635056128",
+      "sequentialSeek": false
+    }
+  }
+}

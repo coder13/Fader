@@ -293,7 +293,7 @@ GitHub: [#38](https://github.com/coder13/Fader/issues/38). Labels: `phase:poc`, 
 
 GitHub: [#39](https://github.com/coder13/Fader/issues/39). Labels: `phase:poc`, `type:feature`, `area:audio`, `priority:next`.
 
-**Current evidence:** Exact seeking currently reconstructs filter history on a worker and can take a long time; preparation is not cancellable.
+**Current evidence:** [Latest-request preparation, bounded filter preroll and session MP3 caches are implemented and locally measured](experiments/2026-11-04-cancellable-seeking.md). Cached fixtures meet the declared timing targets; uncached long MP3 misses them. Exact-source CI and native UI inspection remain pending.
 
 **Scope:** Choose bounded preroll or cached DSP checkpoints and generation-aware decode scheduling. Publish a prepared state only for the latest requested seek.
 
