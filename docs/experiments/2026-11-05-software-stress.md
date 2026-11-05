@@ -5,7 +5,7 @@ They do not complete [#40](https://github.com/coder13/Fader/issues/40) or the ho
 The first hour attempt used source `6e25222c8e615e0e1b406d3075032758b1e6e4b6`.
 It stopped after about five timed minutes when macOS CI exposed a harness portability error.
 That partial attempt does not count toward the hour gate.
-A corrected full run remains pending.
+The corrected hour run uses source `566b0ca981f86d33c873a9b63a5b0919068ae7c2` and remains in progress.
 No audio or MIDI device opens during these runs.
 
 ## Reproducible workload
@@ -72,7 +72,12 @@ Clean Linux CI passed all five suites at source `6e25222` in [run 42001694441](h
 The macOS build failed because its older libc++ lacks `std::jthread`.
 The harness now uses `std::thread` with explicit stop-and-join ownership for both normal and exceptional cleanup.
 The correction keeps the workload and scheduling targets unchanged.
-Its clean CI result remains pending.
+Corrected source `566b0ca981f86d33c873a9b63a5b0919068ae7c2` passes clean [run 42003392676](https://github.com/coder13/Fader/actions/runs/42003392676).
+Linux passes five suites and macOS passes seven suites, including the stress smoke.
+Downloaded artifacts match the exact source, pinned JUCE revision, disabled UI fixtures and zero failed or skipped JUnit cases.
+The macOS job also passes app signature verification.
+A ten-second trial of this corrected build retains all 699 controls with zero source gaps and virtual deadline misses.
+Its callback p99.9 is 68.292 µs and its maximum is 94.750 µs.
 
 ## Configuration and remaining evidence
 
