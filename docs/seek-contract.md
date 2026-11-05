@@ -1,6 +1,6 @@
 # Seek preparation: qualification contract
 
-Tracking: [DJ-039](https://github.com/coder13/Fader/issues/39). Status: implementation/qualification in progress. Targets below were set before measurement. See the [qualification report](experiments/2026-11-04-cancellable-seeking.md) for measured results and outstanding native inspection.
+Tracking: [DJ-039](https://github.com/coder13/Fader/issues/39). Status: software qualification complete within the declared measured and fallback scopes. Targets below were set before measurement. See the [qualification report](experiments/2026-11-04-cancellable-seeking.md) for measured results, and the [native report](experiments/2026-11-05-native-seek-export.md) for completed UI observations.
 
 ## Targets and measurement scope
 

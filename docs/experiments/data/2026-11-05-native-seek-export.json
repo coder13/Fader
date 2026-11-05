@@ -1,0 +1,126 @@
+{
+  "sourceRevision": "7e089d03fa3241d151e76bee0db11b90d0ee12a8",
+  "scope": "Native macOS UI with synthetic seek fixture. No audio or MIDI device opening. These are functional observations, not performance qualification.",
+  "stablePreview": {
+    "path": "/private/tmp/Fader Dark Preview.app",
+    "bundleId": "org.fader.poc.dark-preview",
+    "signedExecutableSha256": "2bff804b13f8633d9740bf4035ee70a967a5eaa35d61f58ac490baac080250d0"
+  },
+  "seek": {
+    "preparingAndCancelVisible": true,
+    "cancellationVerifiedBeforeReady": true,
+    "cancelStatus": "Playback preparation cancelled.",
+    "stayedCancelledAfterDelay": true,
+    "supersedingRequestedSeconds": [
+      0,
+      10,
+      25
+    ],
+    "readyAtLatestSeconds": 25,
+    "readyStatus": "Synthetic seek ready at the latest position; no audio device is open.",
+    "replacementTitle": "Replacement",
+    "replacementPositionSeconds": 0,
+    "replacementMode": "EDIT",
+    "replacementStaysStoppedAfterPriorWork": true,
+    "editReplacement": true,
+    "closeDuringPreparation": true,
+    "editDuringPreparing": true,
+    "editCancelledPreparation": true,
+    "editResultMode": "EDIT",
+    "editVerification": {
+      "startFrames": 240000,
+      "row": 2,
+      "lengthFrames": 576000,
+      "originalLengthFrames": 576000,
+      "clipIdPreserved": true,
+      "assetIdPreserved": true,
+      "onlyStartAndRowChanged": true
+    },
+    "closeObservedState": "Edited replacement 0:00.00 Preparing / Cancel",
+    "closeRequiredTermination": false,
+    "openDialogInvokedDuringPreparing": true,
+    "sourceReplacementScope": "Open was invoked from Preparing. The former request can finish while the native picker is open; the replacement loads in EDIT at zero and remains stopped. Late ignored-cancellation publication is covered separately by preparation tests.",
+    "originalPreviewProcessExited": true
+  },
+  "export": {
+    "fixtureHours": 1,
+    "oversizedHandwrittenFixtureRejected": true,
+    "priorProjectPreservedOnRejectedOpen": true,
+    "correctedManifestBytes": 7438509,
+    "fixtureLoaded": true,
+    "progressVisible": true,
+    "cancelVisible": true,
+    "cancelResult": "Export cancelled",
+    "overwriteSheetAwaitingManualCancel": false,
+    "progressPercentagesObserved": [
+      1,
+      28
+    ],
+    "returnedMode": "EDIT",
+    "newDestinationAbsent": true,
+    "priorWavUnchanged": true,
+    "overwritePromptManuallyCancelled": true,
+    "cancelledDestination": "Export cancellation new.wav",
+    "preservedPriorDestination": "Export cancel.wav",
+    "priorWavWasNotSelectedForRunningExport": true,
+    "existingTargetCancellationNativeQualified": false,
+    "existingTargetRetentionCoveredByBackend": true,
+    "postCancelProjectComparison": {
+      "allNonPathFieldsIdentical": true,
+      "allJsonTypesMatch": true,
+      "float64ValuesChecked": 150040,
+      "compiledPoints": 150032,
+      "sourceBytes": 7438509,
+      "savedBytes": 7438508,
+      "sourceSha256": "68b881f5526eae1aef6275379a6b6e58e69d89767369c46256fe25ade2bb9b8e",
+      "savedSha256": "6057bee3f66b57b13a2a56304f966d727c168c3c47a23d001a51f8d6a147c535",
+      "sameResolvedSyntheticSources": true
+    }
+  },
+  "recoveryPreservedAndRestored": true,
+  "build": {
+    "project": "Fader",
+    "version": "0.2.0",
+    "sourceRevision": "source-archive",
+    "cmakeVersion": "4.4.4",
+    "generator": "Unix Makefiles",
+    "system": "Darwin",
+    "systemVersion": "25.6.0",
+    "architecture": "arm64",
+    "compiler": "AppleClang",
+    "compilerVersion": "21.0.0.21000334",
+    "cxxStandard": "20",
+    "buildType": "Release",
+    "nativeApp": "ON",
+    "uiFixtures": "ON",
+    "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+  },
+  "nativeUiFixturesEnabled": true,
+  "physicalDeviceScope": "No audio/MIDI device opened by these synthetic functional checks. Normal recovery reopen does not start playback.",
+  "screenshots": "Native synthetic screenshots shared in the development chat; screenshot image files are not included in this aggregate.",
+  "limits": [
+    "The delayed preparation is a five-second test factory, not a seek-latency measurement.",
+    "Native presentation timing and native GUI process memory are not qualified by this observation.",
+    "The existing-target overwrite sheet required one owner Cancel click; the running cancellation used a new destination.",
+    "Backend error injection and prior-output retention remain separate evidence."
+  ],
+  "matchingMainRevision": "0d33f6d0a676a96372864e250c3e6920ae25016d",
+  "matchingMainSources": [
+    "src/Main.cpp",
+    "src/Arrangement.cpp",
+    "src/PlaybackPreparation.cpp",
+    "src/OfflineRender.cpp",
+    "src/WavExport.cpp"
+  ],
+  "inputRoutingSample": {
+    "requestedSeconds": 1,
+    "requestedIntervalMilliseconds": 10,
+    "mainThreadSamples": 84,
+    "eventLoopMachWaitSamples": 76,
+    "otherRunloopAndPaintingSamples": 8,
+    "physicalFootprintReported": "50.2M",
+    "peakPhysicalFootprintReported": "166.5M",
+    "metric": "Apple sample physical footprint text; not getrusage peak RSS",
+    "performanceQualified": false
+  }
+}
