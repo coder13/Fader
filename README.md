@@ -8,6 +8,7 @@ An open-source DJ application for preparing, performing, editing, and exporting 
 
 | Document | Purpose |
 | --- | --- |
+| [Active work order](docs/work-order.md) | Dependency-based POC and product priorities, including the new issues |
 | [Build and CI](docs/build-and-ci.md) | Clean-checkout presets, pinned dependencies and test evidence |
 | [Mixer contract](docs/mixer-contract.md) | Source-rate, gain, filter, clipping and master/cue behavior |
 | [Roadmap completeness review](docs/research/roadmap-completeness-review.md) | Feature coverage, proposed backlog gaps and evidence needed for a polished release |
