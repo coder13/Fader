@@ -13,6 +13,8 @@ std::span<const Point> visiblePointHandles(const Curve &, float clipX, double pi
 // the selected curve's opaque colour. Overlapping circles use a filled union.
 void paintPointHandles(juce::Graphics &, std::span<const Point>, float clipX, double pixelsPerSecond,
                        float bottom, float height);
+// Use the native outline clip for Mac curves while preserving stroke settings.
+void paintAutomationCurve(juce::Graphics &, const juce::Path &, juce::Colour, float thickness);
 } // namespace detail
 class Arrangement final : public juce::Component {
   public:

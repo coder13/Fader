@@ -22,13 +22,13 @@ void check(bool pass, const char *message) {
 }
 int main() {
     juce::ScopedJuceInitialiser_GUI juce;
-    testArrangement();
-    testAudioSetup();
-    testAudioPlayback();
     const auto dir = juce::File::getSpecialLocation(juce::File::tempDirectory)
                          .getNonexistentChildFile("fader-test", {}, false);
     dir.createDirectory();
     try {
+        testArrangement();
+        testAudioSetup();
+        testAudioPlayback();
         testPortability();
         testSourceRates();
         testStreamMedia();

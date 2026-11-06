@@ -6,6 +6,7 @@ Physical controller and acoustic qualification remain open.
 The [128/256-frame stress hours](2026-11-05-software-stress-followup.md) and [completed CPU diagnostic](2026-11-05-boundary-hour.md) still fail their timing gates. The [completed activity experiment](2026-11-05-playback-activity-hour.md) records zero virtual misses but still fails the painter-start gate.
 The [full-size short CPU diagnostics](2026-11-05-full-timeline-painter-diagnostic.md) isolate native drawing paths without reducing the project or claiming an hour pass.
 The [bounded handle drawing candidate](2026-11-05-handle-batching.md) preserves point geometry and requires new timing evidence.
+The [native curve clip candidate](2026-11-05-native-curve-clip.md) keeps every curve vertex and tests stroke geometry at Retina scale.
 Add a report for each decision spike and qualification run, using its actual date and a descriptive filename.
 
 Copy this outline and replace the prompts with evidence. A failed experiment is a useful result when it identifies the next decision.

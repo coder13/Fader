@@ -2,10 +2,12 @@
 #include "Arrangement.h"
 #include "Theme.h"
 #include <cmath>
+#include <iostream>
 #include <stdexcept>
+#include <vector>
 using namespace fader;
 namespace {
-void require(bool value, const char *message) {
+void require(bool value, const std::string &message) {
     if (!value)
         throw std::runtime_error(message);
 }
@@ -32,14 +34,16 @@ juce::MouseEvent event(juce::Component *canvas, juce::Point<float> point, juce::
 } // namespace
 void testArrangement() {
     // Compare the actual production helper with the original individual-circle
-    // drawing. Every solid interior pixel must survive; neither renderer may
+    // drawing. Analytically solid circle interiors must survive; neither renderer may
     // put colour beyond a one-pixel antialiasing fringe of the other. This
-    // includes dense overlaps, fractional positions and both sides of each
+    // excludes accumulated opacity at overlapping edges from the interior oracle.
+    // It includes dense overlaps, fractional positions and both sides of each
     // 64-handle boundary, rather than an assertion about a batching counter.
     const juce::SoftwareImageType software;
     const juce::NativeImageType native;
     for (const juce::ImageType *imageType :
          {static_cast<const juce::ImageType *>(&software), static_cast<const juce::ImageType *>(&native)}) {
+        std::cout << "Handle image tests: renderer=" << imageType->getTypeID() << std::endl;
         for (double scale : {2.0, 10.0, 100.0})
             for (float clipX : {-6.25f, .125f, 37.75f}) {
                 Curve curve;
@@ -65,12 +69,29 @@ void testArrangement() {
                 require(curve.points == original, "painting changed stored automation");
                 const juce::Image::BitmapData actualPixels(actual, juce::Image::BitmapData::readOnly);
                 const juce::Image::BitmapData expectedPixels(expected, juce::Image::BitmapData::readOnly);
+                std::vector<bool> solid(1700 * 100);
+                for (const auto &point : curve.points) {
+                    const float cx = clipX + float(double(point.frame) / projectRate * scale),
+                                cy = 90 - point.value * 70;
+                    for (int y = int(std::floor(cy - 3)); y <= int(std::ceil(cy + 3)); ++y)
+                        for (int x = int(std::floor(cx - 3)); x <= int(std::ceil(cx + 3)); ++x)
+                            if (juce::isPositiveAndBelow(x, 1700) && juce::isPositiveAndBelow(y, 100) &&
+                                std::hypot(x + .5f - cx, y + .5f - cy) <= 3.f)
+                                solid[std::size_t(y * 1700 + x)] = true;
+                }
                 for (int y = 1; y < 99; ++y)
                     for (int x = 1; x < 1699; ++x) {
                         const auto a = actualPixels.getPixelColour(x, y).getAlpha();
                         const auto e = expectedPixels.getPixelColour(x, y).getAlpha();
-                        if (e == 255) {
-                            require(a >= 250, "batch drawing lost a solid handle interior");
+                        if (solid[std::size_t(y * 1700 + x)]) {
+                            if (a < 250)
+                                throw std::runtime_error(
+                                    "batch drawing lost a solid handle interior: type=" +
+                                    std::to_string(imageType->getTypeID()) +
+                                    ", scale=" + std::to_string(scale) + ", clipX=" + std::to_string(clipX) +
+                                    ", x/y=" + std::to_string(x) + "/" + std::to_string(y) +
+                                    ", alpha actual/reference=" + std::to_string(a) + "/" +
+                                    std::to_string(e));
                             require(actualPixels.getPixelColour(x, y).getRed() >= 220,
                                     "batch drawing changed the handle colour");
                         }
@@ -89,6 +110,119 @@ void testArrangement() {
                     }
             }
     }
+    // A native solid stroke and its outline clip rasterize sharp miter tips
+    // differently. Use independent line-distance/miter geometry, rather than
+    // making either rasterizer's edge pixels the definition of correctness.
+    // Every sampled vertex must retain coverage, solid interiors must survive,
+    // and the clip must apply the requested opacity once.
+    for (const juce::ImageType *imageType :
+         {static_cast<const juce::ImageType *>(&software), static_cast<const juce::ImageType *>(&native)})
+        for (float deviceScale : {1.f, 2.f})
+            for (float width : {1.4f, 2.2f})
+                for (float opacity : {.65f, 1.f})
+                    for (int shape = 0; shape < 3; ++shape) {
+                        std::vector<juce::Point<float>> vertices;
+                        juce::Path path;
+                        for (int x = 0; x < 1100; ++x) {
+                            const float y =
+                                50.25f + (shape == 0   ? 0.f
+                                          : shape == 1 ? 25.f * std::sin(float(x) * .04f)
+                                                       : float(x % 10 < 5 ? x % 5 : 5 - x % 5) * 4.f);
+                            vertices.emplace_back(float(x) + .125f, y);
+                            if (x == 0)
+                                path.startNewSubPath(vertices.back());
+                            else
+                                path.lineTo(vertices.back());
+                        }
+                        const auto original = path;
+                        const int imageWidth = int(1100 * deviceScale), imageHeight = int(110 * deviceScale);
+                        juce::Image expected(juce::Image::ARGB, imageWidth, imageHeight, true, *imageType);
+                        juce::Image actual(juce::Image::ARGB, imageWidth, imageHeight, true, *imageType);
+                        {
+                            juce::Graphics g(expected);
+                            g.addTransform(juce::AffineTransform::scale(deviceScale));
+                            g.setColour(ui::accent.withAlpha(opacity));
+                            g.strokePath(path, juce::PathStrokeType(width));
+                        }
+                        {
+                            juce::Graphics g(actual);
+                            g.addTransform(juce::AffineTransform::scale(deviceScale));
+                            g.setColour(ui::mint);
+                            detail::paintAutomationCurve(g, path, ui::accent.withAlpha(opacity), width);
+                            // State restoration is part of the production contract.
+                            g.fillRect(1096, 1, 2, 2);
+                        }
+                        require(path == original, "curve drawing changed its sampled vertices");
+                        require(actual.getPixelAt(int(1096 * deviceScale), int(deviceScale)) == ui::mint,
+                                "curve drawing leaked its colour state");
+                        std::vector<bool> allowed(std::size_t(imageWidth * imageHeight));
+                        const float half = width * .5f, fringe = .8f / deviceScale;
+                        auto mark = [&](juce::Rectangle<float> area, auto contains) {
+                            const auto bounds = area.transformedBy(juce::AffineTransform::scale(deviceScale))
+                                                    .getSmallestIntegerContainer()
+                                                    .getIntersection({0, 0, imageWidth, imageHeight});
+                            for (int y = bounds.getY(); y < bounds.getBottom(); ++y)
+                                for (int x = bounds.getX(); x < bounds.getRight(); ++x)
+                                    if (contains(juce::Point<float>{(x + .5f) / deviceScale,
+                                                                    (y + .5f) / deviceScale}))
+                                        allowed[std::size_t(y * imageWidth + x)] = true;
+                        };
+                        for (std::size_t i = 1; i < vertices.size(); ++i) {
+                            const auto a = vertices[i - 1], b = vertices[i], d = b - a;
+                            const float radius = half + fringe;
+                            mark(juce::Rectangle<float>::leftTopRightBottom(
+                                     std::min(a.x, b.x) - radius, std::min(a.y, b.y) - radius,
+                                     std::max(a.x, b.x) + radius, std::max(a.y, b.y) + radius),
+                                 [&](juce::Point<float> p) {
+                                     const auto v = p - a;
+                                     const auto t = std::clamp(
+                                         (v.x * d.x + v.y * d.y) / (d.x * d.x + d.y * d.y), 0.f, 1.f);
+                                     return p.getDistanceFrom(a + d * t) <= radius;
+                                 });
+                            if (i + 1 < vertices.size()) {
+                                const auto next = vertices[i + 1] - b;
+                                const float dot =
+                                    std::clamp((d.x * next.x + d.y * next.y) /
+                                                   (d.getDistanceFromOrigin() * next.getDistanceFromOrigin()),
+                                               -1.f, 1.f);
+                                const float factor = std::sqrt(2.f / std::max(.000001f, 1.f + dot));
+                                // Native Quartz's limit is ten; all tested renderers
+                                // stay within that bound, including beveled joins.
+                                const float join = half * (factor <= 10.f ? factor : 1.f) + fringe;
+                                mark({b.x - join, b.y - join, join * 2, join * 2},
+                                     [&](juce::Point<float> p) { return p.getDistanceFrom(b) <= join; });
+                            }
+                        }
+                        const juce::Image::BitmapData a(actual, juce::Image::BitmapData::readOnly),
+                            e(expected, juce::Image::BitmapData::readOnly);
+                        for (int y = 2; y < imageHeight - 2; ++y)
+                            for (int x = 2; x < imageWidth - 2; ++x) {
+                                if (y <= 3 * deviceScale && x >= 1095 * deviceScale)
+                                    continue;
+                                const auto aa = a.getPixelColour(x, y).getAlpha(),
+                                           ea = e.getPixelColour(x, y).getAlpha();
+                                bool interior = ea >= 250;
+                                for (auto d : {juce::Point<int>{-1, 0}, {1, 0}, {0, -1}, {0, 1}})
+                                    interior &= e.getPixelColour(x + d.x, y + d.y).getAlpha() >= 250;
+                                require(!interior || aa >= 245, "native curve clip lost a solid interior");
+                                require(aa <= int(std::lround(opacity * 255)),
+                                        "curve clip accumulated opacity");
+                                require(aa <= 16 || allowed[std::size_t(y * imageWidth + x)],
+                                        "curve clip exceeded its geometric stroke/miter envelope");
+                            }
+                        for (auto p : vertices) {
+                            const int cx = int(std::floor(p.x * deviceScale)),
+                                      cy = int(std::floor(p.y * deviceScale));
+                            int maximumAlpha = 0;
+                            for (int dy = -1; dy <= 1; ++dy)
+                                for (int dx = -1; dx <= 1; ++dx)
+                                    if (juce::isPositiveAndBelow(cx + dx, actual.getWidth()) &&
+                                        juce::isPositiveAndBelow(cy + dy, actual.getHeight()))
+                                        maximumAlpha = std::max(
+                                            maximumAlpha, int(a.getPixelColour(cx + dx, cy + dy).getAlpha()));
+                            require(maximumAlpha >= int(opacity * 100), "curve clip lost a sampled vertex");
+                        }
+                    }
     // Geometric reference: every circle that can touch the viewport must be in
     // the returned slice, including edges and far-timeline float rounding. The
     // slice size must depend on visible time, rather than total point count.

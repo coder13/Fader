@@ -50,6 +50,19 @@ void detail::paintPointHandles(juce::Graphics &g, std::span<const Point> points,
     if (count != 0)
         g.fillPath(handles);
 }
+void detail::paintAutomationCurve(juce::Graphics &g, const juce::Path &path, juce::Colour colour,
+                                  float thickness) {
+    const juce::Graphics::ScopedSaveState saved(g);
+    g.setColour(colour);
+#if JUCE_MAC
+    // A constant gradient keeps Quartz's native stroke geometry, while JUCE
+    // routes it through a single stroked outline clip before the colour fill.
+    if (g.getInternalContext().getPreferredImageTypeForTemporaryImages()->getTypeID() ==
+        juce::NativeImageType{}.getTypeID())
+        g.setGradientFill(juce::ColourGradient(colour, 0, 0, colour, 0, 1, false));
+#endif
+    g.strokePath(path, juce::PathStrokeType(thickness));
+}
 Arrangement::Arrangement() : canvas(*this) {
     addAndMakeVisible(viewport);
     viewport.setViewedComponent(&canvas, false);
@@ -204,7 +217,9 @@ void Arrangement::Canvas::paint(juce::Graphics &g) {
                     path.lineTo(float(px), y);
             }
             g.setColour(curveColour(owner.parameter).withAlpha(selected ? 1.0f : 0.65f));
-            g.strokePath(path, juce::PathStrokeType(selected ? 2.2f : 1.4f));
+            detail::paintAutomationCurve(g, path,
+                                         curveColour(owner.parameter).withAlpha(selected ? 1.0f : 0.65f),
+                                         selected ? 2.2f : 1.4f);
             if (selected)
                 detail::paintPointHandles(g,
                                           detail::visiblePointHandles(curve, b.getX(), owner.pixelsPerSecond,
