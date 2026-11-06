@@ -1,0 +1,573 @@
+{
+  "sourceRevision": "e38e390ca3b673ba057a4e84d988679bc842256e",
+  "workflowRun": 42136827921,
+  "scope": "Functional CI and serialized observation checks. No sustained performance or physical-device qualification.",
+  "platforms": {
+    "Linux": {
+      "buildInfo": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "e38e390ca3b673ba057a4e84d988679bc842256e",
+        "cmakeVersion": "3.31.6",
+        "generator": "Unix Makefiles",
+        "system": "Linux",
+        "systemVersion": "7.0.0-1017-azure",
+        "architecture": "x86_64",
+        "compiler": "GNU",
+        "compilerVersion": "13.3.0",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "OFF",
+        "uiFixtures": "OFF",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "tests": 5,
+      "failures": 0,
+      "helperTests": 19
+    },
+    "Mac": {
+      "buildInfo": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "e38e390ca3b673ba057a4e84d988679bc842256e",
+        "cmakeVersion": "4.4.4",
+        "generator": "Unix Makefiles",
+        "system": "Darwin",
+        "systemVersion": "24.6.0",
+        "architecture": "arm64",
+        "compiler": "AppleClang",
+        "compilerVersion": "17.0.0.17000013",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "ON",
+        "uiFixtures": "OFF",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "tests": 7,
+      "failures": 0,
+      "helperTests": 19,
+      "observations": {
+        "timedSmoke": {
+          "scope": "Serialized observations only. Maxima can repeat tails. Passing these checks does not qualify performance, CPU precision or source/binary identity.",
+          "hostRowsChecked": 259,
+          "paintRowsChecked": 57,
+          "cpuRowsChecked": 0,
+          "cpuDeltasAboveEnclosingWall": 0,
+          "zeroCpuDeltas": 0,
+          "largestRetainedQueryBracketNanoseconds": 0,
+          "workloadDeclaration": {
+            "requestedSeconds": 2,
+            "diagnosticTimelineSeconds": 0,
+            "projectFrames": 96000,
+            "storedAutomationPoints": 54
+          },
+          "populations": {
+            "blocksEndingAt4096FrameBoundary": {
+              "samples": 23,
+              "maximumInternalCallbackNanoseconds": 49875
+            },
+            "otherBlocks": {
+              "samples": 727,
+              "maximumInternalCallbackNanoseconds": 178083
+            }
+          },
+          "arithmeticChecksPassed": true
+        },
+        "cpuDiagnosticSmoke": {
+          "scope": "Serialized observations only. Maxima can repeat tails. Passing these checks does not qualify performance, CPU precision or source/binary identity.",
+          "hostRowsChecked": 260,
+          "paintRowsChecked": 49,
+          "cpuRowsChecked": 309,
+          "cpuDeltasAboveEnclosingWall": 0,
+          "zeroCpuDeltas": 0,
+          "largestRetainedQueryBracketNanoseconds": 18417,
+          "workloadDeclaration": {
+            "requestedSeconds": 2,
+            "diagnosticTimelineSeconds": 0,
+            "projectFrames": 96000,
+            "storedAutomationPoints": 54
+          },
+          "threadPolicySnapshots": {
+            "checked": 5,
+            "supported": 5,
+            "reportedApiErrors": 0,
+            "scope": "Sampled requested QoS/policy only; not continuous effective scheduling."
+          },
+          "cpuClock": {
+            "name": "clock_gettime(CLOCK_THREAD_CPUTIME_ID); user+system thread CPU",
+            "unitNanoseconds": 1,
+            "reportedResolutionNanoseconds": 42,
+            "resolutionError": 0
+          },
+          "populations": {
+            "blocksEndingAt4096FrameBoundary": {
+              "samples": 23,
+              "maximumInternalCallbackNanoseconds": 76208
+            },
+            "otherBlocks": {
+              "samples": 727,
+              "maximumInternalCallbackNanoseconds": 1614708
+            }
+          },
+          "arithmeticChecksPassed": true
+        },
+        "fullTimelineDiagnosticSmoke": {
+          "scope": "Serialized observations only. Maxima can repeat tails. Passing these checks does not qualify performance, CPU precision or source/binary identity.",
+          "hostRowsChecked": 260,
+          "paintRowsChecked": 61,
+          "cpuRowsChecked": 321,
+          "cpuDeltasAboveEnclosingWall": 0,
+          "zeroCpuDeltas": 0,
+          "largestRetainedQueryBracketNanoseconds": 2438750,
+          "workloadDeclaration": {
+            "requestedSeconds": 2,
+            "diagnosticTimelineSeconds": 4,
+            "projectFrames": 192000,
+            "storedAutomationPoints": 102
+          },
+          "threadPolicySnapshots": {
+            "checked": 5,
+            "supported": 5,
+            "reportedApiErrors": 0,
+            "scope": "Sampled requested QoS/policy only; not continuous effective scheduling."
+          },
+          "cpuClock": {
+            "name": "clock_gettime(CLOCK_THREAD_CPUTIME_ID); user+system thread CPU",
+            "unitNanoseconds": 1,
+            "reportedResolutionNanoseconds": 42,
+            "resolutionError": 0
+          },
+          "populations": {
+            "blocksEndingAt4096FrameBoundary": {
+              "samples": 23,
+              "maximumInternalCallbackNanoseconds": 38667
+            },
+            "otherBlocks": {
+              "samples": 727,
+              "maximumInternalCallbackNanoseconds": 1136250
+            }
+          },
+          "arithmeticChecksPassed": true
+        }
+      },
+      "driver": {
+        "metadata": {
+          "qualifiedSourceRevision": "e38e390ca3b673ba057a4e84d988679bc842256e",
+          "sourceTreeSha256": "4ccca7d55e4668ba19497acc5c9e31f415e8305d4160c3f7d23f2297ea3bb6a4",
+          "sourceVerification": "Every tracked file byte-compared between the clean checkout and build source before execution",
+          "probeSha256": "eb750127ea68fe0225495866d7a8b1b4985699779046467a34ece0574a35065f",
+          "buildInfo": {
+            "project": "Fader",
+            "version": "0.2.0",
+            "sourceRevision": "e38e390ca3b673ba057a4e84d988679bc842256e",
+            "cmakeVersion": "4.4.4",
+            "generator": "Unix Makefiles",
+            "system": "Darwin",
+            "systemVersion": "24.6.0",
+            "architecture": "arm64",
+            "compiler": "AppleClang",
+            "compilerVersion": "17.0.0.17000013",
+            "cxxStandard": "20",
+            "buildType": "Release",
+            "nativeApp": "ON",
+            "uiFixtures": "OFF",
+            "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+          },
+          "os": "macOS-15.8.2-arm64-arm-64bit-Mach-O",
+          "machine": "arm64",
+          "python": "3.15.2",
+          "startedUtc": "2026-11-06T00:35:48.941840+00:00",
+          "fixtures": {
+            "sampleRate": 48000,
+            "sourceSeconds": 4,
+            "sources": [
+              {
+                "file": "A.wav",
+                "sha256": "4a01d78bbe4ff13d9351c0d1d709e947e5337f73cb67a90769c6416bb3299aee",
+                "fileBytes": 768044
+              },
+              {
+                "file": "B.wav",
+                "sha256": "a37efebf4bf311de9b0d069e5bd3ed6768415e22ac44edd1345f48f263bee515",
+                "fileBytes": 768044
+              }
+            ]
+          },
+          "seconds": 2,
+          "blockFrames": 128,
+          "scheduler": "normal",
+          "cpuDiagnostics": false,
+          "diagnosticTimelineSeconds": 0,
+          "scope": "Software sink and offscreen production painter. No audio/MIDI device or native UI interaction.",
+          "preservedProbe": {
+            "file": "fader_probe",
+            "bytes": 13507576,
+            "sha256": "eb750127ea68fe0225495866d7a8b1b4985699779046467a34ece0574a35065f"
+          },
+          "faultsStartedUtc": "2026-11-06T00:35:48.964028+00:00",
+          "faultsExitCode": 0,
+          "faultsFinishedUtc": "2026-11-06T00:35:49.320236+00:00",
+          "preservedFaultFiles": [
+            {
+              "file": "input-overflow-incomplete-prefix.faderset",
+              "bytes": 1534,
+              "sha256": "7fb7e2d97b0573419c240cf4b042b4d1275d57de36a26b0d9af8a74b9519a3de"
+            },
+            {
+              "file": "capture-overflow-incomplete-prefix.faderset",
+              "bytes": 1658,
+              "sha256": "11c98740403b4ad1fb3f36430428be2f8d8e4ad454aefb6b5680e746c1f84e8b"
+            },
+            {
+              "file": "device-loss-incomplete-prefix.faderset",
+              "bytes": 1535,
+              "sha256": "e0a7296633456899a5809141268611f42270a8ab41c132c5c99e5ae93282bf53"
+            },
+            {
+              "file": "source-gap-valid-prefix.faderset",
+              "bytes": 1535,
+              "sha256": "776cd56d44402c8b8bec314fecd07ae90e69bcca4a8bebe6c2aae105f6ab543c"
+            },
+            {
+              "file": "missing-media-preserved.faderset",
+              "bytes": 1510,
+              "sha256": "4e69c01f9967ae37a6b15b8ec039da8c00f31c3836e1b8cff51d47c270c07f20"
+            },
+            {
+              "file": "missing-media.wav",
+              "bytes": 192044,
+              "sha256": "faaa630f4220f03dbc491e07640bc018f50bd47d365f4985aac74bf9db7b3236"
+            }
+          ],
+          "timedStartedUtc": "2026-11-06T00:35:49.323610+00:00",
+          "timedExitCode": 0,
+          "timedFinishedUtc": "2026-11-06T00:35:51.788295+00:00",
+          "timedPhaseFinishedUtc": "2026-11-06T00:35:51.789715+00:00",
+          "preservedOriginalCapture": {
+            "file": "captured-original-raw.faderset",
+            "bytes": 12051,
+            "sha256": "18d8838012ed3bdca3902146d2b4ef05437dd4de5ad4ebc73bb687aa54298193"
+          },
+          "capturedProjectSha256": "18d8838012ed3bdca3902146d2b4ef05437dd4de5ad4ebc73bb687aa54298193",
+          "capturedProjectBytes": 12051,
+          "archiveProjectExitCode": 0,
+          "archivedProjectSha256": "8e73a2416d389f1a4ee98f39e230522d61a89a9bd005938cd97c6712ed42fd41",
+          "archiveVerification": {
+            "scope": "Same-host file identity and parsed project fields; not media-content, sound or timing qualification.",
+            "allNonPathFieldsIdentical": true,
+            "assetPathsResolveToSameSources": true,
+            "assetsChecked": 2,
+            "float64ValuesChecked": 219,
+            "originalSha256": "18d8838012ed3bdca3902146d2b4ef05437dd4de5ad4ebc73bb687aa54298193",
+            "archivedSha256": "8e73a2416d389f1a4ee98f39e230522d61a89a9bd005938cd97c6712ed42fd41",
+            "originalBytes": 12051,
+            "archivedBytes": 12089
+          },
+          "finishedUtc": "2026-11-06T00:35:51.893460+00:00"
+        },
+        "freshObservationCheck": {
+          "scope": "Serialized observations only. Maxima can repeat tails. Passing these checks does not qualify performance, CPU precision or source/binary identity.",
+          "hostRowsChecked": 259,
+          "paintRowsChecked": 53,
+          "cpuRowsChecked": 0,
+          "cpuDeltasAboveEnclosingWall": 0,
+          "zeroCpuDeltas": 0,
+          "largestRetainedQueryBracketNanoseconds": 0,
+          "workloadDeclaration": {
+            "requestedSeconds": 2,
+            "diagnosticTimelineSeconds": 0,
+            "projectFrames": 96000,
+            "storedAutomationPoints": 54
+          },
+          "populations": {
+            "blocksEndingAt4096FrameBoundary": {
+              "samples": 23,
+              "maximumInternalCallbackNanoseconds": 140458
+            },
+            "otherBlocks": {
+              "samples": 727,
+              "maximumInternalCallbackNanoseconds": 285042
+            }
+          },
+          "arithmeticChecksPassed": true
+        },
+        "allRetainedHashesMatch": true,
+        "downloadedNonPathFieldsTypesFloatBitsMatch": true,
+        "float64ValuesChecked": 219,
+        "originalRunnerMediaIdentityReestablishedLocally": false
+      }
+    },
+    "Windows": {
+      "buildInfo": {
+        "project": "Fader",
+        "version": "0.2.0",
+        "sourceRevision": "e38e390ca3b673ba057a4e84d988679bc842256e",
+        "cmakeVersion": "4.4.5",
+        "generator": "Ninja",
+        "system": "Windows",
+        "systemVersion": "10.0.26100",
+        "architecture": "AMD64",
+        "compiler": "MSVC",
+        "compilerVersion": "19.51.36260.0",
+        "cxxStandard": "20",
+        "buildType": "Release",
+        "nativeApp": "ON",
+        "uiFixtures": "OFF",
+        "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+      },
+      "tests": 7,
+      "failures": 0,
+      "helperTests": 19,
+      "observations": {
+        "timedSmoke": {
+          "scope": "Serialized observations only. Maxima can repeat tails. Passing these checks does not qualify performance, CPU precision or source/binary identity.",
+          "hostRowsChecked": 258,
+          "paintRowsChecked": 2,
+          "cpuRowsChecked": 0,
+          "cpuDeltasAboveEnclosingWall": 0,
+          "zeroCpuDeltas": 0,
+          "largestRetainedQueryBracketNanoseconds": 0,
+          "workloadDeclaration": {
+            "requestedSeconds": 2,
+            "diagnosticTimelineSeconds": 0,
+            "projectFrames": 96000,
+            "storedAutomationPoints": 54
+          },
+          "populations": {
+            "blocksEndingAt4096FrameBoundary": {
+              "samples": 23,
+              "maximumInternalCallbackNanoseconds": 41700
+            },
+            "otherBlocks": {
+              "samples": 727,
+              "maximumInternalCallbackNanoseconds": 69400
+            }
+          },
+          "arithmeticChecksPassed": true
+        },
+        "cpuDiagnosticSmoke": {
+          "scope": "Serialized observations only. Maxima can repeat tails. Passing these checks does not qualify performance, CPU precision or source/binary identity.",
+          "hostRowsChecked": 259,
+          "paintRowsChecked": 3,
+          "cpuRowsChecked": 262,
+          "cpuDeltasAboveEnclosingWall": 1,
+          "zeroCpuDeltas": 261,
+          "largestRetainedQueryBracketNanoseconds": 21100,
+          "workloadDeclaration": {
+            "requestedSeconds": 2,
+            "diagnosticTimelineSeconds": 0,
+            "projectFrames": 96000,
+            "storedAutomationPoints": 54
+          },
+          "threadPolicySnapshots": {
+            "checked": 5,
+            "supported": 0,
+            "reportedApiErrors": 0,
+            "scope": "Sampled requested QoS/policy only; not continuous effective scheduling."
+          },
+          "cpuClock": {
+            "name": "GetThreadTimes user+kernel; 100 ns units, precision not guaranteed",
+            "unitNanoseconds": 100,
+            "reportedResolutionNanoseconds": 0,
+            "resolutionError": 4294967295
+          },
+          "populations": {
+            "blocksEndingAt4096FrameBoundary": {
+              "samples": 23,
+              "maximumInternalCallbackNanoseconds": 56000
+            },
+            "otherBlocks": {
+              "samples": 727,
+              "maximumInternalCallbackNanoseconds": 70000
+            }
+          },
+          "arithmeticChecksPassed": true
+        },
+        "fullTimelineDiagnosticSmoke": {
+          "scope": "Serialized observations only. Maxima can repeat tails. Passing these checks does not qualify performance, CPU precision or source/binary identity.",
+          "hostRowsChecked": 260,
+          "paintRowsChecked": 3,
+          "cpuRowsChecked": 263,
+          "cpuDeltasAboveEnclosingWall": 2,
+          "zeroCpuDeltas": 261,
+          "largestRetainedQueryBracketNanoseconds": 10100,
+          "workloadDeclaration": {
+            "requestedSeconds": 2,
+            "diagnosticTimelineSeconds": 4,
+            "projectFrames": 192000,
+            "storedAutomationPoints": 102
+          },
+          "threadPolicySnapshots": {
+            "checked": 5,
+            "supported": 0,
+            "reportedApiErrors": 0,
+            "scope": "Sampled requested QoS/policy only; not continuous effective scheduling."
+          },
+          "cpuClock": {
+            "name": "GetThreadTimes user+kernel; 100 ns units, precision not guaranteed",
+            "unitNanoseconds": 100,
+            "reportedResolutionNanoseconds": 0,
+            "resolutionError": 4294967295
+          },
+          "populations": {
+            "blocksEndingAt4096FrameBoundary": {
+              "samples": 23,
+              "maximumInternalCallbackNanoseconds": 26200
+            },
+            "otherBlocks": {
+              "samples": 727,
+              "maximumInternalCallbackNanoseconds": 158600
+            }
+          },
+          "arithmeticChecksPassed": true
+        }
+      },
+      "driver": {
+        "metadata": {
+          "qualifiedSourceRevision": "e38e390ca3b673ba057a4e84d988679bc842256e",
+          "sourceTreeSha256": "8342705f3319ad63b3c203611c7cb286ad8bfb9dbd679ac95088a8341aff49a1",
+          "sourceVerification": "Every tracked file byte-compared between the clean checkout and build source before execution",
+          "probeSha256": "c8d788669b2ee1ebd7d45a63ce4b219341eeea87108a8c5f774c53d3b9c4e154",
+          "buildInfo": {
+            "project": "Fader",
+            "version": "0.2.0",
+            "sourceRevision": "e38e390ca3b673ba057a4e84d988679bc842256e",
+            "cmakeVersion": "4.4.5",
+            "generator": "Ninja",
+            "system": "Windows",
+            "systemVersion": "10.0.26100",
+            "architecture": "AMD64",
+            "compiler": "MSVC",
+            "compilerVersion": "19.51.36260.0",
+            "cxxStandard": "20",
+            "buildType": "Release",
+            "nativeApp": "ON",
+            "uiFixtures": "OFF",
+            "juceRevision": "d60b7a78030661574a615b586d9325ba7a7fa7dd"
+          },
+          "os": "Windows-2025Server-10.0.26100-SP0",
+          "machine": "AMD64",
+          "python": "3.12.10",
+          "startedUtc": "2026-11-06T00:43:33.705965+00:00",
+          "fixtures": {
+            "sampleRate": 48000,
+            "sourceSeconds": 4,
+            "sources": [
+              {
+                "file": "A.wav",
+                "sha256": "4a01d78bbe4ff13d9351c0d1d709e947e5337f73cb67a90769c6416bb3299aee",
+                "fileBytes": 768044
+              },
+              {
+                "file": "B.wav",
+                "sha256": "a37efebf4bf311de9b0d069e5bd3ed6768415e22ac44edd1345f48f263bee515",
+                "fileBytes": 768044
+              }
+            ]
+          },
+          "seconds": 2,
+          "blockFrames": 128,
+          "scheduler": "normal",
+          "cpuDiagnostics": false,
+          "diagnosticTimelineSeconds": 0,
+          "scope": "Software sink and offscreen production painter. No audio/MIDI device or native UI interaction.",
+          "preservedProbe": {
+            "file": "fader_probe.exe",
+            "bytes": 6924288,
+            "sha256": "c8d788669b2ee1ebd7d45a63ce4b219341eeea87108a8c5f774c53d3b9c4e154"
+          },
+          "faultsStartedUtc": "2026-11-06T00:43:33.718067+00:00",
+          "faultsExitCode": 0,
+          "faultsFinishedUtc": "2026-11-06T00:43:34.052398+00:00",
+          "preservedFaultFiles": [
+            {
+              "file": "input-overflow-incomplete-prefix.faderset",
+              "bytes": 1534,
+              "sha256": "834ba9393e309c6dc90126e6771a719f797bdfe057ed7321b8e9097b77244893"
+            },
+            {
+              "file": "capture-overflow-incomplete-prefix.faderset",
+              "bytes": 1658,
+              "sha256": "d758e307d0060b3dbb2052d1934f10be6032db9074a508c9b91e8054298c178f"
+            },
+            {
+              "file": "device-loss-incomplete-prefix.faderset",
+              "bytes": 1535,
+              "sha256": "06b61a5bb609f6876191e1a2b668f0f1ca55659049103967f2e020e4e842beab"
+            },
+            {
+              "file": "source-gap-valid-prefix.faderset",
+              "bytes": 1535,
+              "sha256": "600fad6d39b33bf8577997a84aacf01e3ae30bd2b94c68026badad21cc8cdfb3"
+            },
+            {
+              "file": "missing-media-preserved.faderset",
+              "bytes": 1510,
+              "sha256": "45cf15ea09622689d99168e96ec5a903a70ae22d1d135ed8893e72e7828ebbf5"
+            },
+            {
+              "file": "missing-media.wav",
+              "bytes": 192044,
+              "sha256": "faaa630f4220f03dbc491e07640bc018f50bd47d365f4985aac74bf9db7b3236"
+            }
+          ],
+          "timedStartedUtc": "2026-11-06T00:43:34.064468+00:00",
+          "timedExitCode": 0,
+          "timedFinishedUtc": "2026-11-06T00:43:36.483570+00:00",
+          "timedPhaseFinishedUtc": "2026-11-06T00:43:36.484396+00:00",
+          "preservedOriginalCapture": {
+            "file": "captured-original-raw.faderset",
+            "bytes": 15073,
+            "sha256": "efbd6e1d6303fe6539226ad3c028c27ddce39c0285c24fbc05e3bce645223a94"
+          },
+          "capturedProjectSha256": "efbd6e1d6303fe6539226ad3c028c27ddce39c0285c24fbc05e3bce645223a94",
+          "capturedProjectBytes": 15073,
+          "archiveProjectExitCode": 0,
+          "archivedProjectSha256": "2b516a2957d915d9bb70a7d703b6db2841ac54670999d78f789d7372f93bb05d",
+          "archiveVerification": {
+            "scope": "Same-host file identity and parsed project fields; not media-content, sound or timing qualification.",
+            "allNonPathFieldsIdentical": true,
+            "assetPathsResolveToSameSources": true,
+            "assetsChecked": 2,
+            "float64ValuesChecked": 284,
+            "originalSha256": "efbd6e1d6303fe6539226ad3c028c27ddce39c0285c24fbc05e3bce645223a94",
+            "archivedSha256": "2b516a2957d915d9bb70a7d703b6db2841ac54670999d78f789d7372f93bb05d",
+            "originalBytes": 15073,
+            "archivedBytes": 15111
+          },
+          "finishedUtc": "2026-11-06T00:43:36.612644+00:00"
+        },
+        "freshObservationCheck": {
+          "scope": "Serialized observations only. Maxima can repeat tails. Passing these checks does not qualify performance, CPU precision or source/binary identity.",
+          "hostRowsChecked": 258,
+          "paintRowsChecked": 2,
+          "cpuRowsChecked": 0,
+          "cpuDeltasAboveEnclosingWall": 0,
+          "zeroCpuDeltas": 0,
+          "largestRetainedQueryBracketNanoseconds": 0,
+          "workloadDeclaration": {
+            "requestedSeconds": 2,
+            "diagnosticTimelineSeconds": 0,
+            "projectFrames": 96000,
+            "storedAutomationPoints": 54
+          },
+          "populations": {
+            "blocksEndingAt4096FrameBoundary": {
+              "samples": 23,
+              "maximumInternalCallbackNanoseconds": 39400
+            },
+            "otherBlocks": {
+              "samples": 727,
+              "maximumInternalCallbackNanoseconds": 376800
+            }
+          },
+          "arithmeticChecksPassed": true
+        },
+        "allRetainedHashesMatch": true,
+        "downloadedNonPathFieldsTypesFloatBitsMatch": true,
+        "float64ValuesChecked": 284,
+        "originalRunnerMediaIdentityReestablishedLocally": false
+      }
+    }
+  }
+}

@@ -72,6 +72,29 @@ def valid_report():
 
 
 class ObservationTests(unittest.TestCase):
+    def test_optional_tile_accounting_rejects_corrupted_bounds_and_types(self):
+        data = valid_report()
+        data['automationTileCache'] = dict(hits=10, rasterizations=9, edgeRasters=4, denseRasters=6,
+            entries=5, accountedRetainedBytes=100000, peakAccountedRetainedBytes=200000,
+            entryLimit=64, byteLimit=32*1024*1024)
+        self.assertEqual(CHECKER.check_observations(data)['automationTileCache']['entries'], 5)
+        for key, value in [('entryLimit', 65), ('byteLimit', 64*1024*1024), ('entries', 10),
+                           ('entries', 65), ('hits', True), ('hits', -1), ('rasterizations', 9.0),
+                           ('edgeRasters', 10), ('denseRasters', 10), ('accountedRetainedBytes', 200001),
+                           ('peakAccountedRetainedBytes', 32*1024*1024+1)]:
+            with self.subTest(key=key, value=value):
+                bad = copy.deepcopy(data)
+                bad['automationTileCache'][key] = value
+                with self.assertRaises(CHECKER.InvalidObservation):
+                    CHECKER.check_observations(bad)
+        zero = copy.deepcopy(data)
+        zero['automationTileCache'] = {key: (value if key.endswith('Limit') else 0)
+                                      for key, value in data['automationTileCache'].items()}
+        CHECKER.check_observations(zero)
+        # Old saved reports have no tile telemetry and remain readable.
+        del data['automationTileCache']
+        CHECKER.check_observations(data)
+
     def test_expanded_timeline_declarations_and_exclusion(self):
         data = valid_report()
         data.update(requestedSeconds=2, diagnosticTimelineSeconds=4, projectFrames=192000,

@@ -733,6 +733,18 @@ juce::var qualifySoftwareStress(const juce::File &folder, int seconds, int block
     out->setProperty("cueAbsoluteSampleSum", cueChecksum);
     out->setProperty("nonFiniteSamples", juce::int64(nonFinite));
     out->setProperty("quietBlocks", juce::int64(quietBlocks));
+    const auto tileStats = arrangement.automationCacheStats();
+    auto *tileCache = new juce::DynamicObject();
+    tileCache->setProperty("hits", juce::int64(tileStats.hits));
+    tileCache->setProperty("rasterizations", juce::int64(tileStats.rasterizations));
+    tileCache->setProperty("edgeRasters", juce::int64(tileStats.edgeRasters));
+    tileCache->setProperty("denseRasters", juce::int64(tileStats.denseRasters));
+    tileCache->setProperty("entries", juce::int64(tileStats.entries));
+    tileCache->setProperty("accountedRetainedBytes", juce::int64(tileStats.retainedBytes));
+    tileCache->setProperty("peakAccountedRetainedBytes", juce::int64(tileStats.peakRetainedBytes));
+    tileCache->setProperty("entryLimit", juce::int64(detail::AutomationLayer::maxTiles));
+    tileCache->setProperty("byteLimit", juce::int64(detail::AutomationLayer::maxRetainedBytes));
+    out->setProperty("automationTileCache", tileCache);
     out->setProperty("arrangementPaints", juce::int64(paints));
     out->setProperty("missedPaintIntervals", juce::int64(missedPaintIntervals));
     out->setProperty("targetArrangementPaints", juce::int64(expectedPaints));
@@ -858,6 +870,10 @@ juce::var snapshotStressArrangement(const juce::File &folder, const juce::File &
     out->setProperty("imageHeight", image.getHeight());
     out->setProperty("timingPixelsPerSecond", 10);
     out->setProperty("snapshotPixelsPerSecond", 40);
+    const auto stats = arrangement.automationCacheStats();
+    out->setProperty("tileCacheHits", juce::int64(stats.hits));
+    out->setProperty("tileRasterizations", juce::int64(stats.rasterizations));
+    out->setProperty("tileCachePeakAccountedRetainedBytes", juce::int64(stats.peakRetainedBytes));
     out->setProperty("densePaintExecution", distribution(times));
     return out;
 }

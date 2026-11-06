@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 #pragma once
 #include "Media.h"
+#include <cstdint>
+#include <memory>
 #include <span>
 
 namespace fader {
@@ -22,15 +24,22 @@ struct AutomationDrawing {
     double pixelsPerSecond = 10;
     float bottom = 0, height = 0;
 };
-// A viewport/row-sized software image bounds Mac automation raster work.
-// The image contains current geometry, never the whole project history.
+// Current geometry determines cache validity. Images and signatures are bounded.
 class AutomationLayer {
   public:
+    struct CacheStats {
+        std::uint64_t hits = 0, rasterizations = 0, edgeRasters = 0, denseRasters = 0;
+        std::size_t entries = 0, retainedBytes = 0, peakRetainedBytes = 0;
+    };
+    static constexpr std::size_t maxTiles = 64, maxRetainedBytes = 32 * 1024 * 1024;
+    explicit AutomationLayer(bool cacheEnabled = true);
+    ~AutomationLayer();
     void paint(juce::Graphics &, const AutomationDrawing &, juce::Rectangle<int> visibleBand);
+    CacheStats cacheStats() const noexcept;
 
   private:
-    juce::Image pixels;
-    float pixelScale = 0;
+    struct Impl;
+    std::unique_ptr<Impl> impl;
 };
 } // namespace detail
 class Arrangement final : public juce::Component {
@@ -52,6 +61,7 @@ class Arrangement final : public juce::Component {
     void refresh();
     void zoom(double);
     void revealPlayhead();
+    detail::AutomationLayer::CacheStats automationCacheStats() const;
     juce::Viewport viewport;
 
   private:
@@ -61,6 +71,9 @@ class Arrangement final : public juce::Component {
       public:
         explicit Canvas(Arrangement &a) : owner(a) {}
         void paint(juce::Graphics &) override;
+        detail::AutomationLayer::CacheStats cacheStats() const {
+            return automationLayer.cacheStats();
+        }
         bool isInterestedInFileDrag(const juce::StringArray &) override {
             return true;
         }

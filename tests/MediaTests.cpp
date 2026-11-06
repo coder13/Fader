@@ -8,6 +8,7 @@
 #include <stdexcept>
 using namespace fader;
 void testArrangement();
+void testAutomationTiles();
 void testAudioSetup();
 void testAudioPlayback();
 void testSourceRates();
@@ -27,6 +28,7 @@ int main() {
     dir.createDirectory();
     try {
         testArrangement();
+        testAutomationTiles();
         testAudioSetup();
         testAudioPlayback();
         testPortability();

@@ -71,17 +71,17 @@ if(FADER_BUILD_APP)
     juce_add_gui_app(Fader PRODUCT_NAME "Fader" COMPANY_NAME "Fader"
         BUNDLE_ID "org.fader.poc" NEEDS_CURL FALSE NEEDS_WEB_BROWSER FALSE)
     target_compile_definitions(Fader PRIVATE FADER_ENABLE_UI_FIXTURES=$<BOOL:${FADER_ENABLE_UI_FIXTURES}>)
-    target_sources(Fader PRIVATE src/Main.cpp src/Arrangement.cpp src/LibraryView.cpp)
+    target_sources(Fader PRIVATE src/Main.cpp src/Arrangement.cpp src/AutomationLayer.cpp src/LibraryView.cpp)
     target_link_libraries(Fader PRIVATE fader_media)
     juce_add_console_app(fader_probe PRODUCT_NAME "fader_probe")
     target_sources(fader_probe PRIVATE src/Probe.cpp src/StreamQualification.cpp src/SeekBenchmark.cpp
-        src/ExportQualification.cpp src/StressClock.cpp src/StressQualification.cpp src/StressFaults.cpp src/Arrangement.cpp)
+        src/ExportQualification.cpp src/StressClock.cpp src/StressQualification.cpp src/StressFaults.cpp src/Arrangement.cpp src/AutomationLayer.cpp)
     target_link_libraries(fader_probe PRIVATE fader_media)
     if(BUILD_TESTING)
         juce_add_console_app(fader_media_tests PRODUCT_NAME "fader_media_tests")
-        target_sources(fader_media_tests PRIVATE tests/MediaTests.cpp tests/ArrangementTests.cpp
+        target_sources(fader_media_tests PRIVATE tests/MediaTests.cpp tests/ArrangementTests.cpp tests/AutomationTileTests.cpp
             tests/AudioSetupTests.cpp tests/SourceRateTests.cpp tests/StreamMediaTests.cpp tests/DecodedCacheTests.cpp tests/ProjectModelTests.cpp tests/ExportTests.cpp tests/PortabilityTests.cpp
-            src/Arrangement.cpp src/StreamQualification.cpp)
+            src/Arrangement.cpp src/AutomationLayer.cpp src/StreamQualification.cpp)
         target_compile_definitions(fader_media_tests PRIVATE
             FADER_TEST_MP3_PATH="${JUCE_SOURCE_DIR}/examples/Assets/Notifications/sounds/served.mp3"
             FADER_TEST_PROJECT_PATH="${CMAKE_SOURCE_DIR}/tests/fixtures/portable-v3.json"

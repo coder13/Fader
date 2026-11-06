@@ -50,54 +50,8 @@ void detail::paintPointHandles(juce::Graphics &g, std::span<const Point> points,
     if (count != 0)
         g.fillPath(handles);
 }
-void detail::AutomationLayer::paint(juce::Graphics &g, const AutomationDrawing &drawing,
-                                    juce::Rectangle<int> visibleBand) {
-    if (visibleBand.isEmpty())
-        return;
-    const juce::Graphics::ScopedSaveState saved(g);
-    g.reduceClipRegion(visibleBand);
-    const auto draw = [&](juce::Graphics &target, const juce::Path &path, float clipX, float bottom,
-                          bool nativeMacJoins) {
-        target.setColour(drawing.colour);
-        juce::PathStrokeType stroke(drawing.thickness);
-        if (nativeMacJoins)
-            stroke.setMiterLimit(10.f);
-        target.strokePath(path, stroke);
-        if (!drawing.handles.empty())
-            detail::paintPointHandles(target, drawing.handles, clipX, drawing.pixelsPerSecond, bottom,
-                                      drawing.height);
-    };
-#if JUCE_MAC
-    const auto scale = g.getInternalContext().getPhysicalPixelScaleFactor();
-    if (std::isfinite(scale) && scale > 0 &&
-        g.getInternalContext().getPreferredImageTypeForTemporaryImages()->getTypeID() ==
-            juce::NativeImageType{}.getTypeID()) {
-        const int width = std::max(1, int(std::ceil(visibleBand.getWidth() * scale))),
-                  height = std::max(1, int(std::ceil(visibleBand.getHeight() * scale)));
-        if (pixels.getWidth() != width || pixels.getHeight() < height || pixelScale != scale) {
-            const int capacityHeight = pixelScale == scale ? std::max(height, pixels.getHeight()) : height;
-            pixels = juce::Image(juce::Image::ARGB, width, capacityHeight, false, juce::SoftwareImageType{});
-            pixelScale = scale;
-        }
-        pixels.clear(pixels.getBounds(), juce::Colours::transparentBlack);
-        // Local coordinates keep stroke calculations precise far down a set.
-        auto localPath = drawing.path;
-        localPath.applyTransform(
-            juce::AffineTransform::translation(-float(visibleBand.getX()), -float(visibleBand.getY())));
-        {
-            juce::Graphics raster(pixels);
-            raster.addTransform(juce::AffineTransform::scale(scale));
-            draw(raster, localPath, drawing.clipX - visibleBand.getX(), drawing.bottom - visibleBand.getY(),
-                 true);
-        }
-        // The bitmap already contains the curve's opacity. Apply it once.
-        g.setColour(juce::Colours::white);
-        g.drawImageTransformed(pixels, juce::AffineTransform::scale(1.f / scale)
-                                           .translated(float(visibleBand.getX()), float(visibleBand.getY())));
-        return;
-    }
-#endif
-    draw(g, drawing.path, drawing.clipX, drawing.bottom, false);
+detail::AutomationLayer::CacheStats Arrangement::automationCacheStats() const {
+    return canvas.cacheStats();
 }
 Arrangement::Arrangement() : canvas(*this) {
     addAndMakeVisible(viewport);

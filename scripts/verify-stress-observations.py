@@ -70,6 +70,20 @@ def check_observations(data):
               'declared two-clip stored curve density')
         report['workloadDeclaration'] = {key: data[key] for key in (
             'requestedSeconds', 'diagnosticTimelineSeconds', 'projectFrames', 'storedAutomationPoints')}
+    if 'automationTileCache' in data:
+        cache = data['automationTileCache']
+        integers(cache, ('hits', 'rasterizations', 'edgeRasters', 'denseRasters', 'entries',
+                         'accountedRetainedBytes', 'peakAccountedRetainedBytes', 'entryLimit', 'byteLimit'))
+        equal(cache['entryLimit'], 64, 'automation cache entry limit')
+        equal(cache['byteLimit'], 32 * 1024 * 1024, 'automation cache byte limit')
+        require(cache['entries'] <= cache['entryLimit'] and
+                cache['entries'] <= cache['rasterizations'], 'invalid automation tile entry count')
+        require(cache['accountedRetainedBytes'] <= cache['peakAccountedRetainedBytes'] <= cache['byteLimit'],
+                'automation cache accounting exceeds its declared bounds')
+        require(cache['edgeRasters'] <= cache['rasterizations'] and
+                cache['denseRasters'] <= cache['rasterizations'], 'invalid automation raster count')
+        report['automationTileCache'] = dict(cache, scope=
+            'Bounded retained pixel/signature accounting only; not all native allocations or process RSS.')
     if 'threadPolicySnapshots' in data:
         require(diagnostic, 'thread policy queries require diagnostics')
         policies = data['threadPolicySnapshots']
