@@ -13,8 +13,25 @@ std::span<const Point> visiblePointHandles(const Curve &, float clipX, double pi
 // the selected curve's opaque colour. Overlapping circles use a filled union.
 void paintPointHandles(juce::Graphics &, std::span<const Point>, float clipX, double pixelsPerSecond,
                        float bottom, float height);
-// Use the native outline clip for Mac curves while preserving stroke settings.
-void paintAutomationCurve(juce::Graphics &, const juce::Path &, juce::Colour, float thickness);
+struct AutomationDrawing {
+    const juce::Path &path;
+    juce::Colour colour;
+    float thickness;
+    std::span<const Point> handles{};
+    float clipX = 0;
+    double pixelsPerSecond = 10;
+    float bottom = 0, height = 0;
+};
+// A viewport/row-sized software image bounds Mac automation raster work.
+// The image contains current geometry, never the whole project history.
+class AutomationLayer {
+  public:
+    void paint(juce::Graphics &, const AutomationDrawing &, juce::Rectangle<int> visibleBand);
+
+  private:
+    juce::Image pixels;
+    float pixelScale = 0;
+};
 } // namespace detail
 class Arrangement final : public juce::Component {
   public:
@@ -61,6 +78,7 @@ class Arrangement final : public juce::Component {
         Frame frame(float) const;
         int hit(juce::Point<float>) const;
         Arrangement &owner;
+        detail::AutomationLayer automationLayer;
         int moving = -1, point = -1, pointClip = -1, pointParam = 0, originalRow = 0;
         Frame originalStart = 0;
         juce::Point<float> anchor;

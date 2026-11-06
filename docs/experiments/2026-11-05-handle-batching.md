@@ -22,7 +22,8 @@ Existing viewport-edge, far-timeline rounding, clip movement, duration and indep
 All local native targets build, and seven suites pass in 15.73 seconds.
 All 19 Python helper tests pass.
 Fresh independent observation checks accept the three native smoke objects.
-Cross-platform CI, a synthetic image comparison and the full-size short CPU diagnostic remain pending for this candidate.
+The completed sections below record cross-platform CI, a synthetic image and the full-size short CPU diagnostic.
+This candidate still fails drawing cadence and Windows image checks.
 A short diagnostic cannot qualify the original hour, physical output or native-window responsiveness.
 The next eligible performance run must retain the original full workload and thresholds.
 

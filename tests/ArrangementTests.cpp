@@ -110,7 +110,7 @@ void testArrangement() {
                     }
             }
     }
-    // A native solid stroke and its outline clip rasterize sharp miter tips
+    // Native and software strokes rasterize sharp miter tips
     // differently. Use independent line-distance/miter geometry, rather than
     // making either rasterizer's edge pixels the definition of correctness.
     // Every sampled vertex must retain coverage, solid interiors must survive,
@@ -148,7 +148,8 @@ void testArrangement() {
                             juce::Graphics g(actual);
                             g.addTransform(juce::AffineTransform::scale(deviceScale));
                             g.setColour(ui::mint);
-                            detail::paintAutomationCurve(g, path, ui::accent.withAlpha(opacity), width);
+                            detail::AutomationLayer layer;
+                            layer.paint(g, {path, ui::accent.withAlpha(opacity), width}, g.getClipBounds());
                             // State restoration is part of the production contract.
                             g.fillRect(1096, 1, 2, 2);
                         }
@@ -204,11 +205,11 @@ void testArrangement() {
                                 bool interior = ea >= 250;
                                 for (auto d : {juce::Point<int>{-1, 0}, {1, 0}, {0, -1}, {0, 1}})
                                     interior &= e.getPixelColour(x + d.x, y + d.y).getAlpha() >= 250;
-                                require(!interior || aa >= 245, "native curve clip lost a solid interior");
+                                require(!interior || aa >= 245, "automation layer lost a solid interior");
                                 require(aa <= int(std::lround(opacity * 255)),
-                                        "curve clip accumulated opacity");
+                                        "automation layer accumulated opacity");
                                 require(aa <= 16 || allowed[std::size_t(y * imageWidth + x)],
-                                        "curve clip exceeded its geometric stroke/miter envelope");
+                                        "automation layer exceeded its geometric stroke/miter envelope");
                             }
                         for (auto p : vertices) {
                             const int cx = int(std::floor(p.x * deviceScale)),
@@ -220,9 +221,59 @@ void testArrangement() {
                                         juce::isPositiveAndBelow(cy + dy, actual.getHeight()))
                                         maximumAlpha = std::max(
                                             maximumAlpha, int(a.getPixelColour(cx + dx, cy + dy).getAlpha()));
-                            require(maximumAlpha >= int(opacity * 100), "curve clip lost a sampled vertex");
+                            require(maximumAlpha >= int(opacity * 100),
+                                    "automation layer lost a sampled vertex");
                         }
                     }
+    for (float deviceScale : {1.f, 2.f}) {
+        detail::AutomationLayer layer;
+        juce::Image image(juce::Image::ARGB, int(200 * deviceScale), int(200 * deviceScale), true, native);
+        juce::Path first, second;
+        first.startNewSubPath(10, 50);
+        first.lineTo(190, 50);
+        second.startNewSubPath(10, 150);
+        second.lineTo(190, 150);
+        {
+            juce::Graphics g(image);
+            g.addTransform(juce::AffineTransform::scale(deviceScale));
+            g.setColour(ui::blue.withAlpha(.2f));
+            layer.paint(g, {first, ui::accent.withAlpha(.65f), 2.2f}, {0, 0, 200, 80});
+            layer.paint(g, {second, ui::mint, 2.2f}, {0, 100, 200, 100});
+            g.fillRect(2, 2, 2, 2);
+        }
+        const auto a = image.getPixelAt(int(100 * deviceScale), int(50 * deviceScale)),
+                   b = image.getPixelAt(int(100 * deviceScale), int(150 * deviceScale));
+        require(a.getAlpha() >= 160 && a.getAlpha() <= 166 && a.getRed() > a.getGreen(),
+                "reusing automation pixels changed the earlier clip or multiplied its opacity");
+        require(b.getAlpha() >= 250 && b.getGreen() > b.getRed(), "second automation layer lost its colour");
+        require(image.getPixelAt(int(2 * deviceScale), int(2 * deviceScale)).getAlpha() == 51,
+                "automation composite leaked its clip or opacity state");
+        juce::Image near(juce::Image::ARGB, int(200 * deviceScale), int(80 * deviceScale), true, native),
+            far(juce::Image::ARGB, int(200 * deviceScale), int(80 * deviceScale), true, native);
+        const Point handles[] = {{0, .5f}, {projectRate, .8f}};
+        auto shifted = first;
+        constexpr int offset = 108000;
+        shifted.applyTransform(juce::AffineTransform::translation(float(offset), 0));
+        {
+            juce::Graphics g(near);
+            g.addTransform(juce::AffineTransform::scale(deviceScale));
+            layer.paint(g, {first, ui::accent, 2.2f, handles, 20, 100, 70, 40}, {0, 0, 200, 80});
+        }
+        {
+            juce::Graphics g(far);
+            g.addTransform(juce::AffineTransform::translation(-float(offset), 0).scaled(deviceScale));
+            layer.paint(g, {shifted, ui::accent, 2.2f, handles, float(offset + 20), 100, 70, 40},
+                        {offset, 0, 200, 80});
+        }
+        require(near.getPixelAt(int(120 * deviceScale), int(38 * deviceScale)).getAlpha() >= 250,
+                "automation composite omitted a handle away from the curve");
+        const juce::Image::BitmapData n(near, juce::Image::BitmapData::readOnly),
+            f(far, juce::Image::BitmapData::readOnly);
+        for (int y = 0; y < near.getHeight(); ++y)
+            for (int x = 0; x < near.getWidth(); ++x)
+                require(n.getPixelColour(x, y) == f.getPixelColour(x, y),
+                        "far timeline translation changed automation raster geometry");
+    }
     // Geometric reference: every circle that can touch the viewport must be in
     // the returned slice, including edges and far-timeline float rounding. The
     // slice size must depend on visible time, rather than total point count.

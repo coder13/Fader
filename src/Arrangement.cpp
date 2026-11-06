@@ -50,18 +50,54 @@ void detail::paintPointHandles(juce::Graphics &g, std::span<const Point> points,
     if (count != 0)
         g.fillPath(handles);
 }
-void detail::paintAutomationCurve(juce::Graphics &g, const juce::Path &path, juce::Colour colour,
-                                  float thickness) {
+void detail::AutomationLayer::paint(juce::Graphics &g, const AutomationDrawing &drawing,
+                                    juce::Rectangle<int> visibleBand) {
+    if (visibleBand.isEmpty())
+        return;
     const juce::Graphics::ScopedSaveState saved(g);
-    g.setColour(colour);
+    g.reduceClipRegion(visibleBand);
+    const auto draw = [&](juce::Graphics &target, const juce::Path &path, float clipX, float bottom,
+                          bool nativeMacJoins) {
+        target.setColour(drawing.colour);
+        juce::PathStrokeType stroke(drawing.thickness);
+        if (nativeMacJoins)
+            stroke.setMiterLimit(10.f);
+        target.strokePath(path, stroke);
+        if (!drawing.handles.empty())
+            detail::paintPointHandles(target, drawing.handles, clipX, drawing.pixelsPerSecond, bottom,
+                                      drawing.height);
+    };
 #if JUCE_MAC
-    // A constant gradient keeps Quartz's native stroke geometry, while JUCE
-    // routes it through a single stroked outline clip before the colour fill.
-    if (g.getInternalContext().getPreferredImageTypeForTemporaryImages()->getTypeID() ==
-        juce::NativeImageType{}.getTypeID())
-        g.setGradientFill(juce::ColourGradient(colour, 0, 0, colour, 0, 1, false));
+    const auto scale = g.getInternalContext().getPhysicalPixelScaleFactor();
+    if (std::isfinite(scale) && scale > 0 &&
+        g.getInternalContext().getPreferredImageTypeForTemporaryImages()->getTypeID() ==
+            juce::NativeImageType{}.getTypeID()) {
+        const int width = std::max(1, int(std::ceil(visibleBand.getWidth() * scale))),
+                  height = std::max(1, int(std::ceil(visibleBand.getHeight() * scale)));
+        if (pixels.getWidth() != width || pixels.getHeight() < height || pixelScale != scale) {
+            const int capacityHeight = pixelScale == scale ? std::max(height, pixels.getHeight()) : height;
+            pixels = juce::Image(juce::Image::ARGB, width, capacityHeight, false, juce::SoftwareImageType{});
+            pixelScale = scale;
+        }
+        pixels.clear(pixels.getBounds(), juce::Colours::transparentBlack);
+        // Local coordinates keep stroke calculations precise far down a set.
+        auto localPath = drawing.path;
+        localPath.applyTransform(
+            juce::AffineTransform::translation(-float(visibleBand.getX()), -float(visibleBand.getY())));
+        {
+            juce::Graphics raster(pixels);
+            raster.addTransform(juce::AffineTransform::scale(scale));
+            draw(raster, localPath, drawing.clipX - visibleBand.getX(), drawing.bottom - visibleBand.getY(),
+                 true);
+        }
+        // The bitmap already contains the curve's opacity. Apply it once.
+        g.setColour(juce::Colours::white);
+        g.drawImageTransformed(pixels, juce::AffineTransform::scale(1.f / scale)
+                                           .translated(float(visibleBand.getX()), float(visibleBand.getY())));
+        return;
+    }
 #endif
-    g.strokePath(path, juce::PathStrokeType(thickness));
+    draw(g, drawing.path, drawing.clipX, drawing.bottom, false);
 }
 Arrangement::Arrangement() : canvas(*this) {
     addAndMakeVisible(viewport);
@@ -216,16 +252,22 @@ void Arrangement::Canvas::paint(juce::Graphics &g) {
                 else
                     path.lineTo(float(px), y);
             }
-            g.setColour(curveColour(owner.parameter).withAlpha(selected ? 1.0f : 0.65f));
-            detail::paintAutomationCurve(g, path,
-                                         curveColour(owner.parameter).withAlpha(selected ? 1.0f : 0.65f),
-                                         selected ? 2.2f : 1.4f);
-            if (selected)
-                detail::paintPointHandles(g,
-                                          detail::visiblePointHandles(curve, b.getX(), owner.pixelsPerSecond,
-                                                                      c.length, visible.getX(),
-                                                                      visible.getRight()),
-                                          b.getX(), owner.pixelsPerSecond, y1, y1 - y0);
+            const float thickness = selected ? 2.2f : 1.4f;
+            // Twelve pixels cover the widest native miter plus antialiasing,
+            // and keep selected/unselected rows at the same buffer height.
+            constexpr int margin = 12;
+            const int bandTop = int(std::floor(y0 - margin)), bandBottom = int(std::ceil(y1 + margin));
+            const auto band =
+                juce::Rectangle<int>(visible.getX(), bandTop, visible.getWidth(), bandBottom - bandTop)
+                    .getIntersection(visible.withTrimmedTop(top));
+            const auto handles =
+                selected ? detail::visiblePointHandles(curve, b.getX(), owner.pixelsPerSecond, c.length,
+                                                       visible.getX(), visible.getRight())
+                         : std::span<const Point>{};
+            automationLayer.paint(g,
+                                  {path, curveColour(owner.parameter).withAlpha(selected ? 1.0f : 0.65f),
+                                   thickness, handles, b.getX(), owner.pixelsPerSecond, y1, y1 - y0},
+                                  band);
         }
     }
     g.restoreState();

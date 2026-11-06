@@ -58,7 +58,9 @@ Existing Windows CPU-accounting precision limits still apply.
 ## Checks completed and remaining
 
 All targets build locally and seven native suites pass in 13.87 seconds.
-The new native case times two seconds of a four-second project, checks all 102 original stored points, then reloads the capture and verifies both clip lengths plus every untouched second-clip point beyond the timed interval.
+The native case times two seconds of a four-second project and checks the declared count of 102 original stored points.
+It reloads the capture and makes sure that both clip lengths remain unchanged.
+It also retains every untouched second-clip point beyond the timed interval.
 CPU coverage is complete and both qualification flags stay false.
 Invalid native settings are checked against a missing fixture folder to prove rejection happens before import.
 Direct CLI checks reject missing CPU mode, malformed integers and duplicate timeline options.
@@ -69,9 +71,9 @@ The independent reader accepts all three local smoke objects, including the expa
 All five Mac snapshots report successful pthread queries and thread-port release; error/default-policy fields remain visible.
 These ordinary local smokes use the default thread mode and do not prove the requested real-time host policy.
 
-CI now retains independent checks of `fullTimelineDiagnosticSmoke` on Mac and Windows alongside both existing objects.
-Inspect exact metadata, full logs, JUnit and artifacts before treating cross-platform collection as checked.
-Then run the full-size short diagnostic to distinguish drawing CPU from elapsed wall pauses and choose an actual repair.
+CI retains independent checks of `fullTimelineDiagnosticSmoke` on Mac and Windows alongside both existing objects.
+The completed results below record exact metadata, full logs, JUnit and artifact inspection.
+The full-size short diagnostics are complete, while the actual painter repair remains open.
 The original full-hour painter failure remains open; any repair still needs the full original uninstrumented hour.
 
 ## Completed full-size observations
